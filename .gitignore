@@ -1,0 +1,260 @@
+# ════════════════════════════════════════════════════════════════════════════════
+# KIMatrix Web - Frontend .gitignore
+# ════════════════════════════════════════════════════════════════════════════════
+# SECURITY CRITICAL: Never commit environment variables, API keys, or secrets
+# Review carefully before committing. When in doubt, exclude it.
+# ════════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ENVIRONMENT VARIABLES & SECRETS
+# ─────────────────────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.env.backup
+.env.bak
+.env.old
+.env.save
+.env.orig
+.env.copy
+env.js
+env.ts
+config.local.js
+config.local.ts
+secrets.json
+secrets.yaml
+secrets.yml
+.secrets
+
+# Keep template files
+!.env.example
+!.env.sample
+!config.example.js
+!config.example.ts
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# API KEYS & CREDENTIALS
+# ─────────────────────────────────────────────────────────────────────────────────
+**/api-keys.json
+**/credentials.json
+**/*-key.json
+**/*-credentials.json
+**/*-secret.json
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.cer
+**/*.crt
+**/*.der
+**/*.csr
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DEPENDENCIES
+# ─────────────────────────────────────────────────────────────────────────────────
+node_modules/
+jspm_packages/
+bower_components/
+.pnp
+.pnp.*
+.pnp.js
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.yarn/install-state.gz
+.yarn/build-state.yml
+.yarn/cache/
+.npm/
+.eslintcache
+package-lock.json.backup
+yarn.lock.backup
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# NEXT.JS
+# ─────────────────────────────────────────────────────────────────────────────────
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.next-sitemap.xml
+.swc/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# BUILD OUTPUTS
+# ─────────────────────────────────────────────────────────────────────────────────
+build/
+dist/
+*.js.map
+*.css.map
+.cache/
+.parcel-cache/
+.turbo/
+.webpack/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# TESTING & COVERAGE
+# ─────────────────────────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+.jest-cache/
+__snapshots__/
+.playwright/
+test-results/
+playwright-report/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# LOGS
+# ─────────────────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+node_modules/.cache/
+logs/
+*.log.*
+log.txt
+error.log
+access.log
+combined.log
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# IDE & EDITORS
+# ─────────────────────────────────────────────────────────────────────────────────
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+*.code-workspace
+.vscode-test/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+out/
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Other
+.history/
+.ionide/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# OPERATING SYSTEMS
+# ─────────────────────────────────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# DEPLOYMENT PLATFORMS
+# ─────────────────────────────────────────────────────────────────────────────────
+.vercel
+.vercel.json.backup
+.netlify
+.firebase/
+.firebaserc
+firebase-debug.log
+firebase-debug.*.log
+.amplify/
+.aws/
+.serverless/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# TEMPORARY FILES
+# ─────────────────────────────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+*.swp
+*.swo
+tmp/
+temp/
+.tmp/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# MISC
+# ─────────────────────────────────────────────────────────────────────────────────
+*.local
+.claude/logs/
+.storybook/build/
+.docusaurus/
+.cache-loader/
+.stylelintcache
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# OPTIONAL: Keep these if you want to track them
+# ─────────────────────────────────────────────────────────────────────────────────
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

@@ -1,0 +1,48 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
+    "@tanstack/react-query": "^5.99.0",
+    "axios": "^1.15.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "country-state-city": "^3.2.1",
+    "dayjs": "^1.11.20",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "joi": "^18.1.2",
+    "js-cookie": "^3.0.5",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "libphonenumber-js": "^1.12.43",
+    "lucide-react": "^1.8.0",
+    "next": "16.2.3",
+    "next-intl": "^4.9.1",
+    "qrcode.react": "^4.2.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-redux": "^9.2.0",
+    "react-toastify": "^11.0.5",
+    "tailwind-merge": "^3.5.0",
+    "use-debounce": "^10.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/js-cookie": "^3.0.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

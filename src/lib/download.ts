@@ -1,0 +1,12 @@
+// Trigger a browser download for a Blob with the given filename.
+// Used for CSV exports — works cross-browser without extra deps.
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
