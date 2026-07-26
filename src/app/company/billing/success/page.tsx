@@ -11,6 +11,7 @@ import { paymentService } from "@/services/payment.service";
 import { useAppDispatch } from "@/store/hooks";
 import { setCompanyIsActive } from "@/store/slices/authSlice";
 import { setSubscription, fetchCompanyProfile } from "@/store/slices/companySlice";
+import { parseApiError } from "@/lib/errors";
 
 type CaptureState = "loading" | "success" | "error";
 
@@ -45,9 +46,12 @@ function CaptureHandler() {
         dispatch(fetchCompanyProfile());
         setState("success");
       })
-      .catch(() => {
+      .catch((err) => {
         setState("error");
-        toast.error("We couldn't confirm your payment. Please contact support if you were charged.");
+        const parsed = parseApiError(err);
+        toast.error(
+          parsed.message || "We couldn't confirm your payment. Please contact support if you were charged."
+        );
       });
   }, [paypalOrderId, dispatch]);
 

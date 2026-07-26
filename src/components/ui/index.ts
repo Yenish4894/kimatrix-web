@@ -2,6 +2,7 @@ export { Button } from "./button";
 export { CustomerPhoneInput } from "./customer-phone-input";
 export { Input } from "./input";
 export { Select } from "./select";
+export { SearchableSelect } from "./searchable-select";
 export { Checkbox } from "./checkbox";
 export { Card, CardHeader, CardContent, CardFooter } from "./card";
 export { Badge } from "./badge";

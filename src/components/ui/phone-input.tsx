@@ -14,6 +14,7 @@ interface PhoneInputProps {
   value: string;
   /** Called with the full E.164 number (or empty if local part is cleared) */
   onChange: (value: string) => void;
+  onBlur?: () => void;
   error?: string;
   helperText?: string;
   disabled?: boolean;
@@ -26,6 +27,7 @@ export function PhoneInput({
   country,
   value,
   onChange,
+  onBlur,
   error,
   helperText,
   disabled,
@@ -102,6 +104,7 @@ export function PhoneInput({
           autoComplete="tel-national"
           value={localPart}
           onChange={handleChange}
+          onBlur={onBlur}
           disabled={isDisabled}
           placeholder={placeholder}
           aria-invalid={!!error}

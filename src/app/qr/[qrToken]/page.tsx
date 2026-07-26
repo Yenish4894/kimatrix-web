@@ -275,11 +275,9 @@ export default function QRSubmissionPage({
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-md mx-auto px-4 py-6 sm:py-8">
         {/* Brand */}
-        <div className="text-center mb-6">
-          <span className="text-lg font-bold font-heading tracking-tight">
-            <span className="text-primary-600">KI</span>
-            <span className="text-slate-800">Mates</span>
-          </span>
+        <div className="text-center mb-6 flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/kimates-logo.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
         </div>
 
         {/* Company info */}

@@ -26,15 +26,18 @@ export const login = createAsyncThunk("auth/login", async (credentials: LoginFor
   }
 });
 
-// Registration creates the company in PENDING state. No tokens are issued
-// and the user must wait for super admin activation before they can log in.
-// Therefore: no token storage, no auth state mutation — just return the
-// payload so the page can show the success message.
+// Registration creates the company (pending) AND returns a session so the user
+// can immediately pay for a plan in the same flow. We persist the tokens/user
+// exactly like login, then the register page kicks off the PayPal order.
 export const registerCompany = createAsyncThunk(
   "auth/registerCompany",
   async (payload: Omit<RegistrationFormData, "businessType"> & { businessType: BusinessType }, { rejectWithValue }) => {
     try {
-      return await authService.registerCompany(payload);
+      const result = await authService.registerCompany(payload);
+      TokenStorage.setTokens(result.tokens);
+      TokenStorage.setUser(result.user, result.companyId ?? null);
+      TokenStorage.setCompanyIsActive(result.companyIsActive ?? null);
+      return result;
     } catch (err) {
       return rejectWithValue(err);
     }
@@ -66,6 +69,10 @@ export const loadSession = createAsyncThunk(
     if (!user || !tokens) {
       return rejectWithValue("no_session");
     }
+
+    // Re-assert the edge session cookie (read by src/proxy.ts) in case it was
+    // lost while the localStorage session survived — keeps the two in sync.
+    TokenStorage.setUser(user, companyId);
 
     // If access token is expired (or about to be), the axios interceptor
     // will handle refresh on the next request. We just restore state here.
@@ -114,9 +121,16 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
       })
-      // register — no auth state change; account is pending activation
+      // register — auto-login: establish the session so payment can start
       .addCase(registerCompany.pending, (state) => { state.isLoading = true; })
-      .addCase(registerCompany.fulfilled, (state) => { state.isLoading = false; })
+      .addCase(registerCompany.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.companyId = action.payload.companyId ?? null;
+        state.companyIsActive = action.payload.companyIsActive ?? null;
+        state.tokens = action.payload.tokens;
+        state.isAuthenticated = true;
+        state.isLoading = false;
+      })
       .addCase(registerCompany.rejected, (state) => { state.isLoading = false; })
       // logout
       .addCase(logout.fulfilled, (state) => {

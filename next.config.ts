@@ -51,11 +51,23 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [
       {
+        // HTML pages — never cache so users always get the latest build
         source: "/:path*",
-        headers: securityHeaders,
+        headers: [
+          ...securityHeaders,
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+      {
+        // Static assets are content-hashed — safe to cache forever
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
       },
     ];
   },

@@ -42,7 +42,7 @@ export default function QRCodePage() {
     setIsDownloading(true);
     try {
       const { generateQrPosterPdf } = await import("@/lib/pdf/qr-poster");
-      generateQrPosterPdf(company, canvas);
+      await generateQrPosterPdf(company, canvas);
       toast.success("QR poster downloaded");
     } catch {
       toast.error("Could not generate the PDF. Please try again.");

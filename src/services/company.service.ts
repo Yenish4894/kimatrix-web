@@ -56,12 +56,6 @@ export const companyService = {
     return data.data;
   },
 
-  // GET /api/company/customers/export — CSV blob
-  exportCustomers: async () => {
-    const res = await api.get("/company/customers/export", { responseType: "blob" });
-    return res.data as Blob;
-  },
-
   // GET /api/company/purchases
   getPurchases: async (params: PurchaseListParams = {}) => {
     const { data } = await api.get<{ data: PaginatedResponse<Purchase> }>(
@@ -77,9 +71,4 @@ export const companyService = {
     return data.data;
   },
 
-  // GET /api/company/purchases/export — CSV blob
-  exportPurchases: async () => {
-    const res = await api.get("/company/purchases/export", { responseType: "blob" });
-    return res.data as Blob;
-  },
 };

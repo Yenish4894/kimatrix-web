@@ -1,5 +1,5 @@
 # ════════════════════════════════════════════════════════════════════════════════
-# KIMatrix Web - Frontend .gitignore
+# KIMates Web - Frontend .gitignore
 # ════════════════════════════════════════════════════════════════════════════════
 # SECURITY CRITICAL: Never commit environment variables, API keys, or secrets
 # Review carefully before committing. When in doubt, exclude it.
@@ -246,11 +246,23 @@ temp/
 # MISC
 # ─────────────────────────────────────────────────────────────────────────────────
 *.local
-.claude/logs/
+.claude/
 .storybook/build/
 .docusaurus/
 .cache-loader/
 .stylelintcache
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# AI / DEV TOOLING (not production code)
+# ─────────────────────────────────────────────────────────────────────────────────
+CLAUDE.md
+AGENTS.md
+GIT_SETUP_SUMMARY.md
+UI_UX_DESIGN_SPEC.md
+SETUP.md
+verify-security.sh
+verify-security.ps1
+docs/
 
 # ─────────────────────────────────────────────────────────────────────────────────
 # OPTIONAL: Keep these if you want to track them

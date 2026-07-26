@@ -6,13 +6,26 @@ import { BRAND, PAGE, savePdf } from "./branding";
 import { formatAddress } from "@/lib/utils";
 import type { Company } from "@/types";
 
+// Load a same-origin image as an HTMLImageElement (jsPDF.addImage accepts it).
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("image load failed"));
+    img.src = src;
+  });
+}
+
 /**
  * Generate a printable QR poster.
  * @param company   The company profile (name, address, qrUrl, businessType)
  * @param qrCanvas  An HTMLCanvasElement that already has the QR rendered on it
  *                  (typically the canvas from <QRCodeCanvas ref=... />)
  */
-export function generateQrPosterPdf(company: Company, qrCanvas: HTMLCanvasElement) {
+export async function generateQrPosterPdf(
+  company: Company,
+  qrCanvas: HTMLCanvasElement,
+): Promise<void> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const { width, height, margin } = PAGE;
 
@@ -25,10 +38,18 @@ export function generateQrPosterPdf(company: Company, qrCanvas: HTMLCanvasElemen
   doc.setFillColor(...BRAND.primary);
   doc.rect(margin / 2, margin / 2, width - margin, 18, "F");
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("KIMATES", width / 2, margin / 2 + 12, { align: "center" });
+  // White KIMates logo centered on the teal strip (falls back to text if it can't load)
+  const logo = await loadImage("/brand/kimates-logo-white.png").catch(() => null);
+  if (logo && logo.naturalHeight > 0) {
+    const logoH = 10; // mm
+    const logoW = logoH * (logo.naturalWidth / logo.naturalHeight);
+    doc.addImage(logo, "PNG", (width - logoW) / 2, margin / 2 + (18 - logoH) / 2, logoW, logoH);
+  } else {
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("KIMATES", width / 2, margin / 2 + 12, { align: "center" });
+  }
 
   // ─── Headline ──────────────────────────────────────────────
   let y = margin + 18;

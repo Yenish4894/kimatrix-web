@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Check, CreditCard, Loader2, RefreshCw } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button, Input, Select, Checkbox } from "@/components/ui";
 import { CountrySelect, StateSelect, CityInput } from "@/components/ui/country-state-select";
 import { PhoneInput, validatePhoneForCountry } from "@/components/ui/phone-input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { registerCompany } from "@/store/slices/authSlice";
+import { paymentService } from "@/services/payment.service";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
+import { cn } from "@/lib/utils";
 import { toast } from "react-toastify";
-import type { BusinessType } from "@/types";
+import type { BusinessType, SubscriptionPlan } from "@/types";
 import Joi from "joi";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
@@ -69,10 +72,11 @@ const schema = Joi.object({
     "string.empty": "Login email is required",
     "string.email": "Enter a valid email address",
   }),
-  password: Joi.string().min(8).max(128).pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).required().messages({
+  password: Joi.string().min(8).max(18).pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/).required().messages({
     "string.empty": "Password is required",
     "string.min": "Password must be at least 8 characters",
-    "string.pattern.base": "Must include lowercase, uppercase, and number",
+    "string.max": "Password must be at most 18 characters",
+    "string.pattern.base": "Must include lowercase, uppercase, number, and special character",
   }),
   confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
     "string.empty": "Please confirm your password",
@@ -108,9 +112,30 @@ const initialForm = {
 export default function RegisterPage() {
   const [form, setForm] = useState<typeof initialForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [pendingResult, setPendingResult] = useState<{ companyName: string; message: string } | null>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { isLoading } = useAppSelector((state) => state.auth);
+
+  // Plans endpoint is public — fetch directly so the picker is available
+  // before the user has any session.
+  const loadPlans = () => {
+    setPlansLoading(true);
+    setPlansError(false);
+    paymentService
+      .getPlans()
+      .then((data) => setPlans(data))
+      .catch(() => setPlansError(true))
+      .finally(() => setPlansLoading(false));
+  };
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
 
   const validate = () => {
     const { error } = schema.validate(form, { abortEarly: false });
@@ -124,11 +149,46 @@ export default function RegisterPage() {
     return false;
   };
 
+  // Validate a single field on blur using the full schema so cross-field refs
+  // (e.g. confirmPassword vs password) resolve correctly.
+  const validateField = (name: string) => {
+    const { error } = schema.validate(form, { abortEarly: false });
+    const fieldError = error?.details.find((d) => d.path[0] === name);
+    setErrors((prev) => ({ ...prev, [name]: fieldError?.message ?? "" }));
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    validateField(e.target.name);
+  };
+
+  const handlePhoneBlur = (name: "contactPhone" | "whatsappNumber") => {
+    const { error } = schema.validate(form, { abortEarly: false });
+    const joiErr = error?.details.find((d) => d.path[0] === name);
+    if (joiErr) {
+      setErrors((prev) => ({ ...prev, [name]: joiErr.message }));
+      return;
+    }
+    const value = form[name];
+    if (value) {
+      const label = name === "contactPhone" ? "Contact phone" : "WhatsApp number";
+      const phoneErr = validatePhoneForCountry(value, form.country, {
+        required: name === "contactPhone",
+        label,
+      });
+      setErrors((prev) => ({ ...prev, [name]: phoneErr ?? "" }));
+    }
+  };
+
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     // Defensive guard against double-submit on slow connections / Suspense
-    if (isLoading) return;
+    if (isLoading || isProcessing) return;
     if (!validate()) return;
+
+    if (!selectedPlanId) {
+      setErrors((prev) => ({ ...prev, plan: "Please choose a plan to continue." }));
+      return;
+    }
 
     // Country-specific phone validation (libphonenumber-js)
     // Joi already enforced E.164 shape; this checks length + country-specific rules.
@@ -147,26 +207,38 @@ export default function RegisterPage() {
       return;
     }
 
+    setIsProcessing(true);
+
+    // Step 1 — create the account. This also establishes a session (auto-login)
+    // so we can start the payment immediately.
     try {
-      const result = await dispatch(
+      await dispatch(
         registerCompany({ ...form, businessType: form.businessType as BusinessType })
       ).unwrap();
-      // Account is in PENDING state. No tokens issued. Show pending screen.
-      setPendingResult({
-        companyName: result.company.name,
-        message: result.message ?? "Thank you for registering. Once your payment is verified, your account will be activated and you'll be able to log in.",
-      });
     } catch (err) {
+      setIsProcessing(false);
       const parsed = parseApiError(err);
       if (parsed.details?.length) {
         setErrors(fieldErrorsFromDetails(parsed.details));
         toast.error(parsed.message);
-      } else if (parsed.message.toLowerCase().includes("password") && parsed.message.toLowerCase().includes("breach")) {
-        setErrors({ password: "This password has appeared in a known data breach. Choose another." });
-        toast.error("Password is not secure. Please choose another.");
       } else {
         toast.error(errorMessageWithId(parsed));
       }
+      return;
+    }
+
+    // Step 2 — start the PayPal order for the chosen plan and redirect out.
+    // The account now exists (pending); if this fails or the user abandons
+    // PayPal, they remain logged in and can finish paying from /company/billing.
+    try {
+      const { approvalUrl } = await paymentService.createOrder(selectedPlanId);
+      globalThis.location.href = approvalUrl; // hard redirect to PayPal (external URL)
+    } catch {
+      setIsProcessing(false);
+      toast.error(
+        "Your account was created, but we couldn't start the payment. You can complete it from the billing page."
+      );
+      router.replace("/company/billing");
     }
   };
 
@@ -177,67 +249,21 @@ export default function RegisterPage() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Pending activation success screen — shown after successful registration.
-  // No tokens are issued; user must wait for super admin to activate the account.
-  if (pendingResult) {
-    return (
-      <AuthLayout
-        title="Application received"
-        subtitle="Your account is awaiting activation"
-      >
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-success-100 bg-success-50/60 p-5">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-full bg-success-100 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-success-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-success-800">
-                  {pendingResult.companyName} registered successfully
-                </p>
-                <p className="text-sm text-success-700/90 mt-1 leading-relaxed">
-                  {pendingResult.message}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-primary-100 bg-primary-50/70 p-4">
-            <div className="flex items-start gap-3">
-              <Clock className="h-4 w-4 text-primary-600 mt-0.5 shrink-0" />
-              <div className="text-xs text-primary-800 leading-relaxed">
-                <p className="font-semibold mb-1">What happens next?</p>
-                <ol className="list-decimal list-inside space-y-0.5 text-primary-700/90">
-                  <li>Log in with your credentials below.</li>
-                  <li>Choose a subscription plan and pay via PayPal.</li>
-                  <li>Your account activates instantly — no waiting.</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-
-          <Link href="/login" className="block">
-            <Button fullWidth>Log In &amp; Subscribe</Button>
-          </Link>
-        </div>
-      </AuthLayout>
-    );
-  }
-
   return (
     <AuthLayout title="Create Account" subtitle="Register your business to get started">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h3>
           <div className="space-y-4">
-            <Input label="Company Name" name="name" placeholder="e.g. Sahel Fuel Co." value={form.name} onChange={handleChange} error={errors.name} />
+            <Input label="Company Name" name="name" placeholder="e.g. Sahel Fuel Co." value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="Company Registration Number" name="registrationNumber" placeholder="e.g. RC-12345" value={form.registrationNumber} onChange={handleChange} error={errors.registrationNumber} />
+              <Input label="Company Registration Number" name="registrationNumber" placeholder="e.g. RC-12345" value={form.registrationNumber} onChange={handleChange} onBlur={handleBlur} error={errors.registrationNumber} />
               <Select
                 label="Business Type"
                 name="businessType"
                 value={form.businessType}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 error={errors.businessType}
                 placeholder="Select type"
                 options={[
@@ -289,7 +315,7 @@ export default function RegisterPage() {
                 error={errors.state}
               />
             </div>
-            <Input label="Street Address" name="streetAddress" placeholder="Street and number" value={form.streetAddress} onChange={handleChange} error={errors.streetAddress} />
+            <Input label="Street Address" name="streetAddress" placeholder="Street and number" value={form.streetAddress} onChange={handleChange} onBlur={handleBlur} error={errors.streetAddress} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <CityInput
                 country={form.country}
@@ -298,7 +324,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 error={errors.city}
               />
-              <Input label="Postal Code" name="postalCode" placeholder="Optional" value={form.postalCode} onChange={handleChange} error={errors.postalCode} helperText="Leave blank if not used" />
+              <Input label="Postal Code" name="postalCode" placeholder="Optional" value={form.postalCode} onChange={handleChange} onBlur={handleBlur} error={errors.postalCode} helperText="Leave blank if not used" />
             </div>
           </div>
         </div>
@@ -306,7 +332,7 @@ export default function RegisterPage() {
         <div>
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Contact Information</h3>
           <div className="space-y-4">
-            <Input label="Contact Email" name="contactEmail" type="email" placeholder="contact@company.com" value={form.contactEmail} onChange={handleChange} error={errors.contactEmail} helperText="Public contact email" />
+            <Input label="Contact Email" name="contactEmail" type="email" placeholder="contact@company.com" value={form.contactEmail} onChange={handleChange} onBlur={handleBlur} error={errors.contactEmail} helperText="Public contact email" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <PhoneInput
                 label="Contact Phone"
@@ -317,6 +343,7 @@ export default function RegisterPage() {
                   setForm((prev) => ({ ...prev, contactPhone: v }));
                   if (errors.contactPhone) setErrors((prev) => ({ ...prev, contactPhone: "" }));
                 }}
+                onBlur={() => handlePhoneBlur("contactPhone")}
                 error={errors.contactPhone}
                 placeholder="Local number"
               />
@@ -329,6 +356,7 @@ export default function RegisterPage() {
                   setForm((prev) => ({ ...prev, whatsappNumber: v }));
                   if (errors.whatsappNumber) setErrors((prev) => ({ ...prev, whatsappNumber: "" }));
                 }}
+                onBlur={() => handlePhoneBlur("whatsappNumber")}
                 error={errors.whatsappNumber}
                 placeholder="Optional"
                 helperText="Optional"
@@ -340,13 +368,77 @@ export default function RegisterPage() {
         <div>
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Account Setup</h3>
           <div className="space-y-4">
-            <Input label="Login Email" name="email" type="email" placeholder="admin@company.com" value={form.email} onChange={handleChange} error={errors.email} helperText="Private email for logging in" />
-            <Input label="Username" name="username" placeholder="Choose a unique username" value={form.username} onChange={handleChange} error={errors.username} helperText="Letters, numbers, dots, dashes, underscores only" />
+            <Input label="Login Email" name="email" type="email" placeholder="admin@company.com" value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} helperText="Private email for logging in" />
+            <Input label="Username" name="username" placeholder="Choose a unique username" value={form.username} onChange={handleChange} onBlur={handleBlur} error={errors.username} helperText="Letters, numbers, dots, dashes, underscores only" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="Password" name="password" type="password" placeholder="8+ chars, upper, lower, digit" value={form.password} onChange={handleChange} error={errors.password} />
-              <Input label="Confirm Password" name="confirmPassword" type="password" placeholder="Re-enter password" value={form.confirmPassword} onChange={handleChange} error={errors.confirmPassword} />
+              <Input label="Password" name="password" type="password" placeholder="8–18 chars, upper, lower, number, special" value={form.password} onChange={handleChange} onBlur={handleBlur} error={errors.password} />
+              <Input label="Confirm Password" name="confirmPassword" type="password" placeholder="Re-enter password" value={form.confirmPassword} onChange={handleChange} onBlur={handleBlur} error={errors.confirmPassword} />
             </div>
           </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Choose Your Plan</h3>
+          {plansLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 text-primary-400 animate-spin" />
+            </div>
+          ) : plansError ? (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <AlertCircle className="h-7 w-7 text-error-400" />
+              <p className="text-sm text-slate-500">Could not load plans. Check your connection and try again.</p>
+              <button
+                type="button"
+                onClick={loadPlans}
+                className="inline-flex items-center gap-2 text-sm text-primary-600 hover:underline"
+              >
+                <RefreshCw className="h-4 w-4" /> Retry
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {plans.map((plan) => {
+                const selected = selectedPlanId === plan.id;
+                return (
+                  <button
+                    type="button"
+                    key={plan.id}
+                    onClick={() => {
+                      setSelectedPlanId(plan.id);
+                      if (errors.plan) setErrors((prev) => ({ ...prev, plan: "" }));
+                    }}
+                    className={cn(
+                      "relative text-left rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-sm focus:outline-none",
+                      selected
+                        ? "border-primary-500 bg-primary-50/50 shadow-[0_0_0_3px_rgba(8,145,178,0.12)]"
+                        : "border-slate-200 bg-white hover:border-primary-200"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{plan.name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{plan.durationDays} days</p>
+                      </div>
+                      {selected && (
+                        <span className="h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
+                          <Check className="h-3 w-3 text-white" />
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-lg font-extrabold text-slate-900 mt-2">
+                      {plan.currency} {Number.parseFloat(plan.price).toFixed(2)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {errors.plan && (
+            <p className="mt-2 text-[13px] text-error-500" role="alert">{errors.plan}</p>
+          )}
+          <p className="text-xs text-slate-400 mt-3">
+            You&apos;ll be securely redirected to PayPal to complete payment right after registering.
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -367,8 +459,9 @@ export default function RegisterPage() {
           />
         </div>
 
-        <Button type="submit" fullWidth isLoading={isLoading}>
-          Register
+        <Button type="submit" fullWidth isLoading={isLoading || isProcessing} disabled={plansLoading}>
+          <CreditCard className="h-4 w-4 mr-2" />
+          {isProcessing ? "Processing…" : "Register & Pay"}
         </Button>
 
         <p className="text-center text-sm text-slate-500">

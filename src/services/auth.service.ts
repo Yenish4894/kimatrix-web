@@ -16,16 +16,21 @@ interface LoginResponse {
   tokens: AuthTokens;
 }
 
-// Registration no longer returns tokens — company is created in pending state
-// and login is blocked until super admin activates it.
+// Registration now auto-logs the user in (issues a session) so the subscription
+// payment can begin immediately in the same flow. The company is still created
+// in the pending state (companyIsActive=false) until payment is captured.
 interface RegisterCompanyResponse {
   user: AuthUser;
   company: Company;
+  companyId?: string;
+  companyIsActive?: boolean;
+  tokens: AuthTokens;
 }
 
 export const authService = {
   // POST /api/auth/register/company
-  // Creates the company in PENDING state. No tokens issued.
+  // Creates the company (pending) and returns a session (tokens) so the caller
+  // can immediately start the subscription payment.
   registerCompany: async (
     payload: Omit<RegistrationFormData, "businessType"> & { businessType: BusinessType }
   ) => {

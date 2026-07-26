@@ -37,9 +37,8 @@ export default function GlobalError({
         }}
       >
         <div style={{ textAlign: "center", padding: "32px", maxWidth: "440px" }}>
-          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0F172A", margin: 0 }}>
-            <span style={{ color: "#0D9488" }}>KI</span>Mates
-          </h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/kimates-logo.png" alt="KIMates" style={{ height: "32px", width: "auto" }} />
           <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#0F172A", marginTop: "32px" }}>
             We hit a critical error
           </h2>

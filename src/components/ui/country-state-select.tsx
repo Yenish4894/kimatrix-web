@@ -2,8 +2,20 @@
 
 import { useMemo } from "react";
 import { City, Country, State, type ICountry, type IState } from "country-state-city";
-import { Select } from "./select";
+import { SearchableSelect } from "./searchable-select";
 import { Input } from "./input";
+
+/**
+ * Adapt the SearchableSelect's `(value: string)` callback to the
+ * `(event)` shape the parent forms already use, so the wrappers below remain
+ * drop-in replacements for the previous native <Select>.
+ */
+function toSelectEvent(
+  name: string,
+  value: string,
+): React.ChangeEvent<HTMLSelectElement> {
+  return { target: { name, value } } as React.ChangeEvent<HTMLSelectElement>;
+}
 
 // ─── Helpers (exported for use outside the components) ─────────
 
@@ -62,16 +74,17 @@ export function CountrySelect({
   );
 
   return (
-    <Select
+    <SearchableSelect
       label={label}
       name={name}
       value={value}
-      onChange={onChange}
+      onChange={(v) => onChange(toSelectEvent(name, v))}
       error={error}
       helperText={helperText}
       disabled={disabled}
       placeholder={placeholder}
       options={options}
+      emptyText="No matching country"
     />
   );
 }
@@ -121,16 +134,17 @@ export function StateSelect({
   else fallbackHelper = helperText;
 
   return (
-    <Select
+    <SearchableSelect
       label={label}
       name={name}
       value={value}
-      onChange={onChange}
+      onChange={(v) => onChange(toSelectEvent(name, v))}
       error={error}
       helperText={fallbackHelper}
       disabled={isDisabled}
       placeholder={placeholder}
       options={options}
+      emptyText="No matching region"
     />
   );
 }
@@ -177,15 +191,16 @@ export function CityInput({
   // African states fall back to text — package data is sparse there).
   if (cities.length > 0) {
     return (
-      <Select
+      <SearchableSelect
         label={label}
         name={name}
         value={value}
-        onChange={onChange}
+        onChange={(v) => onChange(toSelectEvent(name, v))}
         error={error}
         helperText={helperText}
         placeholder="Select city"
         options={cities.map((c) => ({ value: c.name, label: c.name }))}
+        emptyText="No matching city"
       />
     );
   }

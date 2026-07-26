@@ -90,9 +90,9 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
           <div className="relative z-10 flex flex-col gap-5 p-8 lg:p-10 pt-10 lg:pt-11 h-full">
 
             {/* Logo */}
-            <Link href="/" className="inline-flex items-baseline shrink-0">
-              <span className="text-lg font-bold font-heading text-white tracking-tight">KI</span>
-              <span className="text-lg font-bold font-heading text-accent-300 tracking-tight">Mates</span>
+            <Link href="/" className="shrink-0" aria-label="KIMates home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/kimates-logo-white.png" alt="KIMates" width={150} height={34} className="h-[34px] w-auto" />
             </Link>
 
             {/* Headline */}
@@ -212,9 +212,9 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
           <div className="w-full max-w-[340px] relative z-10">
 
             {/* Mobile logo */}
-            <div className="md:hidden mb-6 flex items-center gap-0.5">
-              <span className="text-xl font-bold font-heading text-primary-700 tracking-tight">KI</span>
-              <span className="text-xl font-bold font-heading text-slate-800 tracking-tight">Mates</span>
+            <div className="md:hidden mb-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/kimates-logo.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
             </div>
 
             {/* Form header */}

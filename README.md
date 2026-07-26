@@ -1,4 +1,4 @@
-# KIMatrix Web - Frontend
+# KIMates Web - Frontend
 
 > B2B SaaS QR-based customer purchase tracking platform for fuel stations and shops in Niger, West Africa
 
@@ -10,7 +10,7 @@
 
 ## 📋 Overview
 
-KIMatrix Web is the frontend application for the KIMatrix QR platform. Built with Next.js 15 (App Router), it provides a modern, responsive interface for managing fuel station purchases, tracking customer loyalty, and administering company operations across Niger, West Africa.
+KIMates Web is the frontend application for the KIMates QR platform. Built with Next.js 15 (App Router), it provides a modern, responsive interface for managing fuel station purchases, tracking customer loyalty, and administering company operations across Niger, West Africa.
 
 ## ✨ Features
 
@@ -141,15 +141,15 @@ frontend/
 ### Prerequisites
 
 - Node.js 20+ and npm/yarn
-- Backend API running (see [kimatrix-api](../backend))
+- Backend API running (see [kimates-api](../backend))
 - Git
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/KIMatrix/kimatrix-web.git
-   cd kimatrix-web
+   git clone https://github.com/KIMates/kimates-web.git
+   cd kimates-web
    ```
 
 2. **Install dependencies**
@@ -275,7 +275,7 @@ npm test -- --coverage
 
 3. **Set Environment Variables**
    ```
-   NEXT_PUBLIC_API_BASE_URL=https://api.kimatrix.com
+   NEXT_PUBLIC_API_BASE_URL=https://api.kimates.com
    ```
 
 ### Manual Deployment
@@ -319,16 +319,16 @@ This project is proprietary and confidential. All rights reserved.
 
 ## 👥 Team
 
-- **Development**: KIMatrix Team
-- **Design**: KIMatrix Team
-- **Product**: KIMatrix Team
+- **Development**: KIMates Team
+- **Design**: KIMates Team
+- **Product**: KIMates Team
 
 ## 📞 Support
 
 For issues or questions:
-- Email: support@kimatrix.com
-- GitHub Issues: [kimatrix-web/issues](https://github.com/KIMatrix/kimatrix-web/issues)
+- Email: support@kimates.com
+- GitHub Issues: [kimates-web/issues](https://github.com/KIMates/kimates-web/issues)
 
 ---
 
-Built with ❤️ by KIMatrix Team
+Built with ❤️ by KIMates Team

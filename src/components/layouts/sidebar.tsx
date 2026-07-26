@@ -118,13 +118,15 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
         {!collapsed && (
-          <Link href="/" className="text-xl font-bold font-heading tracking-tight">
-            <span className="text-primary-600">KI</span><span className="text-slate-800">Mates</span>
+          <Link href="/" className="shrink-0" aria-label="KIMates home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/kimates-logo.png" alt="KIMates" width={140} height={30} className="h-[30px] w-auto" />
           </Link>
         )}
         {collapsed && (
-          <Link href="/" className="text-xl font-bold font-heading text-primary-600 mx-auto">
-            K
+          <Link href="/" className="mx-auto shrink-0" aria-label="KIMates home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/kimates-icon.png" alt="KIMates" width={32} height={32} className="h-8 w-8" />
           </Link>
         )}
         <button

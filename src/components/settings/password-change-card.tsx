@@ -18,13 +18,14 @@ const schema = Joi.object({
   }),
   newPassword: Joi.string()
     .min(8)
-    .max(128)
-    .pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .max(18)
+    .pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
     .required()
     .messages({
       "string.empty": "Enter a new password",
       "string.min": "Password must be at least 8 characters",
-      "string.pattern.base": "Must include lowercase, uppercase, and a number",
+      "string.max": "Password must be at most 18 characters",
+      "string.pattern.base": "Must include lowercase, uppercase, number, and special character",
     }),
   confirmNewPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
     "any.only": "Passwords do not match",
@@ -79,9 +80,6 @@ export function PasswordChangeCard() {
       } else if (/current password/i.test(parsed.message)) {
         setErrors({ currentPassword: parsed.message });
         toast.error(parsed.message);
-      } else if (/breach/i.test(parsed.message)) {
-        setErrors({ newPassword: "This password has appeared in a known data breach. Choose another." });
-        toast.error("Password is not secure. Please choose another.");
       } else {
         toast.error(errorMessageWithId(parsed));
       }
@@ -116,7 +114,7 @@ export function PasswordChangeCard() {
             value={form.newPassword}
             onChange={handleChange}
             error={errors.newPassword}
-            helperText="8+ chars, lowercase, uppercase, and a digit"
+            helperText="8–18 chars, lowercase, uppercase, number, and special character"
             autoComplete="new-password"
           />
           <Input

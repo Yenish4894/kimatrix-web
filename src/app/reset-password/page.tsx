@@ -81,8 +81,6 @@ function ResetPasswordInner() {
       const parsed = parseApiError(err);
       if (parsed.status === 401) {
         setGeneralError("This reset link is invalid or has expired. Please request a new one.");
-      } else if (parsed.message.toLowerCase().includes("breach")) {
-        setErrors({ newPassword: "This password has appeared in a known data breach. Choose another." });
       } else {
         setGeneralError(errorMessageWithId(parsed));
       }

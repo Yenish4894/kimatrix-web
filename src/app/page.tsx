@@ -136,8 +136,9 @@ export default function HomePage() {
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="text-xl font-bold font-heading tracking-tight">
-              <span className="text-primary-600">KI</span><span className="text-slate-800">Mates</span>
+            <Link href="/" className="shrink-0" aria-label="KIMates home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/kimates-logo.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
             </Link>
 
             <div className="hidden lg:flex items-center gap-8">
@@ -458,9 +459,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
-              <span className="text-xl font-bold font-heading tracking-tight">
-                <span className="text-primary-400">KI</span><span className="text-white">Mates</span>
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/kimates-logo-white.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
               <p className="mt-3 text-sm text-slate-600">
                 QR-based customer purchase tracking for businesses in Niger.
               </p>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loadSession } from "@/store/slices/authSlice";
+import { loadSession, setCompanyIsActive } from "@/store/slices/authSlice";
 import { fetchCompanyProfile } from "@/store/slices/companySlice";
 import { PageLoader } from "@/components/ui/loader";
 
@@ -65,21 +65,18 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
       return;
     }
 
-    // Fast-path: if auth slice already tells us company is not active
-    // (freshly logged in, never subscribed), skip the profile fetch.
-    if (companyIsActive === false) {
-      router.replace("/company/billing");
-      return;
-    }
-
-    // Profile fetch failed — can't verify subscription. Redirect to billing
-    // as the safest fallback (user can subscribe or contact support).
+    // The REAL subscription state (from the profile) is the source of truth.
+    // We must NOT gate on the cached `companyIsActive` flag alone — it can be
+    // stale after activation (paid this session, activated via webhook/admin,
+    // or logged in before paying). Wait for the profile, then decide.
     if (profileFetchFailed) {
+      // Profile couldn't load — a still-pending company is blocked from
+      // /company/* by the backend, so this is the expected "not subscribed" path.
       router.replace("/company/billing");
       return;
     }
 
-    // Still waiting for profile
+    // Still waiting for the profile — keep showing the loader.
     if (isLoadingProfile || !profile) return;
 
     if (!isSubscriptionActive(profile.subscriptionExpiresAt)) {
@@ -87,6 +84,11 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
       return;
     }
 
+    // Active subscription confirmed — sync the cached flag if it drifted so the
+    // sidebar / plan-status widgets reflect reality.
+    if (companyIsActive !== true) {
+      dispatch(setCompanyIsActive(true));
+    }
     setGatePassed(true);
   }, [
     sessionChecked,
@@ -97,6 +99,7 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
     profileFetchFailed,
     pathname,
     router,
+    dispatch,
   ]);
 
   if (!sessionChecked || authLoading || !gatePassed) {

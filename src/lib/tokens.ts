@@ -1,7 +1,14 @@
 // Token storage. Backend uses Bearer tokens (not cookies), so we persist in
 // localStorage. Refresh rotation + theft detection on the backend limits damage
 // if a token is stolen via XSS. We have no dangerouslySetInnerHTML anywhere.
+//
+// In addition to localStorage we mirror a single NON-SENSITIVE cookie holding
+// the user's role. localStorage is invisible to the server, so the proxy
+// (src/proxy.ts) reads this cookie to redirect unauthenticated/wrong-role users
+// at the edge. It is NOT a security boundary — the backend Bearer-token check
+// is. It only saves an unauthenticated user from briefly loading a guarded page.
 
+import Cookies from "js-cookie";
 import type { AuthTokens, AuthUser } from "@/types";
 
 const KEYS = {
@@ -14,8 +21,21 @@ const KEYS = {
   COMPANY_IS_ACTIVE: "kimates.companyIsActive",
 } as const;
 
+// Edge-readable session hint (role only). Kept in sync with the stored user.
+export const SESSION_COOKIE = "kimates.session";
+
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
+}
+
+function writeSessionCookie(userType: string) {
+  if (!isBrowser()) return;
+  Cookies.set(SESSION_COOKIE, userType, {
+    expires: 7, // matches refresh-token lifetime
+    sameSite: "lax",
+    secure: window.location.protocol === "https:",
+    path: "/",
+  });
 }
 
 export const TokenStorage = {
@@ -65,6 +85,7 @@ export const TokenStorage = {
     } catch {
       /* ignore */
     }
+    writeSessionCookie(user.userType);
   },
 
   getUser(): AuthUser | null {
@@ -106,5 +127,6 @@ export const TokenStorage = {
   clear() {
     if (!isBrowser()) return;
     Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+    Cookies.remove(SESSION_COOKIE, { path: "/" });
   },
 };
