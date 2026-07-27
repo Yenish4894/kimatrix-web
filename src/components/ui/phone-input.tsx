@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useId } from "react";
 import { getCountryCallingCode, isValidPhoneNumber, type CountryCode } from "libphonenumber-js";
 import { cn } from "@/lib/utils";
 import { getCountryCode } from "./country-state-select";
@@ -62,7 +62,8 @@ export function PhoneInput({
     onChange(full);
   };
 
-  const inputId = label?.toLowerCase().replace(/\s+/g, "-") ?? name;
+  const reactId = useId();
+  const inputId = label ? `${reactId}-${label.toLowerCase().replace(/\s+/g, "-")}` : (name ?? reactId);
   const isDisabled = disabled || !dialCode;
 
   return (

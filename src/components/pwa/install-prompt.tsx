@@ -61,14 +61,15 @@ export function InstallPrompt() {
       aria-label="Install KIMates"
     >
       <button
+        type="button"
         onClick={handleDismiss}
         className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100"
         aria-label="Dismiss"
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4" aria-hidden="true" />
       </button>
       <div className="flex items-start gap-3">
-        <div className="h-10 w-10 rounded-xl bg-primary-100 flex items-center justify-center shrink-0">
+        <div className="h-10 w-10 rounded-xl bg-primary-100 flex items-center justify-center shrink-0" aria-hidden="true">
           <Download className="h-5 w-5 text-primary-600" />
         </div>
         <div className="flex-1 min-w-0 pr-4">
@@ -78,14 +79,16 @@ export function InstallPrompt() {
           </p>
           <div className="flex gap-2 mt-3">
             <button
+              type="button"
               onClick={handleInstall}
-              className="h-8 px-3 rounded-md bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium transition-colors"
+              className="h-8 px-3 rounded-md bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium transition-colors cursor-pointer"
             >
               Install
             </button>
             <button
+              type="button"
               onClick={handleDismiss}
-              className="h-8 px-3 rounded-md text-slate-500 hover:bg-slate-100 text-xs font-medium transition-colors"
+              className="h-8 px-3 rounded-md text-slate-500 hover:bg-slate-100 text-xs font-medium transition-colors cursor-pointer"
             >
               Not now
             </button>

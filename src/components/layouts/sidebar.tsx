@@ -130,14 +130,15 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           </Link>
         )}
         <button
+          type="button"
           onClick={() => { setCollapsed((prev) => { const next = !prev; onCollapsedChange?.(next); return next; }); }}
           className={cn(
-            "h-7 w-7 flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 transition-colors text-slate-400",
+            "h-9 w-9 flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 transition-colors text-slate-400",
             collapsed && "mx-auto mt-0"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" /> : <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />}
         </button>
       </div>
 
@@ -165,6 +166,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                           : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                       )}
                       title={collapsed ? item.label : undefined}
+                      aria-label={collapsed ? item.label : undefined}
                     >
                       {/* Active indicator bar */}
                       {isActive && !collapsed && (
@@ -173,7 +175,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                       <item.icon className={cn(
                         "h-[18px] w-[18px] shrink-0 transition-colors",
                         isActive ? "text-primary-600" : "text-slate-400 group-hover/nav:text-slate-600"
-                      )} />
+                      )} aria-hidden="true" />
                       {!collapsed && <span className="text-[13px]">{item.label}</span>}
                     </Link>
                   </li>
@@ -189,7 +191,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
         <div className="mx-3 mb-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary-500" />
+              <Shield className="h-4 w-4 text-primary-500" aria-hidden="true" />
               <span className="text-xs font-semibold text-slate-700">Plan Status</span>
             </div>
             <span className={cn(
@@ -204,7 +206,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           {subscriptionActive && daysLeft !== null && (
             <div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                <Clock className="h-3 w-3" />
+                <Clock className="h-3 w-3" aria-hidden="true" />
                 <span>{daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining</span>
               </div>
               {/* Progress bar */}
@@ -246,21 +248,25 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           )}
           {!collapsed && (
             <button
+              type="button"
               onClick={handleLogout}
               className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
               title="Logout"
+              aria-label="Logout"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
         </div>
         {collapsed && (
           <button
+            type="button"
             onClick={handleLogout}
             className="mt-2 h-8 w-8 mx-auto flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
             title="Logout"
+            aria-label="Logout"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>

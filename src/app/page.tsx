@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { paymentService } from "@/services/payment.service";
+import type { SubscriptionPlan } from "@/types";
 
 /* ─── Feature Carousel Data ──────────────────────── */
 const features = [
@@ -81,7 +83,7 @@ function FeatureCarousel() {
           {features.map((f) => (
             <div key={f.title} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] px-3">
               <div className="bg-white border border-slate-200 rounded-2xl p-6 h-full hover:shadow-md hover:border-slate-300 transition-all">
-                <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", f.color)}>
+                <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", f.color)} aria-hidden="true">
                   <f.icon className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-semibold font-heading text-slate-800">{f.title}</h3>
@@ -95,16 +97,18 @@ function FeatureCarousel() {
       {/* Controls */}
       <div className="flex items-center justify-center gap-4 mt-8">
         <button
+          type="button"
           onClick={scrollPrev}
           className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
           aria-label="Previous"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
 
         <div className="flex gap-2">
           {features.map((f, i) => (
             <button
+              type="button"
               key={f.title}
               onClick={() => emblaApi?.scrollTo(i)}
               className={cn(
@@ -112,16 +116,18 @@ function FeatureCarousel() {
                 selectedIndex === i ? "w-6 bg-primary-600" : "w-2 bg-slate-300"
               )}
               aria-label={`Go to slide ${i + 1}`}
+              aria-current={selectedIndex === i ? "true" : undefined}
             />
           ))}
         </div>
 
         <button
+          type="button"
           onClick={scrollNext}
           className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
           aria-label="Next"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -130,6 +136,19 @@ function FeatureCarousel() {
 
 /* ─── Homepage ───────────────────────────────────── */
 export default function HomePage() {
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+
+  useEffect(() => {
+    paymentService.getPlans()
+      .then(setPlans)
+      .catch(() => {})
+      .finally(() => setPlansLoading(false));
+  }, []);
+
+  const plan15 = plans.find((p) => p.durationDays === 15);
+  const plan30 = plans.find((p) => p.durationDays === 30);
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Navigation */}
@@ -149,7 +168,7 @@ export default function HomePage() {
                 <Button variant="ghost" size="sm">Login</Button>
               </Link>
               <Link href="/register">
-                <Button variant="primary" size="sm">Get Started <ArrowRight className="h-4 w-4" /></Button>
+                <Button variant="primary" size="sm">Get Started <ArrowRight className="h-4 w-4" aria-hidden="true" /></Button>
               </Link>
             </div>
 
@@ -161,6 +180,7 @@ export default function HomePage() {
         </div>
       </nav>
 
+      <main>
       {/* Hero — Clean, light, product-focused */}
       <section className="pt-16 sm:pt-24 pb-20 sm:pb-28 relative overflow-hidden">
         {/* Subtle background accents */}
@@ -173,7 +193,7 @@ export default function HomePage() {
               <span className="text-sm text-primary-700 font-medium">Now available in Niger</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading text-slate-900 leading-[1.1] tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-slate-900 leading-[1.1] tracking-tight">
               Track every purchase{" "}
               <span className="text-primary-800">with one QR code</span>
             </h1>
@@ -182,35 +202,15 @@ export default function HomePage() {
               The simplest way for fuel stations and shops to collect customer purchase data. Subscribe, get your QR code, start tracking.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-10 flex items-center justify-center">
               <Link href="/register">
                 <Button size="lg" className="min-w-[200px] h-12 text-base">
-                  Start Free Trial <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/qr/demo">
-                <Button variant="secondary" size="lg" className="min-w-[200px] h-12 text-base">
-                  Try Demo Form
+                  Get Started <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="mt-16 flex items-center justify-center">
-            <div className="flex items-center divide-x divide-slate-200 bg-slate-50 rounded-2xl border border-slate-100 px-2 py-4">
-              {[
-                { value: "500+", label: "Businesses" },
-                { value: "2,000+", label: "Customers tracked" },
-                { value: "99.9%", label: "Uptime" },
-              ].map((stat) => (
-                <div key={stat.label} className="px-6 sm:px-10 text-center">
-                  <p className="text-2xl sm:text-3xl font-bold font-heading text-slate-900">{stat.value}</p>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Product preview mockup */}
           <div className="mt-16 max-w-4xl mx-auto">
@@ -247,7 +247,7 @@ export default function HomePage() {
                   <div className="grid grid-cols-3 gap-3">
                     <div className="col-span-1 bg-white rounded-lg p-4 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="h-20 w-20 bg-primary-50 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <div className="h-20 w-20 bg-primary-50 rounded-lg mx-auto mb-2 flex items-center justify-center" aria-hidden="true">
                           <QrCode className="h-10 w-10 text-primary-600" />
                         </div>
                         <p className="text-[10px] text-slate-500">Your QR Code</p>
@@ -318,7 +318,7 @@ export default function HomePage() {
                 )}
                 <div className="relative z-10">
                   <span className="text-xs font-bold text-primary-600 tracking-widest">{item.step}</span>
-                  <div className="mx-auto h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mt-3 mb-5 shadow-lg shadow-primary-600/20">
+                  <div className="mx-auto h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mt-3 mb-5 shadow-lg shadow-primary-600/20" aria-hidden="true">
                     <item.icon className="h-7 w-7 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold font-heading text-slate-800">{item.title}</h3>
@@ -340,7 +340,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <div className="bg-white border border-slate-200 rounded-2xl p-8 hover:shadow-lg hover:border-accent-200 transition-all group">
-              <div className="h-14 w-14 rounded-2xl bg-accent-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <div className="h-14 w-14 rounded-2xl bg-accent-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <Fuel className="h-7 w-7 text-accent-600" />
               </div>
               <h3 className="text-xl font-semibold font-heading text-slate-800">Fuel Station</h3>
@@ -350,7 +350,7 @@ export default function HomePage() {
               <ul className="mt-4 space-y-2">
                 {["Vehicle reg. tracking", "Fuel amount logging", "Customer rankings"].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
-                    <CheckCircle className="h-4 w-4 text-accent-500 shrink-0" />
+                    <CheckCircle className="h-4 w-4 text-accent-500 shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
@@ -358,7 +358,7 @@ export default function HomePage() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-8 hover:shadow-lg hover:border-primary-200 transition-all group">
-              <div className="h-14 w-14 rounded-2xl bg-primary-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <div className="h-14 w-14 rounded-2xl bg-primary-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <Store className="h-7 w-7 text-primary-600" />
               </div>
               <h3 className="text-xl font-semibold font-heading text-slate-800">Shop</h3>
@@ -368,7 +368,7 @@ export default function HomePage() {
               <ul className="mt-4 space-y-2">
                 {["Invoice tracking", "Spend accumulation", "Top 10 leaderboard"].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
-                    <CheckCircle className="h-4 w-4 text-primary-500 shrink-0" />
+                    <CheckCircle className="h-4 w-4 text-primary-500 shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
@@ -392,13 +392,19 @@ export default function HomePage() {
               <h3 className="text-xl font-semibold font-heading text-slate-800">15-Day Plan</h3>
               <p className="text-slate-500 mt-1 text-sm">Perfect for trying out</p>
               <div className="mt-6 mb-8">
-                <span className="text-5xl font-bold font-heading text-slate-900">$XX</span>
+                {plansLoading ? (
+                  <span className="inline-block h-12 w-28 rounded-lg bg-slate-100 animate-pulse align-middle" />
+                ) : (
+                  <span className="text-5xl font-bold font-heading text-slate-900">
+                    ${plan15 ? Number.parseFloat(plan15.price).toFixed(2) : "—"}
+                  </span>
+                )}
                 <span className="text-slate-400 ml-1 text-sm">/ 15 days</span>
               </div>
               <ul className="space-y-3 mb-8">
                 {["Unique QR Code", "Customer Dashboard", "PDF Reports", "Email Support"].map((f) => (
                   <li key={f} className="flex items-center gap-3 text-sm text-slate-600">
-                    <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                    <CheckCircle className="h-4 w-4 text-success-500 shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
@@ -417,13 +423,19 @@ export default function HomePage() {
               <h3 className="text-xl font-semibold font-heading">30-Day Plan</h3>
               <p className="text-primary-200 mt-1 text-sm">Best value for growing businesses</p>
               <div className="mt-6 mb-8">
-                <span className="text-5xl font-bold font-heading">$XX</span>
+                {plansLoading ? (
+                  <span className="inline-block h-12 w-28 rounded-lg bg-white/20 animate-pulse align-middle" />
+                ) : (
+                  <span className="text-5xl font-bold font-heading">
+                    ${plan30 ? Number.parseFloat(plan30.price).toFixed(2) : "—"}
+                  </span>
+                )}
                 <span className="text-primary-200 ml-1 text-sm">/ 30 days</span>
               </div>
               <ul className="space-y-3 mb-8">
                 {["Everything in 15-day", "Extended tracking", "Priority support", "Customer rankings"].map((f) => (
                   <li key={f} className="flex items-center gap-3 text-sm text-primary-100">
-                    <CheckCircle className="h-4 w-4 text-accent-400 shrink-0" />
+                    <CheckCircle className="h-4 w-4 text-accent-400 shrink-0" aria-hidden="true" />
                     {f}
                   </li>
                 ))}
@@ -436,7 +448,46 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* FAQ */}
+      <section className="py-16 sm:py-24 bg-slate-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">FAQ</p>
+            <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Common questions</h2>
+          </div>
+          <div className="space-y-4">
+            {[
+              {
+                q: "How long does setup take?",
+                a: "Less than 5 minutes. Register your business, pay, and your unique QR code is ready to print and display immediately.",
+              },
+              {
+                q: "Do my customers need to download an app?",
+                a: "No. Customers scan your QR code with any smartphone camera and fill in a simple form in their browser. No app, no account, no friction.",
+              },
+              {
+                q: "What happens when my plan expires?",
+                a: "Your account is paused and no new purchases can be submitted. Your existing data is preserved. You can renew at any time from the billing page.",
+              },
+              {
+                q: "What types of businesses can use KIMates?",
+                a: "Currently fuel stations and shops. Each type has its own tailored purchase form — fuel stations include a vehicle registration field.",
+              },
+              {
+                q: "Is my customer data secure?",
+                a: "Yes. All data is transmitted over HTTPS and stored securely. Only you can access your business dashboard.",
+              },
+            ].map(({ q, a }) => (
+              <div key={q} className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+                <h3 className="text-base font-semibold text-slate-800 mb-2">{q}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA — last section before footer */}
       <section className="py-20 bg-slate-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.12),transparent_60%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
@@ -444,15 +495,17 @@ export default function HomePage() {
             Ready to start tracking?
           </h2>
           <p className="text-slate-400 mt-4 max-w-md mx-auto">
-            Join hundreds of businesses in Niger already using KIMates.
+            The simplest way for fuel stations and shops in Niger to track customer purchases.
           </p>
           <Link href="/register" className="mt-8 inline-block">
             <Button variant="accent" size="lg" className="h-12 text-base">
-              Register Now <ArrowRight className="h-5 w-5" />
+              Register Now <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </Button>
           </Link>
         </div>
       </section>
+
+      </main>
 
       {/* Footer */}
       <footer className="bg-slate-950 text-slate-400 py-12">

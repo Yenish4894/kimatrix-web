@@ -16,7 +16,7 @@ const inter = Inter({
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
   subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -67,7 +67,7 @@ export default function RootLayout({
           <ServiceWorkerRegister />
           <InstallPrompt />
           <ToastContainer
-            position="top-right"
+            position="top-center"
             autoClose={5000}
             hideProgressBar={false}
             closeOnClick

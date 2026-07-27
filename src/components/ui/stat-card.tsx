@@ -57,6 +57,7 @@ export function StatCard({
             "h-11 w-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105",
             orbStyles[variant]
           )}
+          aria-hidden="true"
         >
           <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
         </div>
@@ -70,9 +71,9 @@ export function StatCard({
             )}
           >
             {trend.positive ? (
-              <TrendingUp className="h-3 w-3" strokeWidth={2.5} />
+              <TrendingUp className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
             ) : (
-              <TrendingDown className="h-3 w-3" strokeWidth={2.5} />
+              <TrendingDown className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
             )}
             {trend.value}
           </span>

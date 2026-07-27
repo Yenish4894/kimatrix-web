@@ -20,7 +20,6 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   useEffect(() => {
-    // TODO when Sentry is wired: Sentry.captureException(error)
     if (process.env.NODE_ENV !== "production") {
       // eslint-disable-next-line no-console
       console.error("[route error]", error);

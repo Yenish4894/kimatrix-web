@@ -32,8 +32,13 @@ export default function AdminCompaniesPage() {
   useEffect(() => {
     if (!actionMenuId) return;
     const close = () => setActionMenuId(null);
+    const closeOnEscape = (e: KeyboardEvent) => { if (e.key === "Escape") setActionMenuId(null); };
     document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("click", close);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [actionMenuId]);
 
   const companiesQ = useQuery({
@@ -153,13 +158,14 @@ export default function AdminCompaniesPage() {
                   <Eye className="h-4 w-4" aria-hidden="true" /> View Details
                 </Link>
                 <button
+                  role="menuitem"
                   className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
                   onClick={() => {
                     setActionMenuId(null);
                     setConfirmModal({ company: row, action: toggleAction });
                   }}
                 >
-                  <Power className="h-4 w-4" />
+                  <Power className="h-4 w-4" aria-hidden="true" />
                   <span className={toggleAction === "deactivate" ? "text-error-500" : "text-success-500"}>
                     {toggleLabel}
                   </span>
@@ -176,7 +182,7 @@ export default function AdminCompaniesPage() {
     <DashboardShell title="Companies" requiredRole="super_admin">
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 mb-5">
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
           <Input
             placeholder="Search companies..."
             className="pl-10"
@@ -262,7 +268,7 @@ export default function AdminCompaniesPage() {
           </p>
           {confirmModal.action === "deactivate" && (
             <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">
-              ⚠ The owner will be signed out of all devices immediately and cannot log in until reactivated.
+              <span aria-hidden="true">⚠</span>{" "}The owner will be signed out of all devices immediately and cannot log in until reactivated.
             </p>
           )}
         </Modal>

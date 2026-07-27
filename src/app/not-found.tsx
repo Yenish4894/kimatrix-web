@@ -13,7 +13,7 @@ export default function NotFound() {
         </p>
         <Link href="/" className="inline-block mt-8">
           <Button>
-            <Home className="h-4 w-4" /> Back to Home
+            <Home className="h-4 w-4" aria-hidden="true" /> Back to Home
           </Button>
         </Link>
       </div>

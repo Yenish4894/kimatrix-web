@@ -155,7 +155,7 @@ export function SearchableSelect({
             "disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed",
           )}
         />
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" aria-hidden="true" />
 
         {open && (
           <ul
@@ -189,7 +189,7 @@ export function SearchableSelect({
                     )}
                   >
                     <span className="truncate">{option.label}</span>
-                    {isSelected && <Check className="h-4 w-4 text-primary-500 shrink-0" />}
+                    {isSelected && <Check className="h-4 w-4 text-primary-500 shrink-0" aria-hidden="true" />}
                   </li>
                 );
               })

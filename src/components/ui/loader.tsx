@@ -15,8 +15,8 @@ const sizeClasses = {
 
 export function Loader({ className, size = "md", text }: LoaderProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-3", className)}>
-      <Loader2 className={cn("animate-spin text-primary-600", sizeClasses[size])} />
+    <div role={text ? "status" : undefined} className={cn("flex flex-col items-center justify-center gap-3", className)}>
+      <Loader2 className={cn("animate-spin text-primary-600", sizeClasses[size])} aria-hidden="true" />
       {text && <p className="text-sm text-slate-500">{text}</p>}
     </div>
   );

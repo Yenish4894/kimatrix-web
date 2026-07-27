@@ -73,12 +73,13 @@ export default function QRCodePage() {
                     size={660}
                     level="H"
                     bgColor="#ffffff"
-                    fgColor="#0F766E"
+                    fgColor="#0891B2"
                     style={{ width: 220, height: 220 }}
                   />
                 ) : (
-                  <div className="h-[220px] w-[220px] flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 text-primary-600 animate-spin" />
+                  <div className="h-[220px] w-[220px] flex items-center justify-center" role="status">
+                    <Loader2 className="h-6 w-6 text-primary-600 animate-spin" aria-hidden="true" />
+                    <span className="sr-only">Loading QR code…</span>
                   </div>
                 )}
               </div>
@@ -95,11 +96,12 @@ export default function QRCodePage() {
                   {company.qrUrl}
                 </span>
                 <button
+                  type="button"
                   onClick={copyUrl}
-                  className="shrink-0 h-7 w-7 flex items-center justify-center rounded-md hover:bg-slate-200 text-slate-500 transition-colors"
+                  className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
                   aria-label="Copy URL"
                 >
-                  {copied ? <Check className="h-4 w-4 text-success-500" /> : <Copy className="h-4 w-4" />}
+                  {copied ? <Check className="h-4 w-4 text-success-500" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
                 </button>
               </div>
             )}
@@ -112,7 +114,7 @@ export default function QRCodePage() {
                 isLoading={isDownloading}
                 disabled={!company || isDownloading}
               >
-                <Download className="h-5 w-5" /> Download Poster (PDF)
+                <Download className="h-5 w-5" aria-hidden="true" /> Download Poster (PDF)
               </Button>
             </div>
             <p className="text-xs text-slate-400 mt-3 max-w-xs mx-auto">

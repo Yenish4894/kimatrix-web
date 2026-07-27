@@ -124,7 +124,7 @@ function PreviewTable({ rows, ranked }: { rows: CustomerRow[]; ranked: boolean }
   if (rows.length === 0) {
     return (
       <div className="text-center py-10 text-slate-400">
-        <Users className="h-10 w-10 mx-auto mb-3 opacity-25" />
+        <Users className="h-10 w-10 mx-auto mb-3 opacity-25" aria-hidden="true" />
         <p className="text-sm">No data available.</p>
       </div>
     );
@@ -145,7 +145,7 @@ function PreviewTable({ rows, ranked }: { rows: CustomerRow[]; ranked: boolean }
           {rows.map((row, i) => (
             <tr key={row.customerId} className={`border-b border-slate-100 last:border-0 ${ranked && i < 3 ? "bg-primary-50/40" : ""}`}>
               <td className="py-3 px-3 text-base text-center">
-                {ranked && i === 0 ? "🥇" : ranked && i === 1 ? "🥈" : ranked && i === 2 ? "🥉" : (
+                {ranked && i === 0 ? <span aria-hidden="true">🥇</span> : ranked && i === 1 ? <span aria-hidden="true">🥈</span> : ranked && i === 2 ? <span aria-hidden="true">🥉</span> : (
                   <span className="text-sm text-slate-400 font-mono">{i + 1}</span>
                 )}
               </td>
@@ -246,7 +246,7 @@ export default function ReportsPage() {
         <section className="space-y-4">
           <div>
             <h2 className="text-base font-heading font-semibold text-slate-800 flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-accent-500" />
+              <Trophy className="h-4 w-4 text-accent-500" aria-hidden="true" />
               Top 10 Customers — Monthly
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -278,7 +278,7 @@ export default function ReportsPage() {
                   </select>
                 </div>
                 <Button onClick={handleGenerateTop10} isLoading={isGeneratingTop10}>
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                   Generate
                 </Button>
               </div>
@@ -308,7 +308,7 @@ export default function ReportsPage() {
                       generateTop10Pdf(top10Report, top10Label, companyName);
                     }}
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     Download PDF
                   </Button>
                 </div>
@@ -322,7 +322,7 @@ export default function ReportsPage() {
         <section className="space-y-4">
           <div>
             <h2 className="text-base font-heading font-semibold text-slate-800 flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary-600" />
+              <Users className="h-4 w-4 text-primary-600" aria-hidden="true" />
               All Customers — Full Report
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -334,7 +334,7 @@ export default function ReportsPage() {
             <CardContent className="py-5">
               <div className="flex items-center gap-3">
                 <Button onClick={handleGenerateAll} isLoading={isGeneratingAll}>
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                   Generate Report
                 </Button>
                 <p className="text-xs text-slate-400">Fetches all customer records — may take a moment for large datasets.</p>
@@ -361,7 +361,7 @@ export default function ReportsPage() {
                       generateAllCustomersPdf(allReport, companyName);
                     }}
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     Download PDF
                   </Button>
                 </div>

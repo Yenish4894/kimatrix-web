@@ -193,12 +193,12 @@ export default function CompanySettingsPage() {
         <Card>
           <CardHeader>
             <h3 className="text-h4 font-heading font-semibold text-slate-800 flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-slate-400" />
+              <Building2 className="h-4 w-4 text-slate-400" aria-hidden="true" />
               Company Profile
             </h3>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {/* Read-only fields — not editable per BE spec */}
               <Input label="Company Name" value={company?.name ?? ""} disabled helperText="Contact support to change the company name" />
               <Input label="Company Registration Number" value={company?.registrationNumber ?? ""} disabled />
@@ -335,7 +335,7 @@ export default function CompanySettingsPage() {
         <Card>
           <CardHeader>
             <h3 className="text-h4 font-heading font-semibold text-slate-800 flex items-center gap-2">
-              <LockIcon className="h-4 w-4 text-slate-400" />
+              <LockIcon className="h-4 w-4 text-slate-400" aria-hidden="true" />
               Account
             </h3>
           </CardHeader>

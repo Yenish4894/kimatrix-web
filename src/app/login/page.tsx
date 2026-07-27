@@ -105,7 +105,7 @@ export default function LoginPage() {
         {deactivatedMessage && (
           <div className="rounded-xl border border-error-100 bg-error-50/60 p-4">
             <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-full bg-error-100 flex items-center justify-center shrink-0">
+              <div className="h-8 w-8 rounded-full bg-error-100 flex items-center justify-center shrink-0" aria-hidden="true">
                 <ShieldOff className="h-4 w-4 text-error-600" />
               </div>
               <div className="flex-1 min-w-0">
@@ -119,7 +119,7 @@ export default function LoginPage() {
         <Input
           label="Email or Username"
           name="identifier"
-          placeholder="admin@example.com or username"
+          placeholder="your@email.com or username"
           value={form.identifier}
           onChange={handleChange}
           error={errors.identifier}

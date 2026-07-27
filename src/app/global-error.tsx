@@ -15,7 +15,6 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // TODO when Sentry is wired: Sentry.captureException(error)
     if (process.env.NODE_ENV !== "production") {
       // eslint-disable-next-line no-console
       console.error("[global error]", error);

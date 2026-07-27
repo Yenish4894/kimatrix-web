@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Phone, Car, User, Calendar, TrendingUp, Receipt } from "lucide-react";
+import { ArrowLeft, Phone, Car, Calendar, TrendingUp, Receipt } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, Badge, Table, Pagination, Button, StatCard, QueryErrorState } from "@/components/ui";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
@@ -49,7 +49,7 @@ export default function CustomerDetailPage({
           <p className="text-slate-500">Customer not found or doesn&apos;t belong to your company.</p>
           <Link href="/company/customers" className="mt-4 inline-block">
             <Button variant="secondary">
-              <ArrowLeft className="h-4 w-4" /> Back to Customers
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Customers
             </Button>
           </Link>
         </div>
@@ -91,7 +91,7 @@ export default function CustomerDetailPage({
     <DashboardShell title="Customer Detail" requiredRole="company">
       <div className="max-w-5xl mx-auto">
         <Link href="/company/customers" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Customers
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Customers
         </Link>
 
         <Card className="mb-6">
@@ -113,11 +113,11 @@ export default function CustomerDetailPage({
                   <h2 className="text-xl sm:text-2xl font-heading font-bold text-slate-800">{customer.fullName}</h2>
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
                     <span className="flex items-center gap-1.5">
-                      <Phone className="h-3.5 w-3.5" /> {customer.mobile}
+                      <Phone className="h-3.5 w-3.5" aria-hidden="true" /> {customer.mobile}
                     </span>
                     {isFuelStation && customer.vehicleNumber && (
                       <span className="flex items-center gap-1.5">
-                        <Car className="h-3.5 w-3.5" /> <span className="font-mono">{customer.vehicleNumber}</span>
+                        <Car className="h-3.5 w-3.5" aria-hidden="true" /> <span className="font-mono">{customer.vehicleNumber}</span>
                       </span>
                     )}
                   </div>
@@ -135,7 +135,7 @@ export default function CustomerDetailPage({
             <StatCard title="Total Spend" value={formatCurrency(customer.totalInvoiceAmount)} icon={TrendingUp} />
             <StatCard title="Visits" value={customer.submissionCount.toString()} icon={Receipt} />
             <StatCard title="First Visit" value={formatDate(customer.firstSubmissionAt)} icon={Calendar} />
-            <StatCard title="Last Visit" value={formatDate(customer.lastSubmissionAt)} icon={User} />
+            <StatCard title="Last Visit" value={formatDate(customer.lastSubmissionAt)} icon={Calendar} />
           </div>
         )}
 

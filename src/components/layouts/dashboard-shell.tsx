@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
@@ -19,6 +19,8 @@ export function DashboardShell({ children, title, requiredRole }: Readonly<Dashb
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
@@ -54,6 +56,50 @@ export function DashboardShell({ children, title, requiredRole }: Readonly<Dashb
     setMobileMenuOpen((prev) => !prev);
   }, []);
 
+  // Focus trap for mobile sidebar — keeps keyboard focus inside when open,
+  // closes on Escape, and restores focus to the trigger when closed.
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      previousFocusRef.current?.focus();
+      previousFocusRef.current = null;
+      return;
+    }
+
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const sidebarEl = sidebarRef.current;
+    if (!sidebarEl) return;
+
+    const getFocusable = () =>
+      Array.from(
+        sidebarEl.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    getFocusable()[0]?.focus();
+
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mobileMenuOpen]);
+
   // Guard: wait until session is resolved before rendering
   if (!hasCheckedSession || isLoading || !isAuthenticated) {
     return <PageLoader />;
@@ -83,7 +129,7 @@ export function DashboardShell({ children, title, requiredRole }: Readonly<Dashb
         />
       )}
 
-      <div className={cn("lg:block", mobileMenuOpen ? "block" : "hidden")}>
+      <div ref={sidebarRef} className={cn("lg:block", mobileMenuOpen ? "block" : "hidden")}>
         <Sidebar onCollapsedChange={setSidebarCollapsed} />
       </div>
 

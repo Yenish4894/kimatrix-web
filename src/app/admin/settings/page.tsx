@@ -26,7 +26,9 @@ export default function AdminSettingsPage() {
             </div>
             <div className="flex justify-between items-center py-1.5">
               <span className="text-sm text-slate-500">Role</span>
-              <span className="text-sm font-medium text-slate-800">Super Admin</span>
+              <span className="text-sm font-medium text-slate-800">
+                {user?.userType === "super_admin" ? "Super Admin" : user?.userType ?? "—"}
+              </span>
             </div>
           </CardContent>
         </Card>

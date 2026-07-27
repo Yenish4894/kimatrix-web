@@ -11,8 +11,8 @@ export default function BillingCancelPage() {
   return (
     <DashboardShell title="Payment Cancelled" requiredRole="company">
       <div className="max-w-md mx-auto flex flex-col items-center gap-5 pt-12 text-center">
-        <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center">
-          <XCircle className="h-8 w-8 text-slate-400" />
+        <div className="h-16 w-16 rounded-full bg-warning-50 flex items-center justify-center" aria-hidden="true">
+          <XCircle className="h-8 w-8 text-warning-500" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-slate-800">Payment Cancelled</h2>

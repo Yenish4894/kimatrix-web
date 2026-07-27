@@ -92,12 +92,12 @@ export function PasswordChangeCard() {
     <Card>
       <CardHeader>
         <h3 className="text-h4 font-heading font-semibold text-slate-800 flex items-center gap-2">
-          <Lock className="h-4 w-4 text-slate-400" />
+          <Lock className="h-4 w-4 text-slate-400" aria-hidden="true" />
           Change Password
         </h3>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <Input
             label="Current Password"
             name="currentPassword"

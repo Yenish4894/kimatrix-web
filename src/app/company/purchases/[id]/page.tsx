@@ -4,8 +4,26 @@ import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Receipt, Calendar, Wallet, User, Phone, Car, MapPin, Monitor, Globe,
+  ArrowLeft, Receipt, Calendar, Wallet, User, Phone, Car, MapPin, Smartphone, Globe,
 } from "lucide-react";
+
+function parseUserAgent(ua: string): string {
+  if (/Android/i.test(ua)) {
+    const browser = /Chrome/i.test(ua) ? "Chrome" : /Firefox/i.test(ua) ? "Firefox" : "Browser";
+    return `Android / ${browser}`;
+  }
+  if (/iPhone/i.test(ua)) return "iPhone / Safari";
+  if (/iPad/i.test(ua)) return "iPad / Safari";
+  if (/Windows/i.test(ua)) {
+    const browser = /Chrome/i.test(ua) ? "Chrome" : /Firefox/i.test(ua) ? "Firefox" : /Edge/i.test(ua) ? "Edge" : "Browser";
+    return `Windows / ${browser}`;
+  }
+  if (/Macintosh/i.test(ua)) {
+    const browser = /Chrome/i.test(ua) ? "Chrome" : /Firefox/i.test(ua) ? "Firefox" : /Safari/i.test(ua) ? "Safari" : "Browser";
+    return `Mac / ${browser}`;
+  }
+  return "Unknown Device";
+}
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, CardHeader, Button } from "@/components/ui";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
@@ -38,7 +56,7 @@ export default function PurchaseDetailPage({
           <p className="text-slate-500">Purchase not found.</p>
           <Link href="/company/purchases" className="mt-4 inline-block">
             <Button variant="secondary">
-              <ArrowLeft className="h-4 w-4" /> Back to Purchases
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Purchases
             </Button>
           </Link>
         </div>
@@ -62,12 +80,12 @@ export default function PurchaseDetailPage({
     <DashboardShell title="Purchase Detail" requiredRole="company">
       <div className="max-w-3xl mx-auto">
         <Link href="/company/purchases" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to Purchases
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Purchases
         </Link>
 
         <Card className="mb-6 bg-gradient-to-br from-primary-50 to-white border-primary-100">
           <CardContent className="py-6 sm:py-8 text-center">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 text-primary-600 mb-4">
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 text-primary-600 mb-4" aria-hidden="true">
               <Receipt className="h-6 w-6" />
             </div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Invoice #</p>
@@ -112,7 +130,7 @@ export default function PurchaseDetailPage({
             <Detail icon={Calendar} label="Submitted At" value={formatDateTime(purchase.submittedAt)} />
             <Detail icon={Wallet} label="Amount" value={formatCurrency(purchase.invoiceAmount)} />
             {purchase.ipAddress && <Detail icon={Globe} label="IP Address" value={purchase.ipAddress} mono />}
-            {purchase.userAgent && <Detail icon={Monitor} label="Device" value={purchase.userAgent.slice(0, 60)} />}
+            {purchase.userAgent && <Detail icon={Smartphone} label="Device" value={parseUserAgent(purchase.userAgent)} />}
             {purchase.latitude && purchase.longitude && (
               <Detail
                 icon={MapPin}
@@ -136,7 +154,7 @@ function Detail({ icon: Icon, label, value, mono }: Readonly<{
 }>) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+      <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0" aria-hidden="true">
         <Icon className="h-4 w-4 text-slate-500" />
       </div>
       <div className="flex-1 min-w-0">

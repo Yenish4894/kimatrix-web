@@ -7,16 +7,23 @@ import { toast } from "react-toastify";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button, Input } from "@/components/ui";
+import { PageLoader } from "@/components/ui/loader";
 import { authService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import Joi from "joi";
 
 const schema = Joi.object({
-  newPassword: Joi.string().min(8).max(128).pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).required().messages({
-    "string.empty": "Password is required",
-    "string.min": "Password must be at least 8 characters",
-    "string.pattern.base": "Must include lowercase, uppercase, and number",
-  }),
+  newPassword: Joi.string()
+    .min(8)
+    .max(18)
+    .pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
+    .required()
+    .messages({
+      "string.empty": "Password is required",
+      "string.min": "Password must be at least 8 characters",
+      "string.max": "Password must be at most 18 characters",
+      "string.pattern.base": "Must include lowercase, uppercase, number, and special character",
+    }),
   confirmNewPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
     "string.empty": "Please confirm your password",
     "any.only": "Passwords do not match",
@@ -38,7 +45,7 @@ function ResetPasswordInner() {
     return (
       <AuthLayout title="Invalid Link" subtitle="This password reset link is missing its token">
         <div className="text-center space-y-4">
-          <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center" aria-hidden="true">
             <AlertTriangle className="h-8 w-8 text-error-500" />
           </div>
           <p className="text-slate-600">The reset link is invalid. Request a new one.</p>
@@ -99,7 +106,7 @@ function ResetPasswordInner() {
     return (
       <AuthLayout title="Password Reset" subtitle="Your password has been updated">
         <div className="text-center space-y-4">
-          <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center" aria-hidden="true">
             <CheckCircle className="h-8 w-8 text-success-500" />
           </div>
           <p className="text-slate-600">Your password has been reset. Redirecting to login...</p>
@@ -110,12 +117,13 @@ function ResetPasswordInner() {
 
   return (
     <AuthLayout title="Reset Your Password" subtitle="Choose a new strong password">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <Input
           label="New Password"
           name="newPassword"
           type="password"
-          placeholder="8+ chars, upper, lower, digit"
+          placeholder="8–18 chars, upper, lower, digit, special"
+          helperText="8–18 chars, lowercase, uppercase, number, and special character"
           value={form.newPassword}
           onChange={handleChange}
           error={errors.newPassword}
@@ -150,7 +158,7 @@ function ResetPasswordInner() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageLoader />}>
       <ResetPasswordInner />
     </Suspense>
   );

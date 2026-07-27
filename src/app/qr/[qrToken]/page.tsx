@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { toast } from "react-toastify";
-import { CheckCircle, AlertTriangle, MapPin, Loader2, X } from "lucide-react";
+import { CheckCircle, AlertTriangle, MapPin, Loader2, X, Fuel, Store } from "lucide-react";
 import { Button, Input, CustomerPhoneInput } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import { qrService } from "@/services";
@@ -229,7 +229,7 @@ export default function QRSubmissionPage({
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 text-primary-600 animate-spin mx-auto" />
+          <Loader2 className="h-8 w-8 text-primary-600 animate-spin mx-auto" aria-hidden="true" />
           <p className="mt-4 text-sm text-slate-500">Loading...</p>
         </div>
       </div>
@@ -241,7 +241,7 @@ export default function QRSubmissionPage({
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8">
-          <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center mb-4">
+          <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center mb-4" aria-hidden="true">
             <X className="h-8 w-8 text-error-500" />
           </div>
           <h1 className="text-xl font-heading font-bold text-slate-800">QR Code Not Recognized</h1>
@@ -259,7 +259,7 @@ export default function QRSubmissionPage({
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8">
-          <div className="mx-auto h-16 w-16 rounded-full bg-warning-100 flex items-center justify-center mb-4">
+          <div className="mx-auto h-16 w-16 rounded-full bg-warning-100 flex items-center justify-center mb-4" aria-hidden="true">
             <AlertTriangle className="h-8 w-8 text-warning-500" />
           </div>
           <h1 className="text-xl font-heading font-bold text-slate-800">Not Accepting Submissions</h1>
@@ -273,7 +273,7 @@ export default function QRSubmissionPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="max-w-md mx-auto px-4 py-6 sm:py-8">
+      <main className="max-w-md mx-auto px-4 py-6 sm:py-8">
         {/* Brand */}
         <div className="text-center mb-6 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -283,15 +283,16 @@ export default function QRSubmissionPage({
         {/* Company info */}
         <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-2xl p-5 text-center mb-6 shadow-lg shadow-primary-600/20">
           <h2 className="text-lg sm:text-xl font-bold font-heading">{company.companyName}</h2>
-          <span className="inline-block mt-2 bg-white/15 backdrop-blur text-primary-100 text-xs font-medium px-3 py-1 rounded-full">
-            {isFuelStation ? "⛽ Fuel Station" : "🏪 Shop"}
+          <span className="inline-flex items-center gap-1.5 mt-2 bg-white/15 backdrop-blur text-primary-100 text-xs font-medium px-3 py-1 rounded-full">
+            {isFuelStation ? <Fuel className="h-3.5 w-3.5" aria-hidden="true" /> : <Store className="h-3.5 w-3.5" aria-hidden="true" />}
+            {isFuelStation ? "Fuel Station" : "Shop"}
           </span>
         </div>
 
         {/* Success state */}
         {success ? (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center animate-fade-in">
-            <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center mb-4">
+            <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center mb-4" aria-hidden="true">
               <CheckCircle className="h-8 w-8 text-success-500" />
             </div>
             <h3 className="text-xl font-heading font-bold text-slate-800">Thank You!</h3>
@@ -316,7 +317,7 @@ export default function QRSubmissionPage({
               Record Your Purchase
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <CustomerPhoneInput
                 label="Mobile Number"
                 name="mobile"
@@ -381,17 +382,17 @@ export default function QRSubmissionPage({
                     onClick={requestLocation}
                     className="w-full text-sm text-primary-600 hover:text-primary-700 py-2 flex items-center justify-center gap-2 border border-dashed border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
                   >
-                    <MapPin className="h-4 w-4" /> Attach location (optional)
+                    <MapPin className="h-4 w-4" aria-hidden="true" /> Attach location (optional)
                   </button>
                 )}
                 {locationStatus === "pending" && (
                   <div className="flex items-center gap-2 text-sm text-slate-500 justify-center py-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Getting location...
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Getting location...
                   </div>
                 )}
                 {locationStatus === "granted" && location && (
                   <div className="flex items-center gap-2 text-sm text-success-600 justify-center py-2">
-                    <CheckCircle className="h-4 w-4" />
+                    <CheckCircle className="h-4 w-4" aria-hidden="true" />
                     Location attached (±{Math.round(location.accuracy)}m)
                   </div>
                 )}
@@ -424,7 +425,7 @@ export default function QRSubmissionPage({
         <p className="text-center text-xs text-slate-400 mt-8">
           Powered by <span className="font-semibold text-slate-500">KIMates</span>
         </p>
-      </div>
+      </main>
     </div>
   );
 }

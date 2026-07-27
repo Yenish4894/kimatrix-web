@@ -32,6 +32,7 @@ function PlanCard({
     <button
       type="button"
       onClick={() => onSelect(plan.id)}
+      aria-pressed={selected}
       className={cn(
         "relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 hover:shadow-md focus:outline-none",
         selected
@@ -54,7 +55,7 @@ function PlanCard({
         </div>
       </div>
       {selected && (
-        <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center">
+        <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center" aria-hidden="true">
           <Check className="h-3 w-3 text-white" />
         </span>
       )}
@@ -115,21 +116,22 @@ export default function BillingPage() {
   let planContent: React.ReactNode;
   if (isLoadingPlans) {
     planContent = (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 text-primary-400 animate-spin" />
+      <div role="status" className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 text-primary-400 animate-spin" aria-hidden="true" />
+        <span className="sr-only">Loading plans…</span>
       </div>
     );
   } else if (plansFetchFailed) {
     planContent = (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
-        <AlertCircle className="h-8 w-8 text-error-400" />
+        <AlertCircle className="h-8 w-8 text-error-400" aria-hidden="true" />
         <p className="text-sm text-slate-500">Could not load plans. Check your connection and try again.</p>
         <button
           type="button"
           onClick={() => dispatch(fetchPlans())}
           className="inline-flex items-center gap-2 text-sm text-primary-600 hover:underline"
         >
-          <RefreshCw className="h-4 w-4" /> Retry
+          <RefreshCw className="h-4 w-4" aria-hidden="true" /> Retry
         </button>
       </div>
     );
@@ -158,7 +160,7 @@ export default function BillingPage() {
             ? "bg-accent-50 border border-accent-100"
             : "bg-primary-50 border border-primary-100"
         )}>
-          <Zap className={cn("h-5 w-5 mt-0.5 shrink-0", isPending || isExpired ? "text-accent-500" : "text-primary-500")} />
+          <Zap className={cn("h-5 w-5 mt-0.5 shrink-0", isPending || isExpired ? "text-accent-500" : "text-primary-500")} aria-hidden="true" />
           <p className="text-sm text-slate-700">{bannerMessage}</p>
         </div>
 
@@ -176,7 +178,7 @@ export default function BillingPage() {
                 disabled={!selectedPlanId || isRedirecting || isLoadingPlans}
                 isLoading={isRedirecting}
               >
-                <CreditCard className="h-4 w-4 mr-2" />
+                <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
                 {isRedirecting ? "Redirecting to PayPal…" : "Pay with PayPal"}
               </Button>
               <p className="text-center text-xs text-slate-400 mt-3">

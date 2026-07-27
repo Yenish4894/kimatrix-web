@@ -32,23 +32,27 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
   return (
     <div className={cn("flex items-center justify-center gap-1", className)}>
       <button
+        type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className="h-9 w-9 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         aria-label="Previous page"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {getVisiblePages().map((page, idx) =>
         page === "..." ? (
-          <span key={`dots-${idx}`} className="h-9 w-9 flex items-center justify-center text-sm text-slate-400">
+          <span key={`dots-${idx}`} className="h-9 w-9 flex items-center justify-center text-sm text-slate-400" aria-hidden="true">
             ...
           </span>
         ) : (
           <button
+            type="button"
             key={page}
             onClick={() => onPageChange(page)}
+            aria-label={`Page ${page}`}
+            aria-current={currentPage === page ? "page" : undefined}
             className={cn(
               "h-9 w-9 flex items-center justify-center rounded-md text-sm font-medium transition-colors",
               currentPage === page
@@ -62,12 +66,13 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
       )}
 
       <button
+        type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="h-9 w-9 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         aria-label="Next page"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );

@@ -57,8 +57,8 @@ function CaptureHandler() {
 
   if (state === "loading") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Loader2 className="h-10 w-10 text-primary-400 animate-spin" />
+      <div role="status" className="flex flex-col items-center justify-center min-h-100 gap-4">
+        <Loader2 className="h-10 w-10 text-primary-400 animate-spin" aria-hidden="true" />
         <p className="text-slate-500 text-sm">Confirming your payment with PayPal…</p>
       </div>
     );
@@ -67,7 +67,7 @@ function CaptureHandler() {
   if (state === "error") {
     return (
       <div className="max-w-md mx-auto flex flex-col items-center gap-5 pt-12 text-center">
-        <div className="h-16 w-16 rounded-full bg-error-50 flex items-center justify-center">
+        <div className="h-16 w-16 rounded-full bg-error-50 flex items-center justify-center" aria-hidden="true">
           <XCircle className="h-8 w-8 text-error-500" />
         </div>
         <div>
@@ -94,7 +94,7 @@ function CaptureHandler() {
 
   return (
     <div className="max-w-md mx-auto flex flex-col items-center gap-5 pt-12 text-center">
-      <div className="h-16 w-16 rounded-full bg-success-50 flex items-center justify-center">
+      <div className="h-16 w-16 rounded-full bg-success-50 flex items-center justify-center" aria-hidden="true">
         <CheckCircle2 className="h-8 w-8 text-success-500" />
       </div>
       <div>
@@ -115,7 +115,7 @@ function CaptureHandler() {
 
 export default function BillingSuccessPage() {
   return (
-    <DashboardShell title="Payment" requiredRole="company">
+    <DashboardShell title="Payment Confirmation" requiredRole="company">
       <Suspense fallback={<PageLoader />}>
         <CaptureHandler />
       </Suspense>

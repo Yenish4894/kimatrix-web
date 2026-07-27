@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { QrCode, BarChart3, Shield, Zap, Fuel, TrendingUp, Users } from "lucide-react";
+import { QrCode, BarChart3, Shield, Zap, Fuel } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loadSession } from "@/store/slices/authSlice";
 import { PageLoader } from "@/components/ui/loader";
@@ -63,7 +63,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary-600 via-primary-500 to-accent-500 z-20" />
 
         {/* ═══ LEFT ZONE — dark teal ═══ */}
-        <div className="hidden md:flex md:w-[45%] relative flex-col justify-between overflow-hidden">
+        <div className="hidden md:flex md:w-[45%] relative flex-col justify-between overflow-hidden" aria-hidden="true">
 
           {/* Base gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700" />
@@ -178,21 +178,8 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
               ))}
             </div>
 
-            {/* Stat chips + copyright */}
-            <div className="mt-auto pt-2 space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                {[
-                  { icon: Users,      value: "500+",  label: "Businesses" },
-                  { icon: TrendingUp, value: "99.9%", label: "Uptime"     },
-                  { icon: BarChart3,  value: "2K+",   label: "Customers"  },
-                ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-1 bg-white/8 border border-white/10 rounded-full px-2.5 py-1">
-                    <s.icon className="h-2.5 w-2.5 text-accent-300 shrink-0" />
-                    <span className="text-[10px] font-bold text-white">{s.value}</span>
-                    <span className="text-[9px] text-white/45">{s.label}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Copyright */}
+            <div className="mt-auto pt-2">
               <p className="text-[9px] text-white/22">
                 &copy; {new Date().getFullYear()} KIMates. All rights reserved.
               </p>
@@ -202,10 +189,10 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
         </div>
 
         {/* ═══ RIGHT ZONE — white form ═══ */}
-        <div className="flex-1 bg-white flex items-center justify-center px-8 py-10 sm:px-10 lg:px-12 relative">
+        <main className="flex-1 bg-white flex items-center justify-center px-8 py-10 sm:px-10 lg:px-12 relative">
 
           {/* Subtle inner top-left watermark */}
-          <div className="absolute top-6 right-7 opacity-[0.06] pointer-events-none select-none">
+          <div className="absolute top-6 right-7 opacity-[0.06] pointer-events-none select-none" aria-hidden="true">
             <QrCode className="h-20 w-20 text-primary-900" />
           </div>
 
@@ -219,7 +206,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
 
             {/* Form header */}
             <div className="mb-6">
-              <div className="h-9 w-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center mb-4">
+              <div className="h-9 w-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center mb-4" aria-hidden="true">
                 <QrCode className="h-4 w-4 text-primary-600" />
               </div>
               <h1 className="text-[1.3rem] font-heading font-bold text-slate-800 tracking-tight">{title}</h1>
@@ -235,7 +222,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
               <Link href="/privacy" className="text-slate-500 hover:text-slate-700 underline underline-offset-2 transition-colors">Privacy</Link>
             </p>
           </div>
-        </div>
+        </main>
 
       </div>
     </div>

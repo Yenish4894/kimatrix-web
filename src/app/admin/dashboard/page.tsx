@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Shield, Fuel, Store, Users, Receipt, Wallet, AlertCircle } from "lucide-react";
+import { Building2, Shield, Fuel, Users, Receipt, Wallet, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard } from "@/components/ui";
@@ -45,24 +45,6 @@ export default function AdminDashboardPage() {
             title="Fuel vs Shops"
             value={isLoading ? "—" : `${stats?.totalFuelStations ?? 0} / ${stats?.totalShops ?? 0}`}
             icon={Fuel}
-          />
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-          Business Types
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <StatCard
-            title="Fuel Stations"
-            value={isLoading ? "—" : (stats?.totalFuelStations ?? 0).toLocaleString("en-US")}
-            icon={Fuel}
-          />
-          <StatCard
-            title="Shops"
-            value={isLoading ? "—" : (stats?.totalShops ?? 0).toLocaleString("en-US")}
-            icon={Store}
           />
         </div>
       </div>

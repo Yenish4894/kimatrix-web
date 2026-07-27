@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Mail } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button, Input } from "@/components/ui";
 import { authService } from "@/services";
@@ -54,9 +55,7 @@ export default function ForgotPasswordPage() {
       <AuthLayout title="Check Your Email" subtitle="We've sent a password reset link">
         <div className="text-center space-y-4">
           <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center">
-            <svg className="h-8 w-8 text-success-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            <Mail className="h-8 w-8 text-success-500" aria-hidden="true" />
           </div>
           <p className="text-slate-600">
             If an account exists for <strong>{email}</strong>, a reset link has been sent.

@@ -61,7 +61,7 @@ export default function AdminCompanyDetailPage({
           <p className="text-slate-500">Company not found.</p>
           <Link href="/admin/companies" className="mt-4 inline-block">
             <Button variant="secondary">
-              <ArrowLeft className="h-4 w-4" /> Back to Companies
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Companies
             </Button>
           </Link>
         </div>
@@ -95,12 +95,12 @@ export default function AdminCompanyDetailPage({
           href="/admin/companies"
           className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-4"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Companies
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Companies
         </Link>
 
         <Card className="mb-6">
           <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-            <div className="h-16 w-16 rounded-2xl bg-primary-100 flex items-center justify-center shrink-0">
+            <div className="h-16 w-16 rounded-2xl bg-primary-100 flex items-center justify-center shrink-0" aria-hidden="true">
               <BizIcon className="h-8 w-8 text-primary-600" />
             </div>
             <div className="flex-1 min-w-0">
@@ -117,7 +117,7 @@ export default function AdminCompanyDetailPage({
               onClick={() => setConfirmModal(status === "active" ? "deactivate" : "activate")}
               className="shrink-0"
             >
-              <Power className="h-4 w-4" />
+              <Power className="h-4 w-4" aria-hidden="true" />
               {status === "active" ? "Deactivate" : "Activate"}
             </Button>
           </CardContent>
@@ -193,7 +193,7 @@ export default function AdminCompanyDetailPage({
           </p>
           {confirmModal === "deactivate" && (
             <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">
-              ⚠ The owner will be signed out of all devices immediately and cannot log in until reactivated.
+              <span aria-hidden="true">⚠</span>{" "}The owner will be signed out of all devices immediately and cannot log in until reactivated.
             </p>
           )}
         </Modal>
@@ -210,7 +210,7 @@ function Detail({ icon: Icon, label, value, mono }: Readonly<{
 }>) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+      <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0" aria-hidden="true">
         <Icon className="h-4 w-4 text-slate-500" />
       </div>
       <div className="flex-1 min-w-0">

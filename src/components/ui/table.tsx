@@ -60,17 +60,30 @@ export function Table<T>({
                   key={col.key}
                   className={cn(
                     "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500",
-                    col.sortable && "cursor-pointer select-none hover:text-slate-700",
                     col.className
                   )}
-                  onClick={() => col.sortable && onSort?.(col.key)}
+                  aria-sort={
+                    col.sortable && sortKey === col.key
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  <span className="flex items-center gap-1">
-                    {col.header}
-                    {col.sortable && sortKey === col.key && (
-                      <span>{sortDirection === "asc" ? "↑" : "↓"}</span>
-                    )}
-                  </span>
+                  {col.sortable ? (
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 select-none hover:text-slate-700 cursor-pointer transition-colors duration-150 w-full text-left"
+                      onClick={() => onSort?.(col.key)}
+                    >
+                      {col.header}
+                      {sortKey === col.key && (
+                        <span aria-hidden="true">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                      )}
+                    </button>
+                  ) : (
+                    <span className="flex items-center gap-1">{col.header}</span>
+                  )}
                 </th>
               ))}
             </tr>

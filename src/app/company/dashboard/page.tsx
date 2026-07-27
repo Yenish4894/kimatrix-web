@@ -102,7 +102,7 @@ export default function CompanyDashboardPage() {
             <div className="bg-primary-50 rounded-2xl p-4 sm:p-6 inline-block mb-6 border border-primary-100">
               <div className="bg-white rounded-xl p-3">
                 {company?.qrUrl ? (
-                  <QRCodeSVG value={company.qrUrl} size={160} level="H" bgColor="#ffffff" fgColor="#0F766E" />
+                  <QRCodeSVG value={company.qrUrl} size={160} level="H" bgColor="#ffffff" fgColor="#0891B2" />
                 ) : (
                   <div className="h-[160px] w-[160px] bg-slate-100 animate-pulse rounded" />
                 )}
@@ -127,7 +127,7 @@ export default function CompanyDashboardPage() {
             <h3 className="text-h3 font-heading font-semibold text-slate-800">Recent Purchases</h3>
             <Link href="/company/purchases">
               <Button variant="ghost" size="sm">
-                View All <ArrowRight className="h-4 w-4" />
+                View All <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
           </div>

@@ -10,7 +10,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-8">
-          <ArrowLeft className="h-4 w-4" /> Back to Home
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Home
         </Link>
 
         <h1 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Terms of Service</h1>
@@ -53,10 +53,6 @@ export default function TermsPage() {
             using the Service at any time.
           </p>
 
-          <div className="mt-12 p-4 bg-warning-50 border border-warning-100 rounded-lg text-sm text-warning-700">
-            <strong>Placeholder:</strong> This is a placeholder document. The final, legally-reviewed
-            Terms of Service will be published before public launch.
-          </div>
         </div>
       </div>
     </div>

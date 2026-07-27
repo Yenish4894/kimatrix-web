@@ -251,7 +251,7 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout title="Create Account" subtitle="Register your business to get started">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div>
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h3>
           <div className="space-y-4">
@@ -380,19 +380,20 @@ export default function RegisterPage() {
         <div>
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Choose Your Plan</h3>
           {plansLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 text-primary-400 animate-spin" />
+            <div role="status" className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 text-primary-400 animate-spin" aria-hidden="true" />
+              <span className="sr-only">Loading plans…</span>
             </div>
           ) : plansError ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <AlertCircle className="h-7 w-7 text-error-400" />
+              <AlertCircle className="h-7 w-7 text-error-400" aria-hidden="true" />
               <p className="text-sm text-slate-500">Could not load plans. Check your connection and try again.</p>
               <button
                 type="button"
                 onClick={loadPlans}
                 className="inline-flex items-center gap-2 text-sm text-primary-600 hover:underline"
               >
-                <RefreshCw className="h-4 w-4" /> Retry
+                <RefreshCw className="h-4 w-4" aria-hidden="true" /> Retry
               </button>
             </div>
           ) : (
@@ -407,6 +408,7 @@ export default function RegisterPage() {
                       setSelectedPlanId(plan.id);
                       if (errors.plan) setErrors((prev) => ({ ...prev, plan: "" }));
                     }}
+                    aria-pressed={selected}
                     className={cn(
                       "relative text-left rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-sm focus:outline-none",
                       selected
@@ -420,7 +422,7 @@ export default function RegisterPage() {
                         <p className="text-xs text-slate-400 mt-0.5">{plan.durationDays} days</p>
                       </div>
                       {selected && (
-                        <span className="h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
+                        <span className="h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0" aria-hidden="true">
                           <Check className="h-3 w-3 text-white" />
                         </span>
                       )}
@@ -460,7 +462,7 @@ export default function RegisterPage() {
         </div>
 
         <Button type="submit" fullWidth isLoading={isLoading || isProcessing} disabled={plansLoading}>
-          <CreditCard className="h-4 w-4 mr-2" />
+          <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
           {isProcessing ? "Processing…" : "Register & Pay"}
         </Button>
 
