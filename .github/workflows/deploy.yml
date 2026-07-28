@@ -1,0 +1,43 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            cd /home/ubuntu/apps/frontend
+
+            echo ">>> Pulling latest code..."
+            git pull origin main
+
+            echo ">>> Installing dependencies..."
+            npm install --production=false
+
+            echo ">>> Building..."
+            npm run build
+
+            echo ">>> Restarting frontend..."
+            pm2 restart kimatrix-web
+
+            echo ">>> Waiting for startup..."
+            sleep 5
+
+            echo ">>> Health check..."
+            curl -sf http://localhost:3000 -o /dev/null || (pm2 logs kimatrix-web --lines 20 --nostream && exit 1)
+
+            echo ">>> Deploy complete!"
