@@ -26,7 +26,8 @@ function parseUserAgent(ua: string): string {
 }
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, CardHeader, Button } from "@/components/ui";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { companyService } from "@/services";
 
 export default function PurchaseDetailPage({
@@ -35,6 +36,7 @@ export default function PurchaseDetailPage({
   params: Promise<{ id: string }>;
 }>) {
   const { id } = use(params);
+  const fmtCurrency = useCurrencyFormatter();
 
   const purchaseQ = useQuery({
     queryKey: ["company", "purchases", id],
@@ -91,7 +93,7 @@ export default function PurchaseDetailPage({
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Invoice #</p>
             <p className="text-lg font-mono font-bold text-slate-800 mt-1">{purchase.invoiceNumber}</p>
             <p className="text-4xl sm:text-5xl font-bold font-heading text-primary-700 mt-4">
-              {formatCurrency(purchase.invoiceAmount)}
+              {fmtCurrency(purchase.invoiceAmount)}
             </p>
             <p className="text-sm text-slate-500 mt-2">{formatDateTime(purchase.submittedAt)}</p>
           </CardContent>
@@ -128,7 +130,7 @@ export default function PurchaseDetailPage({
           </CardHeader>
           <CardContent className="space-y-3">
             <Detail icon={Calendar} label="Submitted At" value={formatDateTime(purchase.submittedAt)} />
-            <Detail icon={Wallet} label="Amount" value={formatCurrency(purchase.invoiceAmount)} />
+            <Detail icon={Wallet} label="Amount" value={fmtCurrency(purchase.invoiceAmount)} />
             {purchase.ipAddress && <Detail icon={Globe} label="IP Address" value={purchase.ipAddress} mono />}
             {purchase.userAgent && <Detail icon={Smartphone} label="Device" value={parseUserAgent(purchase.userAgent)} />}
             {purchase.latitude && purchase.longitude && (

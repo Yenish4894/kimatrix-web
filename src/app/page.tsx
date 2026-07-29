@@ -234,7 +234,7 @@ export default function HomePage() {
                   <div className="grid grid-cols-4 gap-3 mb-4">
                     {[
                       { label: "Total Customers", value: "247", color: "border-l-primary-500" },
-                      { label: "Total Spend", value: "2.4M CFA", color: "border-l-accent-500" },
+                      { label: "Total Spend", value: "R 2.4M", color: "border-l-accent-500" },
                       { label: "Top Spender", value: "Ali M.", color: "border-l-success-500" },
                       { label: "Plan Status", value: "Active", color: "border-l-info-500" },
                     ].map((card) => (
@@ -255,7 +255,7 @@ export default function HomePage() {
                     </div>
                     <div className="col-span-2 bg-white rounded-lg p-3">
                       <p className="text-[10px] text-slate-500 uppercase mb-2">Recent Customers</p>
-                      {["Ali Mohamed — 25,000 CFA", "Fatima Abdou — 12,000 CFA", "Omar Hassan — 8,500 CFA"].map((row) => (
+                      {["Ali Mohamed — R 25,000", "Fatima Abdou — R 12,000", "Omar Hassan — R 8,500"].map((row) => (
                         <div key={row} className="py-1.5 border-b border-slate-100 last:border-0">
                           <p className="text-[11px] text-slate-600">{row}</p>
                         </div>
@@ -514,7 +514,7 @@ export default function HomePage() {
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/kimates-logo-white.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-slate-400">
                 QR-based customer purchase tracking for businesses in South Africa.
               </p>
             </div>
@@ -536,10 +536,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-500">
               &copy; {new Date().getFullYear()} KIMates. All rights reserved.
             </p>
-            <div className="flex gap-6 text-xs text-slate-600">
+            <div className="flex gap-6 text-xs text-slate-500">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>

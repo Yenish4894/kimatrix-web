@@ -118,6 +118,7 @@ export interface QRCompanyInfo {
   companyName: string;
   businessType: BusinessType;
   isActive: boolean;
+  country?: string;
 }
 
 export interface QRSubmissionPayload {

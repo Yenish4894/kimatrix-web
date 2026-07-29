@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { toast } from "react-toastify";
 import { CheckCircle, AlertTriangle, MapPin, Loader2, X, Fuel, Store } from "lucide-react";
 import { Button, Input, CustomerPhoneInput } from "@/components/ui";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getCurrencySymbol } from "@/lib/utils";
 import { qrService } from "@/services";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -298,12 +298,12 @@ export default function QRSubmissionPage({
             <h3 className="text-xl font-heading font-bold text-slate-800">Thank You!</h3>
             <p className="text-slate-500 mt-2 text-sm">
               {success.fullName}, your purchase of{" "}
-              <strong className="text-slate-700">{formatCurrency(success.amount)}</strong> has been recorded.
+              <strong className="text-slate-700">{formatCurrency(success.amount, company?.country ?? "")}</strong> has been recorded.
             </p>
             <div className="mt-6 bg-primary-50 rounded-xl p-4 border border-primary-100">
               <p className="text-xs text-slate-500 uppercase tracking-wide">Your Total Spend Here</p>
               <p className="text-2xl sm:text-3xl font-bold font-heading text-primary-700 mt-1">
-                {formatCurrency(success.customerTotalInvoiceAmount)}
+                {formatCurrency(success.customerTotalInvoiceAmount, company?.country ?? "")}
               </p>
               <p className="text-xs text-slate-500 mt-2">
                 {success.customerSubmissionCount} purchase
@@ -362,7 +362,7 @@ export default function QRSubmissionPage({
               />
 
               <Input
-                label="Invoice Amount (₣)"
+                label={`Invoice Amount (${getCurrencySymbol(company?.country ?? "")})`}
                 name="invoiceAmount"
                 type="number"
                 inputMode="decimal"
@@ -371,7 +371,6 @@ export default function QRSubmissionPage({
                 value={form.invoiceAmount}
                 onChange={handleChange}
                 error={errors.invoiceAmount}
-                helperText="West African CFA Franc"
               />
 
               {/* Geolocation (optional) */}

@@ -7,13 +7,15 @@ import { useDebounce } from "use-debounce";
 import { Search, Eye, Calendar } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
 const PAGE_SIZE = 20;
 
 export default function PurchasesPage() {
+  const fmtCurrency = useCurrencyFormatter();
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 300);
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,7 +93,7 @@ export default function PurchasesPage() {
       header: "Amount",
       sortable: true,
       render: (row: Purchase) => (
-        <span className="font-semibold">{formatCurrency(row.invoiceAmount)}</span>
+        <span className="font-semibold">{fmtCurrency(row.invoiceAmount)}</span>
       ),
     },
     {

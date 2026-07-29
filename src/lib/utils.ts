@@ -10,13 +10,47 @@ export function formatNumber(n: number): string {
   return new Intl.NumberFormat("en-US").format(n);
 }
 
-// Currency: West African CFA Franc (XOF) — Niger's local currency.
-// Format: ₣ + grouped thousands with comma + period decimal (e.g. "₣ 1,234.50").
+// Country → currency symbol mapping. Falls back to "$" for unknown countries.
+const COUNTRY_CURRENCY: Record<string, string> = {
+  // Africa
+  "South Africa": "R", "Nigeria": "₦", "Kenya": "KSh", "Ghana": "GH₵",
+  "Ethiopia": "Br", "Tanzania": "TSh", "Uganda": "USh", "Rwanda": "FRw",
+  "Zambia": "ZK", "Zimbabwe": "Z$", "Botswana": "P", "Namibia": "N$",
+  "Mozambique": "MT", "Angola": "Kz", "Senegal": "₣", "Niger": "₣",
+  "Mali": "₣", "Burkina Faso": "₣", "Ivory Coast": "₣", "Cameroon": "₣",
+  "Egypt": "E£", "Morocco": "MAD", "Tunisia": "DT", "Algeria": "DA",
+  // Americas
+  "United States": "$", "Canada": "CA$", "Mexico": "$", "Brazil": "R$",
+  "Argentina": "$", "Colombia": "$", "Chile": "$", "Peru": "S/",
+  // Europe
+  "United Kingdom": "£", "Germany": "€", "France": "€", "Italy": "€",
+  "Spain": "€", "Netherlands": "€", "Belgium": "€", "Portugal": "€",
+  "Sweden": "kr", "Norway": "kr", "Denmark": "kr", "Switzerland": "Fr",
+  "Poland": "zł", "Turkey": "₺",
+  // Asia
+  "India": "₹", "China": "¥", "Japan": "¥", "South Korea": "₩",
+  "Singapore": "S$", "Malaysia": "RM", "Indonesia": "Rp", "Thailand": "฿",
+  "Philippines": "₱", "Vietnam": "₫", "Bangladesh": "৳", "Pakistan": "₨",
+  "Sri Lanka": "Rs", "Myanmar": "K",
+  // Middle East
+  "United Arab Emirates": "AED", "Saudi Arabia": "SAR", "Qatar": "QR",
+  "Kuwait": "KD", "Israel": "₪",
+  // Oceania
+  "Australia": "A$", "New Zealand": "NZ$",
+};
+
+export function getCurrencySymbol(country: string): string {
+  return COUNTRY_CURRENCY[country] ?? "$";
+}
+
+// Format a monetary amount using the currency symbol for the given country.
+// country defaults to "" → falls back to "$" (safe for admin/global views).
 // Backend sends decimals as strings — preserve precision.
-export function formatCurrency(amount: string | number): string {
+export function formatCurrency(amount: string | number, country = ""): string {
+  const symbol = getCurrencySymbol(country);
   const num = typeof amount === "string" ? Number.parseFloat(amount) : amount;
-  if (Number.isNaN(num)) return "₣ 0.00";
-  return `₣ ${num.toLocaleString("en-US", {
+  if (Number.isNaN(num)) return `${symbol} 0.00`;
+  return `${symbol} ${num.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;

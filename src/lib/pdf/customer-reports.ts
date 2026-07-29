@@ -24,13 +24,14 @@ interface ReportOpts {
   title: string;
   subtitle: string;
   companyName: string;
+  country?: string;
   rows: ReportRow[];
   filename: string;
   /** Show podium markers (Gold/Silver/Bronze) on the first 3 rows */
   ranked?: boolean;
 }
 
-function buildReport({ title, subtitle, companyName, rows, filename, ranked = false }: ReportOpts) {
+function buildReport({ title, subtitle, companyName, country = "", rows, filename, ranked = false }: ReportOpts) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const startY = drawHeader(doc, { title, subtitle, companyName });
 
@@ -58,7 +59,7 @@ function buildReport({ title, subtitle, companyName, rows, filename, ranked = fa
     r.fullName + (r.vehicleNumber ? `\n${r.vehicleNumber}` : ""),
     r.mobile,
     String(r.purchaseCount),
-    formatCurrency(r.totalSpend),
+    formatCurrency(r.totalSpend, country),
   ]);
 
   autoTable(doc, {
@@ -109,7 +110,7 @@ function buildReport({ title, subtitle, companyName, rows, filename, ranked = fa
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.textSoft);
   doc.text(
-    `${rows.length} customer${rows.length === 1 ? "" : "s"}  •  ${totalPurchases} purchase${totalPurchases === 1 ? "" : "s"}  •  Total: ${formatCurrency(totalSpend)}`,
+    `${rows.length} customer${rows.length === 1 ? "" : "s"}  •  ${totalPurchases} purchase${totalPurchases === 1 ? "" : "s"}  •  Total: ${formatCurrency(totalSpend, country)}`,
     PAGE.width - PAGE.margin,
     sy,
     { align: "right" }
@@ -119,24 +120,24 @@ function buildReport({ title, subtitle, companyName, rows, filename, ranked = fa
   savePdf(doc, filename);
 }
 
-export function generateTop10Pdf(rows: ReportRow[], monthLabel: string, companyName: string) {
-  // Page already passes the tie-aware list (may be >10 if customers tie at the
-  // cutoff amount). Don't slice here — that would re-introduce the bug.
+export function generateTop10Pdf(rows: ReportRow[], monthLabel: string, companyName: string, country = "") {
   buildReport({
     title: "Top 10 Customers",
     subtitle: monthLabel,
     companyName,
+    country,
     rows,
     filename: `kimates-top10-${monthLabel.replaceAll(/\s+/g, "-").toLowerCase()}.pdf`,
     ranked: true,
   });
 }
 
-export function generateAllCustomersPdf(rows: ReportRow[], companyName: string) {
+export function generateAllCustomersPdf(rows: ReportRow[], companyName: string, country = "") {
   buildReport({
     title: "All Customers",
     subtitle: "All-time totals — sorted by spend",
     companyName,
+    country,
     rows,
     filename: `kimates-all-customers-${new Date().toISOString().split("T")[0]}.pdf`,
     ranked: false,

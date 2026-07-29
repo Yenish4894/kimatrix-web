@@ -6,7 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Phone, Car, Calendar, TrendingUp, Receipt } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, Badge, Table, Pagination, Button, StatCard, QueryErrorState } from "@/components/ui";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
@@ -16,6 +17,7 @@ export default function CustomerDetailPage({
   params: Promise<{ id: string }>;
 }>) {
   const { id } = use(params);
+  const fmtCurrency = useCurrencyFormatter();
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 20;
 
@@ -67,7 +69,7 @@ export default function CustomerDetailPage({
       key: "invoiceAmount",
       header: "Amount",
       render: (row: Purchase) => (
-        <span className="font-semibold">{formatCurrency(row.invoiceAmount)}</span>
+        <span className="font-semibold">{fmtCurrency(row.invoiceAmount)}</span>
       ),
     },
     {
@@ -132,7 +134,7 @@ export default function CustomerDetailPage({
 
         {customer && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <StatCard title="Total Spend" value={formatCurrency(customer.totalInvoiceAmount)} icon={TrendingUp} />
+            <StatCard title="Total Spend" value={fmtCurrency(customer.totalInvoiceAmount)} icon={TrendingUp} />
             <StatCard title="Visits" value={customer.submissionCount.toString()} icon={Receipt} />
             <StatCard title="First Visit" value={formatDate(customer.firstSubmissionAt)} icon={Calendar} />
             <StatCard title="Last Visit" value={formatDate(customer.lastSubmissionAt)} icon={Calendar} />

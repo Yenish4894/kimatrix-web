@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { companyService } from "@/services";
 import type { Customer } from "@/types";
 
@@ -16,6 +17,7 @@ const PAGE_SIZE = 20;
 type SortKey = "totalInvoiceAmount" | "submissionCount" | "lastSubmissionAt" | "firstSubmissionAt";
 
 export default function CustomersPage() {
+  const fmtCurrency = useCurrencyFormatter();
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 300);
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,7 +82,7 @@ export default function CustomersPage() {
       header: "Total Spend",
       sortable: true,
       render: (row: Customer) => (
-        <span className="font-semibold">{formatCurrency(row.totalInvoiceAmount)}</span>
+        <span className="font-semibold">{fmtCurrency(row.totalInvoiceAmount)}</span>
       ),
     },
     {

@@ -118,7 +118,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
                     </span>
                     <span className="text-[8px] font-semibold text-green-300/90 uppercase tracking-widest">Live</span>
                   </div>
-                  <p className="text-[11px] font-semibold text-white leading-tight">Niamey Fuel Station</p>
+                  <p className="text-[11px] font-semibold text-white leading-tight">Cape Town Fuel Station</p>
                 </div>
                 <div className="h-7 w-7 rounded-lg bg-white/10 border border-white/12 flex items-center justify-center">
                   <Fuel className="h-3.5 w-3.5 text-accent-300" />
@@ -129,7 +129,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
               <div className="grid grid-cols-2 gap-1.5 mb-2.5">
                 <div className="bg-white/8 rounded-lg p-2">
                   <p className="text-[7px] text-white/40 uppercase tracking-wider">Total Spend</p>
-                  <p className="text-xs font-bold text-white mt-0.5">2.4M ₣</p>
+                  <p className="text-xs font-bold text-white mt-0.5">R 2.4M</p>
                   <p className="text-[8px] text-accent-300 mt-0.5">↑ 12% this week</p>
                 </div>
                 <div className="bg-white/8 rounded-lg p-2">
@@ -150,7 +150,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
                     <span className="text-[10px] text-white/70 font-medium">{row.name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-semibold text-white">{row.amount} ₣</p>
+                    <p className="text-[10px] font-semibold text-white">R {row.amount}</p>
                     <p className="text-[8px] text-white/30">{row.time}</p>
                   </div>
                 </div>

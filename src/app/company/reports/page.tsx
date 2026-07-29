@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Trophy, Users, Download, FileText } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Button, Card, CardContent } from "@/components/ui";
-import { formatCurrency } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { companyService } from "@/services";
 import { parseApiError } from "@/lib/errors";
 // PDF generators are lazy-loaded on click — saves ~200KB from initial bundle.
@@ -120,7 +120,7 @@ function buildTop10(purchases: Purchase[]): CustomerRow[] {
 
 // ─── Shared preview table ──────────────────────────────────────
 
-function PreviewTable({ rows, ranked }: { rows: CustomerRow[]; ranked: boolean }) {
+function PreviewTable({ rows, ranked, fmtCurrency }: { rows: CustomerRow[]; ranked: boolean; fmtCurrency: (amount: string | number) => string }) {
   if (rows.length === 0) {
     return (
       <div className="text-center py-10 text-slate-400">
@@ -159,7 +159,7 @@ function PreviewTable({ rows, ranked }: { rows: CustomerRow[]; ranked: boolean }
               </td>
               <td className="py-3 px-3 text-slate-500 font-mono text-xs">{row.mobile}</td>
               <td className="py-3 px-3 text-right text-slate-600">{row.purchaseCount}</td>
-              <td className="py-3 px-3 text-right font-semibold text-slate-800">{formatCurrency(row.totalSpend)}</td>
+              <td className="py-3 px-3 text-right font-semibold text-slate-800">{fmtCurrency(row.totalSpend)}</td>
             </tr>
           ))}
         </tbody>
@@ -193,6 +193,8 @@ export default function ReportsPage() {
     queryFn: companyService.getProfile,
   });
   const companyName = profileQ.data?.name ?? "Your Company";
+  const companyCountry = profileQ.data?.country ?? "";
+  const fmtCurrency = useCurrencyFormatter();
 
   const handleGenerateTop10 = async () => {
     setIsGeneratingTop10(true);
@@ -305,14 +307,14 @@ export default function ReportsPage() {
                     variant="secondary"
                     onClick={async () => {
                       const { generateTop10Pdf } = await import("@/lib/pdf/customer-reports");
-                      generateTop10Pdf(top10Report, top10Label, companyName);
+                      generateTop10Pdf(top10Report, top10Label, companyName, companyCountry);
                     }}
                   >
                     <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     Download PDF
                   </Button>
                 </div>
-                <PreviewTable rows={top10Report} ranked />
+                <PreviewTable rows={top10Report} ranked fmtCurrency={fmtCurrency} />
               </CardContent>
             </Card>
           )}
@@ -358,14 +360,14 @@ export default function ReportsPage() {
                     variant="secondary"
                     onClick={async () => {
                       const { generateAllCustomersPdf } = await import("@/lib/pdf/customer-reports");
-                      generateAllCustomersPdf(allReport, companyName);
+                      generateAllCustomersPdf(allReport, companyName, companyCountry);
                     }}
                   >
                     <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     Download PDF
                   </Button>
                 </div>
-                <PreviewTable rows={allReport} ranked={false} />
+                <PreviewTable rows={allReport} ranked={false} fmtCurrency={fmtCurrency} />
               </CardContent>
             </Card>
           )}

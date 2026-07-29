@@ -6,7 +6,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, Card, CardContent, Button, Table } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
@@ -26,6 +27,8 @@ export default function CompanyDashboardPage() {
     queryFn: () =>
       companyService.getPurchases({ page: 1, limit: 5, sortBy: "submittedAt", sortOrder: "DESC" }),
   });
+
+  const fmtCurrency = useCurrencyFormatter();
 
   const company = profileQ.data;
   const stats = statsQ.data;
@@ -53,7 +56,7 @@ export default function CompanyDashboardPage() {
       key: "invoiceAmount",
       header: "Amount",
       render: (row: Purchase) => (
-        <span className="font-semibold">{formatCurrency(row.invoiceAmount)}</span>
+        <span className="font-semibold">{fmtCurrency(row.invoiceAmount)}</span>
       ),
     },
     {
@@ -79,7 +82,7 @@ export default function CompanyDashboardPage() {
         />
         <StatCard
           title="Total Spend"
-          value={isLoading ? "—" : formatCurrency(stats?.totalSpend ?? 0)}
+          value={isLoading ? "—" : fmtCurrency(stats?.totalSpend ?? 0)}
           icon={Wallet}
         />
         <StatCard
@@ -88,7 +91,7 @@ export default function CompanyDashboardPage() {
           icon={Trophy}
           trend={
             stats?.topSpender
-              ? { value: formatCurrency(stats.topSpender.totalInvoiceAmount), positive: true }
+              ? { value: fmtCurrency(stats.topSpender.totalInvoiceAmount), positive: true }
               : undefined
           }
         />
@@ -104,7 +107,7 @@ export default function CompanyDashboardPage() {
                 {company?.qrUrl ? (
                   <QRCodeSVG value={company.qrUrl} size={160} level="H" bgColor="#ffffff" fgColor="#0891B2" />
                 ) : (
-                  <div className="h-[160px] w-[160px] bg-slate-100 animate-pulse rounded" />
+                  <div className="h-40 w-40 bg-slate-100 animate-pulse rounded" />
                 )}
               </div>
             </div>
