@@ -190,7 +190,7 @@ export default function HomePage() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-primary-50 border border-primary-100 rounded-full px-4 py-1.5 mb-6">
               <span className="h-2 w-2 rounded-full bg-primary-500" />
-              <span className="text-sm text-primary-700 font-medium">Now available in Niger</span>
+              <span className="text-sm text-primary-700 font-medium">Now available in South Africa</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-slate-900 leading-[1.1] tracking-tight">
@@ -495,7 +495,7 @@ export default function HomePage() {
             Ready to start tracking?
           </h2>
           <p className="text-slate-400 mt-4 max-w-md mx-auto">
-            The simplest way for fuel stations and shops in Niger to track customer purchases.
+            The simplest way for fuel stations and shops in South Africa to track customer purchases.
           </p>
           <Link href="/register" className="mt-8 inline-block">
             <Button variant="accent" size="lg" className="h-12 text-base">
@@ -515,7 +515,7 @@ export default function HomePage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/kimates-logo-white.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
               <p className="mt-3 text-sm text-slate-600">
-                QR-based customer purchase tracking for businesses in Niger.
+                QR-based customer purchase tracking for businesses in South Africa.
               </p>
             </div>
             <div>
@@ -531,7 +531,7 @@ export default function HomePage() {
               <h4 className="font-semibold text-slate-200 mb-3 text-sm">Contact</h4>
               <ul className="space-y-2 text-sm">
                 <li>support@kimates.com</li>
-                <li>Niamey, Niger</li>
+                <li>Johannesburg, South Africa</li>
               </ul>
             </div>
           </div>

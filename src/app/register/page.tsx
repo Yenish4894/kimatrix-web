@@ -90,8 +90,8 @@ const schema = Joi.object({
 
 const initialForm = {
   name: "",
-  // Default Country to Niger — platform is Niger-only for MVP, saves a click for 99% of users
-  country: "Niger",
+  // Default Country to South Africa — saves a click for 99% of users
+  country: "South Africa",
   state: "",
   city: "",
   streetAddress: "",
