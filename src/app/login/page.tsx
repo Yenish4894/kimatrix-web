@@ -97,13 +97,21 @@ export default function LoginPage() {
     if (deactivatedMessage) setDeactivatedMessage(null);
   };
 
+  /** Surface the blurred field's error immediately, matching the register flow. */
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    const { error } = schema.validate(form, { abortEarly: false });
+    const detail = error?.details.find((d) => d.path[0] === name);
+    setErrors((prev) => ({ ...prev, [name]: detail?.message ?? "" }));
+  };
+
   const disabled = isLoading || rateLimitRemaining > 0;
 
   return (
     <AuthLayout title="Welcome Back" subtitle="Login to your account">
       <form onSubmit={handleSubmit} className="space-y-5">
         {deactivatedMessage && (
-          <div className="rounded-xl border border-error-100 bg-error-50/60 p-4">
+          <div role="alert" className="rounded-xl border border-error-100 bg-error-50/60 p-4">
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-full bg-error-100 flex items-center justify-center shrink-0" aria-hidden="true">
                 <ShieldOff className="h-4 w-4 text-error-600" />
@@ -122,6 +130,7 @@ export default function LoginPage() {
           placeholder="your@email.com or username"
           value={form.identifier}
           onChange={handleChange}
+          onBlur={handleBlur}
           error={errors.identifier}
           autoComplete="username"
         />
@@ -132,6 +141,7 @@ export default function LoginPage() {
           placeholder="Enter your password"
           value={form.password}
           onChange={handleChange}
+          onBlur={handleBlur}
           error={errors.password}
           autoComplete="current-password"
         />

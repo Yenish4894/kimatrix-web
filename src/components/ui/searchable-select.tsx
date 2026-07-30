@@ -134,6 +134,9 @@ export function SearchableSelect({
           aria-controls={listId}
           aria-autocomplete="list"
           aria-invalid={!!error}
+          aria-describedby={
+            error ? `${fieldId}-error` : helperText ? `${fieldId}-helper` : undefined
+          }
           autoComplete="off"
           disabled={disabled}
           placeholder={placeholder}
@@ -198,11 +201,13 @@ export function SearchableSelect({
         )}
       </div>
       {error && (
-        <p className="mt-1 text-[13px] text-error-500" role="alert">
+        <p id={`${fieldId}-error`} className="mt-1 text-[13px] text-error-500" role="alert">
           {error}
         </p>
       )}
-      {helperText && !error && <p className="mt-1 text-[13px] text-slate-400">{helperText}</p>}
+      {helperText && !error && (
+        <p id={`${fieldId}-helper`} className="mt-1 text-[13px] text-slate-400">{helperText}</p>
+      )}
     </div>
   );
 }

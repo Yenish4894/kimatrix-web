@@ -136,7 +136,8 @@ export default function QRSubmissionPage({
 
   const isFuelStation = company?.businessType === "fuel_station";
 
-  const validate = () => {
+  /** Pure — builds the full error map without touching state. */
+  const computeErrors = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
     // Mobile — validated via libphonenumber-js on the full E.164
@@ -164,8 +165,23 @@ export default function QRSubmissionPage({
       });
     }
 
+    return newErrors;
+  };
+
+  const validate = () => {
+    const newErrors = computeErrors();
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * Validate the blurred field only. Customers fill this on a phone with no
+   * account — catching a bad invoice number at blur beats a wall of errors
+   * after they've already hit Submit.
+   */
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    setErrors((prev) => ({ ...prev, [name]: computeErrors()[name] ?? "" }));
   };
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
@@ -282,7 +298,7 @@ export default function QRSubmissionPage({
 
         {/* Company info */}
         <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-2xl p-5 text-center mb-6 shadow-lg shadow-primary-600/20">
-          <h2 className="text-lg sm:text-xl font-bold font-heading">{company.companyName}</h2>
+          <h1 className="text-lg sm:text-xl font-bold font-heading text-white">{company.companyName}</h1>
           <span className="inline-flex items-center gap-1.5 mt-2 bg-white/15 backdrop-blur text-primary-100 text-xs font-medium px-3 py-1 rounded-full">
             {isFuelStation ? <Fuel className="h-3.5 w-3.5" aria-hidden="true" /> : <Store className="h-3.5 w-3.5" aria-hidden="true" />}
             {isFuelStation ? "Fuel Station" : "Shop"}
@@ -295,7 +311,7 @@ export default function QRSubmissionPage({
             <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center mb-4" aria-hidden="true">
               <CheckCircle className="h-8 w-8 text-success-500" />
             </div>
-            <h3 className="text-xl font-heading font-bold text-slate-800">Thank You!</h3>
+            <h2 className="text-xl font-heading font-bold text-slate-800">Thank You!</h2>
             <p className="text-slate-500 mt-2 text-sm">
               {success.fullName}, your purchase of{" "}
               <strong className="text-slate-700">{formatCurrency(success.amount, company?.country ?? "")}</strong> has been recorded.
@@ -313,9 +329,9 @@ export default function QRSubmissionPage({
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6">
-            <h3 className="text-base sm:text-lg font-heading font-semibold text-slate-800 text-center mb-5">
+            <h2 className="text-base sm:text-lg font-heading font-semibold text-slate-800 text-center mb-5">
               Record Your Purchase
-            </h3>
+            </h2>
 
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <CustomerPhoneInput
@@ -335,6 +351,7 @@ export default function QRSubmissionPage({
                 placeholder="Enter your full name"
                 value={form.fullName}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 error={errors.fullName}
                 autoComplete="name"
               />
@@ -343,9 +360,10 @@ export default function QRSubmissionPage({
                 <Input
                   label="Vehicle Registration"
                   name="vehicleNumber"
-                  placeholder="e.g. NE-1234-AB"
+                  placeholder="e.g. CA-123-456"
                   value={form.vehicleNumber}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   error={errors.vehicleNumber}
                   helperText="Letters, numbers, dashes — no spaces"
                   className="uppercase"
@@ -358,6 +376,7 @@ export default function QRSubmissionPage({
                 placeholder="As shown on your receipt"
                 value={form.invoiceNumber}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 error={errors.invoiceNumber}
               />
 
@@ -370,6 +389,7 @@ export default function QRSubmissionPage({
                 placeholder="0.00"
                 value={form.invoiceAmount}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 error={errors.invoiceAmount}
               />
 
@@ -379,7 +399,7 @@ export default function QRSubmissionPage({
                   <button
                     type="button"
                     onClick={requestLocation}
-                    className="w-full text-sm text-primary-600 hover:text-primary-700 py-2 flex items-center justify-center gap-2 border border-dashed border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
+                    className="w-full min-h-11 text-sm text-primary-600 hover:text-primary-700 py-2 flex items-center justify-center gap-2 border border-dashed border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
                   >
                     <MapPin className="h-4 w-4" aria-hidden="true" /> Attach location (optional)
                   </button>
@@ -403,7 +423,7 @@ export default function QRSubmissionPage({
               </div>
 
               {generalError && (
-                <p className="text-sm text-error-600 bg-error-50 border border-error-100 rounded-lg p-3">
+                <p role="alert" className="text-sm text-error-600 bg-error-50 border border-error-100 rounded-lg p-3">
                   {generalError}
                 </p>
               )}

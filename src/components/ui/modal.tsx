@@ -114,7 +114,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
             <h3 className="text-h3 font-heading font-semibold text-slate-800">{title}</h3>
             <button
               onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
               aria-label="Close"
               type="button"
             >

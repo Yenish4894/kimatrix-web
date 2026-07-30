@@ -101,7 +101,7 @@ export default function CompanyDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
         <Card className="lg:col-span-2">
           <CardContent className="text-center py-6 sm:py-8">
-            <h3 className="text-h3 font-heading font-semibold text-slate-800 mb-4 sm:mb-6">Your QR Code</h3>
+            <h2 className="text-h3 font-heading font-semibold text-slate-800 mb-4 sm:mb-6">Your QR Code</h2>
             <div className="bg-primary-50 rounded-2xl p-4 sm:p-6 inline-block mb-6 border border-primary-100">
               <div className="bg-white rounded-xl p-3">
                 {company?.qrUrl ? (
@@ -127,7 +127,7 @@ export default function CompanyDashboardPage() {
 
         <div className="lg:col-span-3">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-h3 font-heading font-semibold text-slate-800">Recent Purchases</h3>
+            <h2 className="text-h3 font-heading font-semibold text-slate-800">Recent Purchases</h2>
             <Link href="/company/purchases">
               <Button variant="ghost" size="sm">
                 View All <ArrowRight className="h-4 w-4" aria-hidden="true" />

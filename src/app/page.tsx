@@ -105,19 +105,25 @@ function FeatureCarousel() {
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {features.map((f, i) => (
+            /* Button is 44px tall with horizontal padding so the tap area clears
+               WCAG 2.5.5 without the 8px dots visually growing or overlapping. */
             <button
               type="button"
               key={f.title}
               onClick={() => emblaApi?.scrollTo(i)}
-              className={cn(
-                "h-2 rounded-full transition-all",
-                selectedIndex === i ? "w-6 bg-primary-600" : "w-2 bg-slate-300"
-              )}
+              className="h-11 px-1 flex items-center"
               aria-label={`Go to slide ${i + 1}`}
               aria-current={selectedIndex === i ? "true" : undefined}
-            />
+            >
+              <span
+                className={cn(
+                  "block h-2 rounded-full transition-all",
+                  selectedIndex === i ? "w-6 bg-primary-600" : "w-2 bg-slate-300"
+                )}
+              />
+            </button>
           ))}
         </div>
 
@@ -420,7 +426,7 @@ export default function HomePage() {
                   Most Popular
                 </span>
               </div>
-              <h3 className="text-xl font-semibold font-heading">30-Day Plan</h3>
+              <h3 className="text-xl font-semibold font-heading text-white">30-Day Plan</h3>
               <p className="text-primary-200 mt-1 text-sm">Best value for growing businesses</p>
               <div className="mt-6 mb-8">
                 {plansLoading ? (

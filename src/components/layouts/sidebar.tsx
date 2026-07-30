@@ -110,6 +110,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
 
   return (
     <aside
+      aria-label="Main navigation"
       className={cn(
         "fixed left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col transition-all duration-300 z-40",
         collapsed ? "w-[72px]" : "w-[260px]"
@@ -133,7 +134,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           type="button"
           onClick={() => { setCollapsed((prev) => { const next = !prev; onCollapsedChange?.(next); return next; }); }}
           className={cn(
-            "h-9 w-9 flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 transition-colors text-slate-400",
+            "tap-target h-9 w-9 flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 transition-colors text-slate-400",
             collapsed && "mx-auto mt-0"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -159,7 +160,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "relative flex items-center gap-3 h-10 rounded-lg transition-all duration-200 ease-out group/nav",
+                        "relative flex items-center gap-3 h-11 rounded-lg transition-all duration-200 ease-out group/nav",
                         collapsed ? "justify-center px-0" : "px-3",
                         isActive
                           ? "bg-gradient-to-r from-primary-50 to-primary-50/40 text-primary-700 font-semibold shadow-[0_1px_2px_rgba(13,148,136,0.06)]"
@@ -250,7 +251,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+              className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
               title="Logout"
               aria-label="Logout"
             >
@@ -262,7 +263,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           <button
             type="button"
             onClick={handleLogout}
-            className="mt-2 h-8 w-8 mx-auto flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            className="tap-target mt-2 h-8 w-8 mx-auto flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
             title="Logout"
             aria-label="Logout"
           >

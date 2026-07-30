@@ -19,7 +19,7 @@ export function Header({ title, onMenuToggle }: Readonly<HeaderProps>) {
         <button
           type="button"
           onClick={onMenuToggle}
-          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 transition-colors shrink-0"
+          className="tap-target lg:hidden h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 transition-colors shrink-0"
           aria-label="Toggle menu"
         >
           <Menu className="h-5 w-5" aria-hidden="true" />

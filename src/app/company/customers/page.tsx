@@ -107,7 +107,7 @@ export default function CustomersPage() {
         <Link
           href={`/company/customers/${row.id}`}
           aria-label={`View ${row.fullName}`}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
+          className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
         >
           <Eye className="h-4 w-4" aria-hidden="true" />
         </Link>

@@ -34,7 +34,7 @@ function PlanCard({
       onClick={() => onSelect(plan.id)}
       aria-pressed={selected}
       className={cn(
-        "relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 hover:shadow-md focus:outline-none",
+        "relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 hover:shadow-md",
         selected
           ? "border-primary-500 bg-primary-50/50 shadow-[0_0_0_3px_rgba(8,145,178,0.12)]"
           : "border-slate-200 bg-white hover:border-primary-200"

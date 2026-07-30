@@ -36,13 +36,13 @@ export function QueryErrorState({
 
   if (compact) {
     return (
-      <div className={`flex items-center gap-2 text-sm text-error-600 ${className ?? ""}`}>
+      <div role="alert" className={`flex items-center gap-2 text-sm text-error-600 ${className ?? ""}`}>
         <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="flex-1 truncate">Couldn&apos;t load {resource}</span>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="text-primary-600 hover:underline text-sm font-medium"
+            className="min-h-11 px-3 -mr-3 shrink-0 text-primary-600 hover:underline text-sm font-medium"
             type="button"
           >
             Retry

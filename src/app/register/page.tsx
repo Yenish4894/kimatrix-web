@@ -410,7 +410,7 @@ export default function RegisterPage() {
                     }}
                     aria-pressed={selected}
                     className={cn(
-                      "relative text-left rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-sm focus:outline-none",
+                      "relative text-left rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-sm",
                       selected
                         ? "border-primary-500 bg-primary-50/50 shadow-[0_0_0_3px_rgba(8,145,178,0.12)]"
                         : "border-slate-200 bg-white hover:border-primary-200"

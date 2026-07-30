@@ -49,6 +49,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             )}
             ref={ref}
             aria-invalid={!!error}
+            aria-describedby={
+              error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined
+            }
             {...props}
           >
             {placeholder && (
@@ -65,12 +68,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" aria-hidden="true" />
         </div>
         {error && (
-          <p className="mt-1 text-[13px] text-error-500" role="alert">
+          <p id={`${selectId}-error`} className="mt-1 text-[13px] text-error-500" role="alert">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-[13px] text-slate-400">{helperText}</p>
+          <p id={`${selectId}-helper`} className="mt-1 text-[13px] text-slate-400">{helperText}</p>
         )}
       </div>
     );

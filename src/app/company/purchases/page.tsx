@@ -112,7 +112,7 @@ export default function PurchasesPage() {
         <Link
           href={`/company/purchases/${row.id}`}
           aria-label={`View invoice ${row.invoiceNumber}`}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
+          className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
         >
           <Eye className="h-4 w-4" aria-hidden="true" />
         </Link>
@@ -132,7 +132,7 @@ export default function PurchasesPage() {
             onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
           />
         </div>
-        <div className="flex items-center h-10 rounded-md border border-slate-200 bg-white hover:border-slate-300 divide-x divide-slate-200 overflow-hidden">
+        <div className="flex items-center h-11 rounded-md border border-slate-200 bg-white hover:border-slate-300 divide-x divide-slate-200 overflow-hidden transition-colors focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15">
           <div className="flex items-center gap-1.5 px-3">
             <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
