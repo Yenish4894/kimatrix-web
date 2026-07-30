@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loadSession, setCompanyIsActive } from "@/store/slices/authSlice";
 import { fetchCompanyProfile } from "@/store/slices/companySlice";
 import { PageLoader } from "@/components/ui/loader";
+import type { CompanyProfile } from "@/types";
 
 // Routes always accessible regardless of subscription status
 const BILLING_PREFIX = "/company/billing";
@@ -13,7 +14,19 @@ function isBillingRoute(pathname: string) {
   return pathname === BILLING_PREFIX || pathname.startsWith(BILLING_PREFIX + "/");
 }
 
-function isSubscriptionActive(expiresAt: string | null | undefined): boolean {
+// Access is decided server-side and delivered as `profile.hasAccess`.
+//
+// This deliberately no longer derives status from `subscriptionExpiresAt`. That check
+// treated a null expiry as "locked out" while the backend treated it as "admin comp —
+// allowed", so comped companies were bounced to billing forever while their API calls
+// succeeded. It also trusted the client's clock. One server-computed boolean now.
+//
+// The fallback exists only for the deploy window where this may run against the
+// previous backend. Once the backend release has shipped, this collapses to
+// `profile.hasAccess` and the legacy branch goes away.
+function resolveHasAccess(profile: CompanyProfile): boolean {
+  if (typeof profile.hasAccess === "boolean") return profile.hasAccess;
+  const expiresAt = profile.subscriptionExpiresAt;
   if (!expiresAt) return false;
   return new Date(expiresAt).getTime() > Date.now();
 }
@@ -79,7 +92,7 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
     // Still waiting for the profile — keep showing the loader.
     if (isLoadingProfile || !profile) return;
 
-    if (!isSubscriptionActive(profile.subscriptionExpiresAt)) {
+    if (!resolveHasAccess(profile)) {
       router.replace("/company/billing");
       return;
     }

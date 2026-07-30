@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { Company, SubscriptionPlan } from "@/types";
+import type { CompanyProfile, SubscriptionPlan } from "@/types";
 import { companyService } from "@/services";
 import { paymentService } from "@/services/payment.service";
 
 interface CompanyState {
-  profile: Company | null;
+  profile: CompanyProfile | null;
   plans: SubscriptionPlan[];
   isLoadingProfile: boolean;
   isLoadingPlans: boolean;
@@ -54,7 +54,8 @@ const companySlice = createSlice({
       state.plansFetchFailed = false;
     },
     // Called after a successful PayPal capture to sync subscription fields
-    // without waiting for a full profile refetch.
+    // without waiting for a full profile refetch. Optimistic — the authoritative
+    // values arrive on the next `fetchCompanyProfile`.
     setSubscription: (
       state,
       action: { payload: { subscriptionEndsAt: string } }
@@ -62,6 +63,12 @@ const companySlice = createSlice({
       if (state.profile) {
         state.profile.subscriptionExpiresAt = action.payload.subscriptionEndsAt;
         state.profile.isActive = true;
+        // Keep the entitlement block coherent, or the gate would bounce the user
+        // straight back to billing on the very next render after paying.
+        state.profile.hasAccess = true;
+        state.profile.subscriptionStatus = "active";
+        state.profile.accessUntil = action.payload.subscriptionEndsAt;
+        state.profile.isTrial = false;
       }
     },
   },

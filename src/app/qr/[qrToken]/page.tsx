@@ -271,7 +271,12 @@ export default function QRSubmissionPage({
     );
   }
 
-  if (!company.isActive) {
+  // Falls back to the old `isActive` flag so this page keeps working if it goes live
+  // ahead of the backend release. Simplify to `!company.isAcceptingSubmissions` once
+  // the backend has shipped — a wrong answer here shows real customers at a counter
+  // a "not accepting submissions" screen.
+  const acceptingSubmissions = company.isAcceptingSubmissions ?? company.isActive ?? true;
+  if (!acceptingSubmissions) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8">

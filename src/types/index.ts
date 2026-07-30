@@ -79,6 +79,45 @@ export interface Company extends CompanyAddress {
   };
 }
 
+/**
+ * Server-computed entitlement. Mirrors the backend's `computeEntitlement()`.
+ * `active` covers paid and comped; `trialing` is a live free trial.
+ */
+export type SubscriptionStatus =
+  | "pending"
+  | "trialing"
+  | "active"
+  | "trial_expired"
+  | "expired"
+  | "past_due"
+  | "deactivated";
+
+/**
+ * What `GET /company/profile` returns — a Company plus the entitlement block.
+ *
+ * Distinct from `Company` because the admin endpoints return the raw entity with no
+ * entitlement fields, and the access gate must never read a possibly-undefined flag.
+ */
+export interface CompanyProfile extends Company {
+  /**
+   * The ONLY thing the route gate should read. Never re-derive access from a date on
+   * the client: the old `subscriptionExpiresAt > Date.now()` check disagreed with the
+   * backend about what a null expiry meant, and trusted the client's clock.
+   *
+   * The whole block is optional ONLY for the window in which this frontend may be
+   * live against the previous backend. Make these required once the backend release
+   * has shipped, and drop the legacy fallback in `resolveHasAccess`.
+   */
+  hasAccess?: boolean;
+  subscriptionStatus?: SubscriptionStatus;
+  /** Unified end-of-access across trial, paid and comp. `null` = perpetual or not started. */
+  accessUntil?: string | null;
+  trialEndsAt?: string | null;
+  isTrial?: boolean;
+  isComped?: boolean;
+  canExport?: boolean;
+}
+
 // ─── Customer ──────────────────────────────────────────────
 
 export interface Customer {
@@ -117,7 +156,17 @@ export interface QRCompanyInfo {
   companyId: string;
   companyName: string;
   businessType: BusinessType;
-  isActive: boolean;
+  /**
+   * Replaces the old `isActive`, which ignored subscription expiry — the form
+   * rendered normally and the customer only hit the wall on submit.
+   *
+   * Optional only for the deploy window in which the frontend may be live against
+   * the previous backend. Make it required once the backend release has shipped.
+   */
+  isAcceptingSubmissions?: boolean;
+  /** @deprecated Superseded by `isAcceptingSubmissions`. Remove after the backend ships. */
+  isActive?: boolean;
+  /** Drives the currency symbol on the customer form. Absent on the old backend. */
   country?: string;
 }
 

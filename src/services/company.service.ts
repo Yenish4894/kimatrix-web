@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import type {
-  Company,
+  CompanyProfile,
   Customer,
   Purchase,
   CompanyStats,
@@ -25,13 +25,13 @@ interface PurchaseListParams extends ListParams {
 export const companyService = {
   // GET /api/company/profile
   getProfile: async () => {
-    const { data } = await api.get<{ data: Company }>("/company/profile");
+    const { data } = await api.get<{ data: CompanyProfile }>("/company/profile");
     return data.data;
   },
 
   // PUT /api/company/profile — partial update of editable fields
   updateProfile: async (payload: UpdateCompanyProfilePayload) => {
-    const { data } = await api.put<{ data: Company }>("/company/profile", payload);
+    const { data } = await api.put<{ data: CompanyProfile }>("/company/profile", payload);
     return data.data;
   },
 
