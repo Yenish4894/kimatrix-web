@@ -275,8 +275,11 @@ npm test -- --coverage
 
 3. **Set Environment Variables**
    ```
-   NEXT_PUBLIC_API_BASE_URL=https://api.kimates.com
+   NEXT_PUBLIC_API_BASE_URL=https://kimates.com
    ```
+
+   Origin only — the API client appends `/api` itself. The backend is
+   reverse-proxied under the main domain; there is no `api.*` subdomain.
 
 ### Manual Deployment
 

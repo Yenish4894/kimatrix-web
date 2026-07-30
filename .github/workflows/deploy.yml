@@ -28,6 +28,12 @@ jobs:
             echo ">>> Installing dependencies..."
             npm install --production=false
 
+            # Clear previous build output so a deleted route or chunk can't linger.
+            # `.next/cache` is deliberately preserved — it holds the incremental
+            # compiler cache, and removing it turns every deploy into a cold build.
+            echo ">>> Cleaning stale build output..."
+            find .next -mindepth 1 -maxdepth 1 ! -name cache -exec rm -rf {} + 2>/dev/null || true
+
             echo ">>> Building..."
             npm run build
 
