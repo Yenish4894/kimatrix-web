@@ -116,6 +116,8 @@ export interface CompanyProfile extends Company {
   isTrial?: boolean;
   isComped?: boolean;
   canExport?: boolean;
+  /** Owner's email confirmation state. The trial clock starts on verification. */
+  emailVerified?: boolean;
 }
 
 // ─── Customer ──────────────────────────────────────────────

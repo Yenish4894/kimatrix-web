@@ -8,6 +8,7 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, Card, CardContent, Button, Table } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { EmailVerificationBanner } from "@/components/billing/email-verification-banner";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
@@ -68,6 +69,11 @@ export default function CompanyDashboardPage() {
 
   return (
     <DashboardShell title="Dashboard" requiredRole="company">
+      <EmailVerificationBanner
+        emailVerified={company?.emailVerified}
+        email={company?.contactEmail}
+      />
+
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard

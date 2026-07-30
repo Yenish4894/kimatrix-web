@@ -78,4 +78,16 @@ export const authService = {
   changePassword: async (payload: PasswordChangePayload) => {
     await api.post("/auth/password-change", payload);
   },
+
+  // POST /api/auth/email-verification/confirm — public; the link is opened from an
+  // inbox, possibly in a browser with no session.
+  confirmEmailVerification: async (token: string) => {
+    await api.post("/auth/email-verification/confirm", { token });
+  },
+
+  // POST /api/auth/email-verification/resend — authenticated, so it takes no email
+  // and cannot be used to probe which addresses exist. Rate limited server-side.
+  resendEmailVerification: async () => {
+    await api.post("/auth/email-verification/resend");
+  },
 };
