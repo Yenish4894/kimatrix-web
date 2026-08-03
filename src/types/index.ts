@@ -47,9 +47,32 @@ export interface CompanyAddress {
 export interface SubscriptionPlan {
   id: string;
   name: string;
+  description?: string | null;
   durationDays: number;
   price: string;
   currency: string;
+  /**
+   * Drives the "Most Popular" badge. Replaces the old hardcoded `durationDays === 30`
+   * check, which would have un-featured everything the moment an admin created plans.
+   */
+  isPopular?: boolean;
+  sortOrder?: number;
+}
+
+/** Admin view of a plan — adds lifecycle state the public catalogue never exposes. */
+export interface AdminPlan extends SubscriptionPlan {
+  isActive: boolean;
+  archivedAt: string | null;
+  supersededByPlanId: string | null;
+  supersedesPlanId: string | null;
+  /** Whether the plan carries billing history — an edit to price/duration will version it. */
+  hasPayments?: boolean;
+  hasSubscribers?: boolean;
+}
+
+export interface PlatformSettings {
+  trialDurationDays: number;
+  platformCurrency: string;
 }
 
 export interface Company extends CompanyAddress {

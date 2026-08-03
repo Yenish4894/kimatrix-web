@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import type { AdminStats, Company, PaginatedResponse } from "@/types";
+import type { AdminPlan, AdminStats, Company, PaginatedResponse, PlatformSettings } from "@/types";
 
 interface AdminCompaniesParams {
   page?: number;
@@ -40,4 +40,63 @@ export const adminService = {
   activateCompany: async (companyId: string) => {
     await api.patch(`/admin/companies/${companyId}/activate`);
   },
+
+  // ─── Plans ───────────────────────────────────────────────────
+
+  // GET /api/admin/plans — includes disabled and archived plans
+  getPlans: async () => {
+    const { data } = await api.get<{ data: AdminPlan[] }>("/admin/plans");
+    return data.data;
+  },
+
+  // POST /api/admin/plans
+  createPlan: async (payload: PlanFormPayload) => {
+    const { data } = await api.post<{ data: AdminPlan; message: string }>("/admin/plans", payload);
+    return data;
+  },
+
+  // PATCH /api/admin/plans/:id
+  // If price or duration changed on a plan that already has billing history, the
+  // server archives it and returns a NEW plan with a different id.
+  updatePlan: async (planId: string, payload: Partial<PlanFormPayload>) => {
+    const { data } = await api.patch<{ data: AdminPlan; message: string }>(
+      `/admin/plans/${planId}`,
+      payload,
+    );
+    return data;
+  },
+
+  // PATCH /api/admin/plans/:id/availability
+  setPlanActive: async (planId: string, isActive: boolean) => {
+    const { data } = await api.patch<{ data: AdminPlan; message: string }>(
+      `/admin/plans/${planId}/availability`,
+      { isActive },
+    );
+    return data;
+  },
+
+  // ─── Platform settings ───────────────────────────────────────
+
+  getSettings: async () => {
+    const { data } = await api.get<{ data: PlatformSettings }>("/admin/settings");
+    return data.data;
+  },
+
+  updateSettings: async (payload: Partial<PlatformSettings>) => {
+    const { data } = await api.patch<{ data: PlatformSettings; message: string }>(
+      "/admin/settings",
+      payload,
+    );
+    return data;
+  },
 };
+
+export interface PlanFormPayload {
+  name: string;
+  description?: string | null;
+  durationDays: number;
+  price: string;
+  isPopular?: boolean;
+  isActive?: boolean;
+  sortOrder?: number;
+}

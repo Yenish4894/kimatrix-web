@@ -19,6 +19,7 @@ import {
   Shield,
   Clock,
   CreditCard,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -61,6 +62,7 @@ const adminNav: NavSection[] = [
     items: [
       { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
       { icon: Building2, label: "Companies", href: "/admin/companies" },
+      { icon: Tag, label: "Plans & Trial", href: "/admin/plans" },
       { icon: Eye, label: "Visitor Stats", href: "/admin/visitors" },
       { icon: Mail, label: "Bulk Email", href: "/admin/email" },
     ],

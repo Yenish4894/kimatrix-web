@@ -25,8 +25,13 @@ function PlanCard({
   onSelect: (id: string) => void;
 }>) {
   const price = Number.parseFloat(plan.price);
-  const dailyRate = (price / plan.durationDays).toFixed(0);
-  const isPopular = plan.durationDays === 30;
+  // Guard the per-day figure: rounding to 0dp renders "≈ R 0/day" for anything under
+  // about 1.50 a day, which reads as a bug on a cheap or short plan.
+  const perDay = price / plan.durationDays;
+  const dailyRate = perDay >= 1 ? perDay.toFixed(0) : perDay.toFixed(2);
+  // Admin-controlled. Was hardcoded to `durationDays === 30`, which silently
+  // un-featured everything as soon as an admin created their own plans.
+  const isPopular = plan.isPopular === true;
 
   return (
     <button
