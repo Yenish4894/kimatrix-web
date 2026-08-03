@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { fetchPlans } from "@/store/slices/companySlice";
 import { cn } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
@@ -86,7 +87,12 @@ export default function BillingPage() {
   const dispatch = useAppDispatch();
   const { plans, isLoadingPlans, plansFetchFailed } = useAppSelector((state) => state.company);
   const companyIsActive = useAppSelector((state) => state.auth.companyIsActive);
-  const profile = useAppSelector((state) => state.company.profile);
+  // From the shared query, not Redux. The layout used to skip fetching the profile on
+  // billing routes, so this was ALWAYS null on every real entry path — the gate
+  // redirect, the PayPal cancel return, the post-register redirect, a reload. The
+  // "Current Subscription" card therefore never rendered and `isExpired` was
+  // permanently false, showing an expired customer the neutral "manage" copy.
+  const { data: profile } = useCompanyProfile();
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -121,7 +127,10 @@ export default function BillingPage() {
     }
   };
 
-  const isPending = companyIsActive === false;
+  // From the server-computed profile, not the localStorage-cached flag, which is only
+  // refreshed at login and so could say "active" for an account an admin has since
+  // deactivated — showing them the neutral "manage your subscription" banner.
+  const isPending = profile ? profile.hasAccess === false : companyIsActive === false;
   const isExpired =
     !!profile?.subscriptionExpiresAt &&
     new Date(profile.subscriptionExpiresAt).getTime() < Date.now();

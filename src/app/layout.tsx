@@ -7,22 +7,38 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
+// `display: "swap"` is next/font's default but stated explicitly — it is what keeps
+// text visible during load rather than invisible (FOIT), which matters most on the
+// public QR page over mobile data.
+//
+// `latin-ext` is deliberately KEPT on the two text faces. It costs ~40 KB, but company
+// and customer names are user-supplied free text and a missing glyph renders as tofu
+// or a mismatched system fallback in the middle of someone's name. Not worth the
+// saving in a market whose character set I can't verify.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
+// `preload: false` — mono is used only in authenticated tables (invoice numbers,
+// vehicle plates, QR tokens) and never above the fold. It was being <link rel=preload>ed
+// on every route from the root layout, including the public QR page, where it competes
+// with the LCP image for the same connection and is then never used.
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
   subsets: ["latin"],
   weight: ["400"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

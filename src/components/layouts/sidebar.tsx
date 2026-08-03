@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { logout } from "@/store/slices/authSlice";
 
 interface NavItem {
@@ -91,8 +92,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
-  const companyIsActive = useAppSelector((state) => state.auth.companyIsActive);
-  const profile = useAppSelector((state) => state.company.profile);
+  const { data: profile } = useCompanyProfile();
 
   const isAdmin = user?.userType === "super_admin";
   const nav = isAdmin ? adminNav : companyNav;
@@ -104,7 +104,12 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
 
   const daysLeft = getDaysLeft(profile?.subscriptionExpiresAt);
   const planDuration = profile?.currentPlan?.durationDays ?? 30;
-  const subscriptionActive = companyIsActive === true && daysLeft !== null && daysLeft > 0;
+  // Server-computed. This used to be `companyIsActive === true && daysLeft > 0`, where
+  // `companyIsActive` was a localStorage-cached boolean refreshed only at login. A
+  // comped company (hasAccess true, no expiry ⇒ daysLeft null) therefore saw a red
+  // "Inactive" badge and a "Subscribe to activate your account" link — permanently,
+  // while paying.
+  const subscriptionActive = profile?.hasAccess === true;
   const progressColor = daysLeft === null ? "bg-slate-300"
     : daysLeft > 10 ? "bg-success-500"
     : daysLeft > 3 ? "bg-accent-500"

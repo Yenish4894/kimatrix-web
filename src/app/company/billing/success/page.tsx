@@ -10,7 +10,8 @@ import { PageLoader } from "@/components/ui/loader";
 import { paymentService } from "@/services/payment.service";
 import { useAppDispatch } from "@/store/hooks";
 import { setCompanyIsActive } from "@/store/slices/authSlice";
-import { setSubscription, fetchCompanyProfile } from "@/store/slices/companySlice";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateCompanyProfile } from "@/hooks/useCompanyProfile";
 import { parseApiError } from "@/lib/errors";
 
 type CaptureState = "loading" | "success" | "error";
@@ -20,6 +21,7 @@ function CaptureHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const paypalOrderId = searchParams.get("token");
 
   const [state, setState] = useState<CaptureState>("loading");
@@ -39,11 +41,12 @@ function CaptureHandler() {
       .captureOrder(paypalOrderId)
       .then((result) => {
         setExpiresAt(result.subscriptionEndsAt);
-        // Sync Redux so sidebar + gate reflect activation immediately
         dispatch(setCompanyIsActive(true));
-        dispatch(setSubscription({ subscriptionEndsAt: result.subscriptionEndsAt }));
-        // Refetch full profile to get currentPlan details
-        dispatch(fetchCompanyProfile());
+        // Invalidate the shared profile query so the gate, sidebar and every page see
+        // the new subscription immediately. Previously this dispatched a Redux refetch
+        // and left the query cache alone, so with a 60s staleTime a user who had
+        // viewed the dashboard just before paying came back to pre-payment status.
+        void invalidateCompanyProfile(queryClient);
         setState("success");
       })
       .catch((err) => {

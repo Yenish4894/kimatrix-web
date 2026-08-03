@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy, Users, Download, FileText } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
@@ -120,7 +120,16 @@ function buildTop10(purchases: Purchase[]): CustomerRow[] {
 
 // ─── Shared preview table ──────────────────────────────────────
 
-function PreviewTable({ rows, ranked, fmtCurrency }: { rows: CustomerRow[]; ranked: boolean; fmtCurrency: (amount: string | number) => string }) {
+/**
+ * Memoized: the "All Customers" report loads every customer the company has, and this
+ * table lives on a page with unrelated state (the month/year selects). Without memo,
+ * changing the month re-rendered every row — 3,000 customers means 15,000 elements and
+ * 3,000 `Intl.NumberFormat` calls for a dropdown that doesn't affect this table.
+ *
+ * Depends on `fmtCurrency` being referentially stable, which `useCurrencyFormatter`
+ * now guarantees via `useCallback`.
+ */
+const PreviewTable = memo(function PreviewTable({ rows, ranked, fmtCurrency }: { rows: CustomerRow[]; ranked: boolean; fmtCurrency: (amount: string | number) => string }) {
   if (rows.length === 0) {
     return (
       <div className="text-center py-10 text-slate-500">
@@ -166,7 +175,7 @@ function PreviewTable({ rows, ranked, fmtCurrency }: { rows: CustomerRow[]; rank
       </table>
     </div>
   );
-}
+});
 
 // ─── Page ──────────────────────────────────────────────────────
 

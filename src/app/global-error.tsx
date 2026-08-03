@@ -37,7 +37,15 @@ export default function GlobalError({
       >
         <div style={{ textAlign: "center", padding: "32px", maxWidth: "440px" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/kimates-logo.png" alt="KIMates" style={{ height: "32px", width: "auto" }} />
+          {/* Intrinsic width/height so the error screen doesn't reflow as the logo
+              loads — the one screen where a second layout jump is least welcome. */}
+          <img
+            src="/brand/kimates-logo.png"
+            alt="KIMates"
+            width={150}
+            height={32}
+            style={{ height: "32px", width: "auto" }}
+          />
           <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#0F172A", marginTop: "32px" }}>
             We hit a critical error
           </h2>

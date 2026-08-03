@@ -65,6 +65,19 @@ export function CustomerPhoneInput({
 
   const countries = useMemo(buildCountryList, []);
 
+  // The <option> ELEMENTS, not just the data. All five fields of the QR form share one
+  // state object, so a keystroke in "Invoice Amount" re-renders this component — which
+  // meant constructing and diffing ~240 React elements per character typed, on a phone.
+  const countryOptions = useMemo(
+    () =>
+      countries.map((c) => (
+        <option key={c.isoCode} value={c.isoCode}>
+          {c.flag} {c.name} (+{c.dialCode})
+        </option>
+      )),
+    [countries]
+  );
+
   const dialCode = useMemo(() => {
     if (!countryCode) return null;
     try {
@@ -133,11 +146,7 @@ export function CustomerPhoneInput({
         )}
       >
         <option value="">Select country</option>
-        {countries.map((c) => (
-          <option key={c.isoCode} value={c.isoCode}>
-            {c.flag} {c.name} (+{c.dialCode})
-          </option>
-        ))}
+        {countryOptions}
       </select>
 
       {/* Number input with locked dial code prefix */}

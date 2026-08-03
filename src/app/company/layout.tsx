@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loadSession, setCompanyIsActive } from "@/store/slices/authSlice";
-import { fetchCompanyProfile } from "@/store/slices/companySlice";
+import { loadSession } from "@/store/slices/authSlice";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { PageLoader } from "@/components/ui/loader";
 import { QueryErrorState } from "@/components/ui";
+import { parseApiError } from "@/lib/errors";
 import type { CompanyProfile } from "@/types";
 
 // Routes always accessible regardless of subscription status
@@ -37,35 +38,28 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
   const router = useRouter();
   const pathname = usePathname();
 
-  const { isAuthenticated, isLoading: authLoading, companyIsActive } = useAppSelector(
-    (state) => state.auth
-  );
-  const { profile, isLoadingProfile, profileErrorStatus } = useAppSelector(
-    (state) => state.company
-  );
+  const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
 
   const [sessionChecked, setSessionChecked] = useState(false);
   const [gatePassed, setGatePassed] = useState(false);
-  const [gateError, setGateError] = useState(false);
 
-  // Step 1: restore session from localStorage once
+  // Restore session from localStorage once.
   useEffect(() => {
     dispatch(loadSession()).finally(() => setSessionChecked(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Step 2: once authenticated, fetch company profile for subscription gate.
-  // `pathname` is included so that navigating away from a billing page (where
-  // the fetch is skipped) to a non-billing page correctly triggers the fetch.
-  useEffect(() => {
-    if (!sessionChecked || !isAuthenticated) return;
-    if (isBillingRoute(pathname)) return; // billing pages bypass the gate
-    if (profile || isLoadingProfile) return; // already have it or fetching
-    dispatch(fetchCompanyProfile());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionChecked, isAuthenticated, pathname]);
+  // The SAME query the pages use — one fetch, one cache, one invalidation surface.
+  //
+  // Note this is no longer skipped on billing routes. Skipping the fetch there meant
+  // `/company/billing` always rendered with a null profile on every real entry path
+  // (the gate redirect, the PayPal cancel return, a reload), so its "Current
+  // Subscription" card never appeared and an expired customer was shown the neutral
+  // "Manage your subscription" copy instead of an expiry warning. Only the *redirect*
+  // is skipped on billing routes; the fetch always runs.
+  const { data: profile, isLoading: isLoadingProfile, error } = useCompanyProfile();
+  const profileErrorStatus = error ? parseApiError(error).status : null;
 
-  // Step 3: evaluate the gate
   useEffect(() => {
     if (!sessionChecked) return;
 
@@ -74,31 +68,27 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
       return;
     }
 
-    // Billing routes are always accessible — no subscription required
+    // Billing routes are always reachable — no subscription required to pay.
     if (isBillingRoute(pathname)) {
       setGatePassed(true);
       return;
     }
 
-    // The REAL subscription state (from the profile) is the source of truth.
-    // We must NOT gate on the cached `companyIsActive` flag alone — it can be
-    // stale after activation (paid this session, activated via webhook/admin,
-    // or logged in before paying). Wait for the profile, then decide.
-    // Only an authorization failure means "not subscribed". `profileFetchFailed`
-    // alone also covers 500s, CORS failures, offline devices and the request timeout —
-    // sending those to the billing page told customers with an active paid
-    // subscription to pay again, with no error and no retry. Some of them would.
-    if (profileErrorStatus === 401 || profileErrorStatus === 402 || profileErrorStatus === 403) {
+    // Only an authorization failure means "not subscribed". Treating every failure as
+    // one told customers with an active paid subscription to pay again — a 500, a CORS
+    // failure, an offline device or a timeout all landed on "Choose a Plan".
+    if (
+      profileErrorStatus === 401 ||
+      profileErrorStatus === 402 ||
+      profileErrorStatus === 403
+    ) {
       router.replace("/company/billing");
       return;
     }
-    if (profileErrorStatus !== null) {
-      // Anything else is a transient failure — render a retry instead of redirecting.
-      setGateError(true);
-      return;
-    }
+    // Anything else is transient — fall through to the retryable error state below.
+    if (profileErrorStatus !== null) return;
 
-    // Still waiting for the profile — keep showing the loader.
+    // Still waiting — keep showing the loader.
     if (isLoadingProfile || !profile) return;
 
     if (!resolveHasAccess(profile)) {
@@ -106,38 +96,30 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
       return;
     }
 
-    // Active subscription confirmed — sync the cached flag if it drifted so the
-    // sidebar / plan-status widgets reflect reality.
-    if (companyIsActive !== true) {
-      dispatch(setCompanyIsActive(true));
-    }
     setGatePassed(true);
   }, [
     sessionChecked,
     isAuthenticated,
-    companyIsActive,
     isLoadingProfile,
     profile,
     profileErrorStatus,
     pathname,
     router,
-    dispatch,
   ]);
 
   // A transient failure gets an explicit, retryable error rather than a silent
   // redirect to the payment page.
-  if (gateError) {
+  if (
+    profileErrorStatus !== null &&
+    profileErrorStatus !== 401 &&
+    profileErrorStatus !== 402 &&
+    profileErrorStatus !== 403 &&
+    !isBillingRoute(pathname)
+  ) {
     return (
       <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <QueryErrorState
-            error={null}
-            resource="your account"
-            onRetry={() => {
-              setGateError(false);
-              void dispatch(fetchCompanyProfile());
-            }}
-          />
+          <QueryErrorState error={error} resource="your account" />
         </div>
       </div>
     );

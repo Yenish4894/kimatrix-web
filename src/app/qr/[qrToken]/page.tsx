@@ -12,41 +12,66 @@ import {
   Store,
   WifiOff,
 } from "lucide-react";
-import { Button, Input, CustomerPhoneInput, isoFromCountryName } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
+// By path, not via the barrel — this drags in the country dataset and phone metadata,
+// and this is the only route that needs them.
+import {
+  CustomerPhoneInput,
+  isoFromCountryName,
+} from "@/components/ui/customer-phone-input";
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils";
 import { qrService } from "@/services";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import Joi from "joi";
 import type { QRCompanyInfo, QRSubmissionResponse } from "@/types";
 
 const VEHICLE = /^[A-Za-z0-9-]+$/;
 const MAX_INVOICE_AMOUNT = 10_000_000;
 
-const baseSchema = {
-  fullName: Joi.string().min(2).max(255).required().messages({
-    "string.empty": "Full name is required",
-    "string.min": "Name must be at least 2 characters",
-  }),
-  invoiceNumber: Joi.string().min(1).max(64).required().messages({
-    "string.empty": "Invoice number is required",
-  }),
-  invoiceAmount: Joi.number().positive().max(MAX_INVOICE_AMOUNT).required().messages({
-    "number.base": "Enter a valid amount",
-    "number.positive": "Amount must be positive",
-    "number.max": `Amount cannot exceed ${MAX_INVOICE_AMOUNT.toLocaleString()}`,
-  }),
+/**
+ * Hand-rolled rather than Joi.
+ *
+ * Joi is 171 KB raw / 53 KB gzipped and is not tree-shakeable — it builds its whole
+ * type registry at module scope, so these four rules cost exactly as much as the
+ * 15-field registration schema. That was 21% of everything this route shipped, parsed
+ * before hydration, on the one page a walk-up customer loads over mobile data.
+ *
+ * The page already hand-rolls the phone check via `isValidPhoneNumber`, so this is
+ * consistent with what was here rather than a new pattern. The server validates all
+ * of this again regardless — this layer exists purely to catch mistakes early.
+ */
+const RULES: Record<string, (raw: string) => string | undefined> = {
+  fullName: (v) => {
+    const t = v.trim();
+    if (!t) return "Full name is required";
+    if (t.length < 2) return "Name must be at least 2 characters";
+    if (t.length > 255) return "Name is too long";
+    return undefined;
+  },
+  invoiceNumber: (v) => {
+    const t = v.trim();
+    if (!t) return "Invoice number is required";
+    if (t.length > 64) return "Invoice number is too long";
+    return undefined;
+  },
+  invoiceAmount: (v) => {
+    if (!v.trim()) return "Enter a valid amount";
+    const n = Number(v);
+    if (!Number.isFinite(n)) return "Enter a valid amount";
+    if (n <= 0) return "Amount must be positive";
+    if (n > MAX_INVOICE_AMOUNT)
+      return `Amount cannot exceed ${MAX_INVOICE_AMOUNT.toLocaleString()}`;
+    return undefined;
+  },
+  vehicleNumber: (v) => {
+    const t = v.trim().toUpperCase();
+    if (!t) return "Vehicle number is required";
+    if (t.length < 2) return "Vehicle number is too short";
+    if (t.length > 32) return "Vehicle number is too long";
+    if (!VEHICLE.test(t)) return "Only letters, numbers, and dashes allowed";
+    return undefined;
+  },
 };
-
-const fuelSchema = Joi.object({
-  ...baseSchema,
-  vehicleNumber: Joi.string().min(2).max(32).pattern(VEHICLE).required().messages({
-    "string.empty": "Vehicle number is required",
-    "string.pattern.base": "Only letters, numbers, and dashes allowed",
-  }),
-});
-
-const shopSchema = Joi.object(baseSchema);
 
 interface GeoLocation {
   latitude: number;
@@ -174,22 +199,14 @@ export default function QRSubmissionPage({
       newErrors.mobile = "Enter a valid phone number for the selected country";
     }
 
-    // Remaining fields via Joi
-    const schema = isFuelStation ? fuelSchema : shopSchema;
-    const payload: Record<string, unknown> = {
-      fullName: form.fullName.trim(),
-      invoiceNumber: form.invoiceNumber.trim(),
-      invoiceAmount: form.invoiceAmount ? Number(form.invoiceAmount) : undefined,
-    };
-    if (isFuelStation) {
-      payload.vehicleNumber = form.vehicleNumber.toUpperCase().trim();
-    }
-    const { error } = schema.validate(payload, { abortEarly: false });
-    if (error) {
-      error.details.forEach((d) => {
-        const key = d.path[0] as string;
-        if (!newErrors[key]) newErrors[key] = d.message;
-      });
+    // Vehicle number only applies to fuel stations; shops must not be asked for it.
+    const fields = isFuelStation
+      ? (["fullName", "invoiceNumber", "invoiceAmount", "vehicleNumber"] as const)
+      : (["fullName", "invoiceNumber", "invoiceAmount"] as const);
+
+    for (const field of fields) {
+      const message = RULES[field]?.(form[field]);
+      if (message) newErrors[field] = message;
     }
 
     return newErrors;
@@ -360,7 +377,16 @@ export default function QRSubmissionPage({
         {/* Brand */}
         <div className="text-center mb-6 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/kimates-logo.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
+          {/* Above the fold on the highest-traffic mobile route — hint the browser to
+              fetch it early rather than at its default low priority. */}
+          <img
+            src="/brand/kimates-logo.png"
+            alt="KIMates"
+            width={150}
+            height={32}
+            fetchPriority="high"
+            className="h-8 w-auto"
+          />
         </div>
 
         {/* Company info */}
