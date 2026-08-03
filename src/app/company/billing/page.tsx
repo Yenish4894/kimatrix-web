@@ -51,8 +51,13 @@ function PlanCard({
         </span>
       )}
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-bold text-slate-800">{plan.name}</p>
+          {/* Admins can write this in the plan editor; without rendering it here they
+              were composing copy nobody ever saw. */}
+          {plan.description && (
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">{plan.description}</p>
+          )}
           <p className="text-xs text-slate-400 mt-0.5">≈ {plan.currency} {dailyRate}/day</p>
         </div>
         <div className="text-right shrink-0">
@@ -83,10 +88,13 @@ export default function BillingPage() {
     }
   }, [dispatch, plans.length, plansFetchFailed]);
 
-  // Pre-select the popular plan once plans load
+  // Pre-select the plan the admin marked popular, falling back to the first.
+  // This used to look for `durationDays === 30`, so once plans became admin-managed the
+  // badge and the pre-selection could land on two different cards — or, with no 30-day
+  // plan at all, on an arbitrary one.
   useEffect(() => {
     if (plans.length > 0 && !selectedPlanId) {
-      const popular = plans.find((p) => p.durationDays === 30) ?? plans[0];
+      const popular = plans.find((p) => p.isPopular) ?? plans[0];
       setSelectedPlanId(popular.id);
     }
   }, [plans, selectedPlanId]);

@@ -24,27 +24,36 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
     description: plan?.description ?? "",
     durationDays: plan ? String(plan.durationDays) : "",
     price: plan?.price ?? "",
+    sortOrder: plan?.sortOrder !== undefined ? String(plan.sortOrder) : "",
     isPopular: plan?.isPopular ?? false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Editing price or duration on a plan that has already been sold creates a new
   // version rather than rewriting the old one. Warn before they save, not after.
+  //
+  // Compared numerically: the server stores "249.00", so a string compare flagged
+  // typing "249" as a change and showed the versioning warning for an edit that would
+  // actually apply in place.
   const carriesHistory = Boolean(plan?.hasPayments || plan?.hasSubscribers);
-  const billingChanged =
-    isEdit &&
-    (form.price.trim() !== plan?.price ||
-      form.durationDays.trim() !== String(plan?.durationDays));
-  const willVersion = carriesHistory && billingChanged;
+  const priceChanged =
+    isEdit && Number.parseFloat(form.price || "NaN") !== Number.parseFloat(plan?.price ?? "NaN");
+  const durationChanged =
+    isEdit && Number.parseInt(form.durationDays || "NaN", 10) !== plan?.durationDays;
+  const willVersion = carriesHistory && (priceChanged || durationChanged);
 
   const saveM = useMutation({
     mutationFn: async () => {
+      const sortOrder = Number.parseInt(form.sortOrder, 10);
       const payload: PlanFormPayload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
         durationDays: Number.parseInt(form.durationDays, 10),
         price: form.price.trim(),
         isPopular: form.isPopular,
+        // Omitted when blank so the server keeps its own default (the plan duration),
+        // rather than being pinned to 0 and dragging the plan to the front.
+        ...(Number.isFinite(sortOrder) ? { sortOrder } : {}),
       };
       return isEdit && plan
         ? adminService.updatePlan(plan.id, payload)
@@ -116,9 +125,22 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
             onChange={handleChange}
             error={errors["price"]}
             placeholder="249.99"
-            helperText={plan ? `Charged in ${plan.currency}` : "Uses your platform currency"}
+            helperText={plan ? `Charged in ${plan.currency}` : "Uses your billing currency"}
           />
         </div>
+
+        <Input
+          label="Display order"
+          name="sortOrder"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={form.sortOrder}
+          onChange={handleChange}
+          error={errors["sortOrder"]}
+          placeholder="Leave blank to order by length"
+          helperText="Lower numbers appear first on the billing page."
+        />
 
         <div>
           <Checkbox
