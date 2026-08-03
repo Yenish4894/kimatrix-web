@@ -91,7 +91,7 @@ export function Table<T>({
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-slate-400">
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-slate-500">
                   {emptyMessage}
                 </td>
               </tr>
@@ -116,7 +116,7 @@ export function Table<T>({
       {/* Mobile card view */}
       <div className="md:hidden space-y-3">
         {data.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-lg p-6 text-center text-sm text-slate-400">
+          <div className="bg-white border border-slate-200 rounded-lg p-6 text-center text-sm text-slate-500">
             {emptyMessage}
           </div>
         ) : (
@@ -125,14 +125,25 @@ export function Table<T>({
               key={keyExtractor(row)}
               className="bg-white border border-slate-200 rounded-lg p-4 space-y-2"
             >
-              {columns.map((col) => (
-                <div key={col.key} className="flex justify-between items-center">
-                  <span className="text-xs font-medium text-slate-500 uppercase">{col.header}</span>
-                  <span className="text-sm text-slate-700">
-                    {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
-                  </span>
-                </div>
-              ))}
+              {columns.map((col) => {
+                const raw = String((row as Record<string, unknown>)[col.key] ?? "");
+                return (
+                  // `min-w-0` + `truncate` on the value and `shrink-0` on the label:
+                  // without them a long customer name wrapped onto three lines and
+                  // squeezed the label down to one character per line at 375px.
+                  <div key={col.key} className="flex justify-between items-start gap-3">
+                    <span className="text-xs font-medium text-slate-500 uppercase shrink-0">
+                      {col.header}
+                    </span>
+                    <span
+                      className="text-sm text-slate-700 min-w-0 text-right truncate"
+                      title={col.render ? undefined : raw}
+                    >
+                      {col.render ? col.render(row) : raw}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ))
         )}

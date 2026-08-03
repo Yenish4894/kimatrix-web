@@ -64,7 +64,7 @@ export default function CustomersPage() {
       render: (row: Customer) => (
         <div>
           <p className="font-medium text-slate-700">{row.fullName}</p>
-          <p className="text-xs text-slate-400">{row.mobile}</p>
+          <p className="text-xs text-slate-500">{row.mobile}</p>
         </div>
       ),
     },

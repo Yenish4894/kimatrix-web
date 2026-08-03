@@ -231,7 +231,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 mx-4">
                     <div className="bg-slate-700 rounded-md h-6 flex items-center px-3">
-                      <span className="text-xs text-slate-400">kimates.com/company/dashboard</span>
+                      <span className="text-xs text-slate-500">kimates.com/company/dashboard</span>
                     </div>
                   </div>
                 </div>
@@ -405,7 +405,7 @@ export default function HomePage() {
                     ${plan15 ? Number.parseFloat(plan15.price).toFixed(2) : "—"}
                   </span>
                 )}
-                <span className="text-slate-400 ml-1 text-sm">/ 15 days</span>
+                <span className="text-slate-500 ml-1 text-sm">/ 15 days</span>
               </div>
               <ul className="space-y-3 mb-8">
                 {["Unique QR Code", "Customer Dashboard", "PDF Reports", "Email Support"].map((f) => (
@@ -500,7 +500,7 @@ export default function HomePage() {
           <h2 className="text-3xl sm:text-4xl font-bold font-heading text-white">
             Ready to start tracking?
           </h2>
-          <p className="text-slate-400 mt-4 max-w-md mx-auto">
+          <p className="text-slate-500 mt-4 max-w-md mx-auto">
             The simplest way for fuel stations and shops in South Africa to track customer purchases.
           </p>
           <Link href="/register" className="mt-8 inline-block">
@@ -514,13 +514,13 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 py-12">
+      <footer className="bg-slate-950 text-slate-500 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/kimates-logo-white.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-sm text-slate-500">
                 QR-based customer purchase tracking for businesses in South Africa.
               </p>
             </div>

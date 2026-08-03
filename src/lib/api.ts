@@ -24,6 +24,24 @@ const api = axios.create({
   timeout: 30_000, // 30s — generous for slow networks in target region
 });
 
+/**
+ * For genuinely public endpoints (the customer QR flow). Deliberately has NO
+ * interceptors.
+ *
+ * Routing those calls through `api` meant any 401 triggered the shared auth handling:
+ * clear tokens, toast "Your session has ended", and push to /login. On `/qr/:token`
+ * there is nothing to log into, and the redirect discarded the invoice number and
+ * amount the customer had just typed. A merchant testing their own QR while signed in
+ * with an expired token was enough to trigger it.
+ *
+ * Shorter timeout too — a customer standing at a counter will not wait 30s.
+ */
+export const publicApi = axios.create({
+  baseURL: `${API_BASE_URL}/api`,
+  headers: { "Content-Type": "application/json" },
+  timeout: 15_000,
+});
+
 // ─── Request interceptor — attach Bearer ──────────────────
 api.interceptors.request.use((config) => {
   const token = TokenStorage.getAccessToken();

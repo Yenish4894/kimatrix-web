@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loadSession, setCompanyIsActive } from "@/store/slices/authSlice";
 import { fetchCompanyProfile } from "@/store/slices/companySlice";
 import { PageLoader } from "@/components/ui/loader";
+import { QueryErrorState } from "@/components/ui";
 import type { CompanyProfile } from "@/types";
 
 // Routes always accessible regardless of subscription status
@@ -39,12 +40,13 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
   const { isAuthenticated, isLoading: authLoading, companyIsActive } = useAppSelector(
     (state) => state.auth
   );
-  const { profile, isLoadingProfile, profileFetchFailed } = useAppSelector(
+  const { profile, isLoadingProfile, profileErrorStatus } = useAppSelector(
     (state) => state.company
   );
 
   const [sessionChecked, setSessionChecked] = useState(false);
   const [gatePassed, setGatePassed] = useState(false);
+  const [gateError, setGateError] = useState(false);
 
   // Step 1: restore session from localStorage once
   useEffect(() => {
@@ -82,10 +84,17 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
     // We must NOT gate on the cached `companyIsActive` flag alone — it can be
     // stale after activation (paid this session, activated via webhook/admin,
     // or logged in before paying). Wait for the profile, then decide.
-    if (profileFetchFailed) {
-      // Profile couldn't load — a still-pending company is blocked from
-      // /company/* by the backend, so this is the expected "not subscribed" path.
+    // Only an authorization failure means "not subscribed". `profileFetchFailed`
+    // alone also covers 500s, CORS failures, offline devices and the request timeout —
+    // sending those to the billing page told customers with an active paid
+    // subscription to pay again, with no error and no retry. Some of them would.
+    if (profileErrorStatus === 401 || profileErrorStatus === 402 || profileErrorStatus === 403) {
       router.replace("/company/billing");
+      return;
+    }
+    if (profileErrorStatus !== null) {
+      // Anything else is a transient failure — render a retry instead of redirecting.
+      setGateError(true);
       return;
     }
 
@@ -109,11 +118,30 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
     companyIsActive,
     isLoadingProfile,
     profile,
-    profileFetchFailed,
+    profileErrorStatus,
     pathname,
     router,
     dispatch,
   ]);
+
+  // A transient failure gets an explicit, retryable error rather than a silent
+  // redirect to the payment page.
+  if (gateError) {
+    return (
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <QueryErrorState
+            error={null}
+            resource="your account"
+            onRetry={() => {
+              setGateError(false);
+              void dispatch(fetchCompanyProfile());
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!sessionChecked || authLoading || !gatePassed) {
     return <PageLoader />;

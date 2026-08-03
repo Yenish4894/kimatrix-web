@@ -324,7 +324,7 @@ export default function CompanySettingsPage() {
                   Save Changes
                 </Button>
                 {!isDirty && (
-                  <span className="text-xs text-slate-400">No changes to save</span>
+                  <span className="text-xs text-slate-500">No changes to save</span>
                 )}
               </div>
             </form>

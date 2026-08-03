@@ -5,7 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { StatCard, Card, CardContent, Button, Table } from "@/components/ui";
+import { StatCard, Card, CardContent, Button, Table, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { EmailVerificationBanner } from "@/components/billing/email-verification-banner";
@@ -36,6 +36,10 @@ export default function CompanyDashboardPage() {
   const recentPurchases = recentPurchasesQ.data?.items ?? [];
   const isFuelStation = company?.businessType === "fuel_station";
   const isLoading = profileQ.isLoading || statsQ.isLoading;
+  // Without this, a failed /stats call rendered 0 customers, 0 purchases and 0.00
+  // total spend — indistinguishable from a brand-new account, and the currency symbol
+  // silently fell back to "$" because the profile was missing too.
+  const hasFatalError = profileQ.isError || statsQ.isError;
 
   const columns = [
     { key: "fullNameSnapshot", header: "Name" },
@@ -69,6 +73,17 @@ export default function CompanyDashboardPage() {
 
   return (
     <DashboardShell title="Dashboard" requiredRole="company">
+      {hasFatalError ? (
+        <QueryErrorState
+          error={profileQ.error ?? statsQ.error}
+          resource="your dashboard"
+          onRetry={() => {
+            void profileQ.refetch();
+            void statsQ.refetch();
+          }}
+        />
+      ) : (
+        <>
       <EmailVerificationBanner
         emailVerified={company?.emailVerified}
         email={company?.contactEmail}
@@ -119,7 +134,7 @@ export default function CompanyDashboardPage() {
             </div>
             <p className="text-sm font-medium text-slate-700">{company?.name ?? "Loading..."}</p>
             {company?.qrToken && (
-              <p className="text-xs text-slate-400 mt-1 font-mono break-all">
+              <p className="text-xs text-slate-500 mt-1 font-mono break-all">
                 /qr/{company.qrToken}
               </p>
             )}
@@ -140,15 +155,29 @@ export default function CompanyDashboardPage() {
               </Button>
             </Link>
           </div>
-          <Table
-            columns={columns}
-            data={recentPurchases}
-            keyExtractor={(row) => row.id}
-            isLoading={recentPurchasesQ.isLoading}
-            emptyMessage="No purchases yet. Share your QR code to get started!"
-          />
+          {/* Degrades independently of the stat cards — a failed purchases call must
+              not claim "No purchases yet. Share your QR code to get started!" to a
+              merchant who has plenty. */}
+          {recentPurchasesQ.isError ? (
+            <QueryErrorState
+              compact
+              error={recentPurchasesQ.error}
+              resource="recent purchases"
+              onRetry={() => recentPurchasesQ.refetch()}
+            />
+          ) : (
+            <Table
+              columns={columns}
+              data={recentPurchases}
+              keyExtractor={(row) => row.id}
+              isLoading={recentPurchasesQ.isLoading}
+              emptyMessage="No purchases yet. Share your QR code to get started!"
+            />
+          )}
         </div>
       </div>
+        </>
+      )}
     </DashboardShell>
   );
 }

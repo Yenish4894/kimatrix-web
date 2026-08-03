@@ -150,7 +150,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
         {nav.map((section) => (
           <div key={section.title} className="mb-6">
             {!collapsed && (
-              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 {section.title}
               </p>
             )}
@@ -177,7 +177,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                       )}
                       <item.icon className={cn(
                         "h-[18px] w-[18px] shrink-0 transition-colors",
-                        isActive ? "text-primary-600" : "text-slate-400 group-hover/nav:text-slate-600"
+                        isActive ? "text-primary-600" : "text-slate-500 group-hover/nav:text-slate-600"
                       )} aria-hidden="true" />
                       {!collapsed && <span className="text-[13px]">{item.label}</span>}
                     </Link>
@@ -246,7 +246,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
               <p className="text-[13px] font-medium text-slate-700 truncate">
                 {user?.username}
               </p>
-              <p className="text-[11px] text-slate-400">{user?.userType === "super_admin" ? "Admin" : "Company"}</p>
+              <p className="text-[11px] text-slate-500">{user?.userType === "super_admin" ? "Admin" : "Company"}</p>
             </div>
           )}
           {!collapsed && (

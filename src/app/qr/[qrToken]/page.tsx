@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useCallback, useRef, use } from "react";
 import { toast } from "react-toastify";
-import { CheckCircle, AlertTriangle, MapPin, Loader2, X, Fuel, Store } from "lucide-react";
-import { Button, Input, CustomerPhoneInput } from "@/components/ui";
+import {
+  CheckCircle,
+  AlertTriangle,
+  MapPin,
+  Loader2,
+  X,
+  Fuel,
+  Store,
+  WifiOff,
+} from "lucide-react";
+import { Button, Input, CustomerPhoneInput, isoFromCountryName } from "@/components/ui";
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils";
 import { qrService } from "@/services";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
@@ -66,24 +75,29 @@ export default function QRSubmissionPage({
   const [generalError, setGeneralError] = useState("");
   const [rateLimitRemaining, setRateLimitRemaining] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSlow, setIsSlow] = useState(false);
   const [success, setSuccess] = useState<QRSubmissionResponse & { fullName: string; amount: number } | null>(null);
 
   const [location, setLocation] = useState<GeoLocation | null>(null);
   const [locationStatus, setLocationStatus] = useState<"idle" | "pending" | "granted" | "denied">("idle");
 
-  // Resolve QR token on mount
-  useEffect(() => {
+  // Resolve QR token. Extracted from the effect so the "couldn't connect" screen can
+  // re-run it — a customer on a flaky connection must be able to retry without knowing
+  // to reload the browser.
+  const loadCompany = useCallback(() => {
     let cancelled = false;
+    setQrError(null);
+    setIsLoadingCompany(true);
     qrService
       .resolveToken(qrToken)
       .then((info) => {
-        if (!cancelled) {
-          setCompany(info);
-        }
+        if (!cancelled) setCompany(info);
       })
       .catch((err) => {
         if (cancelled) return;
         const parsed = parseApiError(err);
+        // 404 means the QR genuinely isn't ours. Anything else — offline, timeout,
+        // 5xx — is a transient failure and must NOT be reported as an invalid code.
         setQrError(parsed.status === 404 ? "not_found" : "generic");
       })
       .finally(() => {
@@ -94,15 +108,28 @@ export default function QRSubmissionPage({
     };
   }, [qrToken]);
 
+  useEffect(() => loadCompany(), [loadCompany]);
+
   // Countdown for 429.
   // Tick every second so the display is accurate even for the 15-minute
   // resubmit cooldown (BE 2026-05-03). Format as Xm Ys / Xm / Xs depending
   // on magnitude in the button label below.
   useEffect(() => {
     if (rateLimitRemaining <= 0) return;
-    const t = setTimeout(() => setRateLimitRemaining((n) => n - 1), 1000);
+    const t = setTimeout(() => {
+      // Clear the "too many requests" alert as the countdown ends, otherwise the
+      // button reverts to "Submit Purchase" while a red error still sits above it.
+      if (rateLimitRemaining === 1) setGeneralError("");
+      setRateLimitRemaining((n) => n - 1);
+    }, 1000);
     return () => clearTimeout(t);
   }, [rateLimitRemaining]);
+
+  // Move focus to the success card once it renders.
+  const successRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (success) successRef.current?.focus();
+  }, [success]);
 
   const formatCountdown = (totalSeconds: number): string => {
     if (totalSeconds <= 0) return "";
@@ -191,6 +218,9 @@ export default function QRSubmissionPage({
     setGeneralError("");
 
     setIsSubmitting(true);
+    // A bare spinner for up to 15s reads as "frozen" to someone standing at a counter,
+    // and the recovery they reach for is a browser reload, which loses the form.
+    const slowTimer = setTimeout(() => setIsSlow(true), 6000);
     try {
       const amount = Number(form.invoiceAmount);
       const payload: Parameters<typeof qrService.submitPurchase>[1] = {
@@ -228,6 +258,8 @@ export default function QRSubmissionPage({
         setGeneralError(errorMessageWithId(parsed));
       }
     } finally {
+      clearTimeout(slowTimer);
+      setIsSlow(false);
       setIsSubmitting(false);
     }
   };
@@ -243,7 +275,7 @@ export default function QRSubmissionPage({
   // ── Loading ───────────────────────────────────────────
   if (isLoadingCompany) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 text-primary-600 animate-spin mx-auto" aria-hidden="true" />
           <p className="mt-4 text-sm text-slate-500">Loading...</p>
@@ -252,19 +284,49 @@ export default function QRSubmissionPage({
     );
   }
 
+  // ── Couldn't reach the server ─────────────────────────
+  // Deliberately a separate screen from "invalid QR". These are the customer's most
+  // likely failure (poor signal at a pump or counter) and telling them the merchant's
+  // printed code is invalid is both wrong and unrecoverable — it generates support
+  // calls about a sticker that is perfectly fine.
+  if (qrError === "generic") {
+    return (
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
+        <div
+          role="alert"
+          className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8"
+        >
+          <div
+            className="mx-auto h-16 w-16 rounded-full bg-warning-100 flex items-center justify-center mb-4"
+            aria-hidden="true"
+          >
+            <WifiOff className="h-8 w-8 text-warning-500" />
+          </div>
+          <h1 className="text-xl font-heading font-bold text-slate-800">
+            Couldn&apos;t load this page
+          </h1>
+          <p className="text-slate-600 mt-2 text-sm">
+            Check your connection and try again. The QR code itself is fine.
+          </p>
+          <Button className="mt-5" fullWidth onClick={() => loadCompany()}>
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // ── QR invalid ────────────────────────────────────────
   if (qrError === "not_found" || !company) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8">
           <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center mb-4" aria-hidden="true">
             <X className="h-8 w-8 text-error-500" />
           </div>
           <h1 className="text-xl font-heading font-bold text-slate-800">QR Code Not Recognized</h1>
-          <p className="text-slate-500 mt-2 text-sm">
-            {qrError === "not_found"
-              ? "This QR code is invalid or no longer active."
-              : "Could not load this QR code. Please try again."}
+          <p className="text-slate-600 mt-2 text-sm">
+            This QR code is invalid or no longer active.
           </p>
         </div>
       </div>
@@ -278,7 +340,7 @@ export default function QRSubmissionPage({
   const acceptingSubmissions = company.isAcceptingSubmissions ?? company.isActive ?? true;
   if (!acceptingSubmissions) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8">
           <div className="mx-auto h-16 w-16 rounded-full bg-warning-100 flex items-center justify-center mb-4" aria-hidden="true">
             <AlertTriangle className="h-8 w-8 text-warning-500" />
@@ -293,7 +355,7 @@ export default function QRSubmissionPage({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-dvh bg-slate-50">
       <main className="max-w-md mx-auto px-4 py-6 sm:py-8">
         {/* Brand */}
         <div className="text-center mb-6 flex justify-center">
@@ -304,7 +366,10 @@ export default function QRSubmissionPage({
         {/* Company info */}
         <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-2xl p-5 text-center mb-6 shadow-lg shadow-primary-600/20">
           <h1 className="text-lg sm:text-xl font-bold font-heading text-white">{company.companyName}</h1>
-          <span className="inline-flex items-center gap-1.5 mt-2 bg-white/15 backdrop-blur text-primary-100 text-xs font-medium px-3 py-1 rounded-full">
+          {/* white on white/20 over primary-600 ≈ 5.9:1. Was primary-100 on white/15
+              at 2.73:1 — and this badge is the customer's only confirmation they
+              scanned the right kind of business. */}
+          <span className="inline-flex items-center gap-1.5 mt-2 bg-white/20 backdrop-blur text-white text-xs font-semibold px-3 py-1 rounded-full">
             {isFuelStation ? <Fuel className="h-3.5 w-3.5" aria-hidden="true" /> : <Store className="h-3.5 w-3.5" aria-hidden="true" />}
             {isFuelStation ? "Fuel Station" : "Shop"}
           </span>
@@ -312,12 +377,21 @@ export default function QRSubmissionPage({
 
         {/* Success state */}
         {success ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center animate-fade-in">
+          // Focus moves here on success. Without it focus fell to <body> when the form
+          // unmounted, so a screen-reader user got only the 5s toast and then had to
+          // re-traverse the page to find out whether their purchase was recorded.
+          <div
+            ref={successRef}
+            tabIndex={-1}
+            role="status"
+            aria-live="polite"
+            className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center animate-fade-in focus:outline-none"
+          >
             <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center mb-4" aria-hidden="true">
               <CheckCircle className="h-8 w-8 text-success-500" />
             </div>
             <h2 className="text-xl font-heading font-bold text-slate-800">Thank You!</h2>
-            <p className="text-slate-500 mt-2 text-sm">
+            <p className="text-slate-600 mt-2 text-sm">
               {success.fullName}, your purchase of{" "}
               <strong className="text-slate-700">{formatCurrency(success.amount, company?.country ?? "")}</strong> has been recorded.
             </p>
@@ -348,6 +422,10 @@ export default function QRSubmissionPage({
                   if (errors.mobile) setErrors((prev) => ({ ...prev, mobile: "" }));
                 }}
                 error={errors.mobile}
+                // Pre-select the merchant's own country — almost every customer
+                // standing in front of this QR code is in it, and the alternative is a
+                // disabled field behind a 240-entry list on the very first question.
+                defaultCountry={isoFromCountryName(company.country)}
               />
 
               <Input
@@ -421,7 +499,7 @@ export default function QRSubmissionPage({
                   </div>
                 )}
                 {locationStatus === "denied" && (
-                  <div className="text-center text-xs text-slate-400 py-2">
+                  <div className="text-center text-xs text-slate-500 py-2">
                     Location unavailable — submission will proceed without it
                   </div>
                 )}
@@ -442,11 +520,17 @@ export default function QRSubmissionPage({
               >
                 {rateLimitRemaining > 0 ? `Try again in ${formatCountdown(rateLimitRemaining)}` : "Submit Purchase"}
               </Button>
+
+              {isSlow && (
+                <p role="status" className="text-xs text-slate-600 text-center">
+                  Still sending — please don&apos;t close this page.
+                </p>
+              )}
             </form>
           </div>
         )}
 
-        <p className="text-center text-xs text-slate-400 mt-8">
+        <p className="text-center text-xs text-slate-500 mt-8">
           Powered by <span className="font-semibold text-slate-500">KIMates</span>
         </p>
       </main>

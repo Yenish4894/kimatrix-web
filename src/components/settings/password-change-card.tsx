@@ -127,7 +127,7 @@ export function PasswordChangeCard() {
             autoComplete="new-password"
           />
 
-          <div className="text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-lg p-3">
+          <div className="text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-lg p-3">
             For security, you&apos;ll be signed out of all devices and asked to log in again.
           </div>
 

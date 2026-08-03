@@ -38,7 +38,7 @@ export default function ErrorPage({
         </p>
 
         {error.digest && (
-          <p className="mt-3 text-xs text-slate-400 font-mono">
+          <p className="mt-3 text-xs text-slate-500 font-mono">
             Error ID: {error.digest}
           </p>
         )}

@@ -46,10 +46,17 @@ export function getCurrencySymbol(country: string): string {
 // Format a monetary amount using the currency symbol for the given country.
 // country defaults to "" → falls back to "$" (safe for admin/global views).
 // Backend sends decimals as strings — preserve precision.
-export function formatCurrency(amount: string | number, country = ""): string {
+export function formatCurrency(
+  amount: string | number | null | undefined,
+  country = ""
+): string {
   const symbol = getCurrencySymbol(country);
   const num = typeof amount === "string" ? Number.parseFloat(amount) : amount;
-  if (Number.isNaN(num)) return `${symbol} 0.00`;
+  // `Number.isNaN(null)` is false and `null.toLocaleString()` throws, so a nullable
+  // amount used to take the whole render down. That happened on the QR success screen
+  // AFTER the purchase was already recorded, so the customer saw a crash and
+  // re-submitted straight into a duplicate-invoice error.
+  if (typeof num !== "number" || !Number.isFinite(num)) return `${symbol} 0.00`;
   return `${symbol} ${num.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

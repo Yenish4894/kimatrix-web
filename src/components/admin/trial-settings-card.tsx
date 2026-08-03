@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Clock } from "lucide-react";
-import { Button, Card, CardContent, Input, Select } from "@/components/ui";
+import { Button, Card, CardContent, Input, Select, QueryErrorState } from "@/components/ui";
 import { adminService } from "@/services/admin.service";
 import { parseApiError } from "@/lib/errors";
 
@@ -52,6 +52,11 @@ export function TrialSettingsCard() {
     onError: (err) => setError(parseApiError(err).message),
   });
 
+  // Without this the admin gets an enabled but empty "Length (days)" box, a
+  // permanently disabled Save button and no explanation — and a currency dropdown
+  // showing nothing selected, which reads as "the platform currency was reset".
+  const settingsFailed = settingsQ.isError;
+
   const current = settingsQ.data?.trialDurationDays;
   const parsed = Number.parseInt(value, 10);
   const isDirty = Number.isFinite(parsed) && parsed !== current;
@@ -78,6 +83,20 @@ export function TrialSettingsCard() {
     // message inline rather than as a toast, since it tells them what to do next.
     onError: (err) => setCurrencyError(parseApiError(err).message),
   });
+
+  if (settingsFailed) {
+    return (
+      <Card>
+        <CardContent className="py-5">
+          <QueryErrorState
+            error={settingsQ.error}
+            resource="trial settings"
+            onRetry={() => settingsQ.refetch()}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -124,7 +143,7 @@ export function TrialSettingsCard() {
               </Button>
             </div>
 
-            <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-3 leading-relaxed">
               Changing this only affects companies who start a trial afterwards — anyone
               mid-trial keeps the length they were given.
             </p>
@@ -165,7 +184,7 @@ export function TrialSettingsCard() {
                 </Button>
               </div>
 
-              <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+              <p className="text-xs text-slate-500 mt-3 leading-relaxed">
                 You can only switch currency once no plans are on sale in the old one —
                 changing it can&apos;t convert your prices, so the amounts would be wrong.
                 Hide the old plans first, then create new ones at the right prices.

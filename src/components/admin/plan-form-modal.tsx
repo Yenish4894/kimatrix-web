@@ -148,7 +148,7 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
             checked={form.isPopular}
             onChange={(e) => setForm((prev) => ({ ...prev, isPopular: e.target.checked }))}
           />
-          <p className="mt-1 ml-7 text-xs text-slate-400">
+          <p className="mt-1 ml-7 text-xs text-slate-500">
             Only one plan can carry the badge — setting it here removes it from any other.
           </p>
         </div>

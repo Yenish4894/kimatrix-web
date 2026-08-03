@@ -87,11 +87,13 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <button
-        type="button"
-        aria-label="Close dialog"
-        className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in cursor-default"
+      {/* Overlay — a plain div, not a button. As a <button aria-label="Close dialog">
+          it sat outside the aria-modal container and before it in DOM order, so screen
+          readers announced a stray "Close dialog, button". Escape and the explicit
+          close button already cover keyboard users. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
       {/* Content */}
@@ -102,15 +104,20 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
         aria-label={title}
         tabIndex={-1}
         className={cn(
+          // flex + capped height so a tall body scrolls INSIDE the panel. Without this,
+          // body scroll is locked and the mobile sheet is pinned to bottom-0, so
+          // anything taller than the viewport had its top rendered off-screen and
+          // permanently unreachable — the plan form was unusable on a phone.
           "relative w-full mx-4 bg-white rounded-2xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.25),0_0_0_1px_rgba(15,23,42,0.06)] animate-scale-in focus:outline-none",
-          "max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:mx-0 max-sm:rounded-b-none max-sm:animate-slide-up",
+          "flex flex-col max-h-[85dvh]",
+          "max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:mx-0 max-sm:rounded-b-none max-sm:animate-slide-up max-sm:max-h-[92dvh]",
           sizeClasses[size],
           className
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-slate-200">
             <h3 className="text-h3 font-heading font-semibold text-slate-800">{title}</h3>
             <button
               onClick={onClose}
@@ -122,11 +129,12 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
             </button>
           </div>
         )}
-        {/* Body */}
-        <div className="px-6 py-4">{children}</div>
+        {/* Body — scrolls independently; overscroll-contain stops the page behind it
+            from scrolling once the body hits its end. */}
+        <div className="px-6 py-4 overflow-y-auto overscroll-contain">{children}</div>
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
+          <div className="shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
             {footer}
           </div>
         )}

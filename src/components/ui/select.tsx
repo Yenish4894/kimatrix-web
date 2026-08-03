@@ -73,7 +73,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </p>
         )}
         {helperText && !error && (
-          <p id={`${selectId}-helper`} className="mt-1 text-[13px] text-slate-400">{helperText}</p>
+          <p id={`${selectId}-helper`} className="mt-1 text-[13px] text-slate-500">{helperText}</p>
         )}
       </div>
     );

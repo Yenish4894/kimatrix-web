@@ -24,7 +24,7 @@ export function Loader({ className, size = "md", text }: LoaderProps) {
 
 export function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="flex items-center justify-center min-h-[60dvh]">
       <Loader size="lg" text="Loading..." />
     </div>
   );

@@ -215,7 +215,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
 
             {children}
 
-            <p className="text-center text-xs text-slate-400 mt-5">
+            <p className="text-center text-xs text-slate-500 mt-5">
               By continuing you agree to our{" "}
               <Link href="/terms" className="text-slate-500 hover:text-slate-700 underline underline-offset-2 transition-colors">Terms</Link>
               {" "}&amp;{" "}

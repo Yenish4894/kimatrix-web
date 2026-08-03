@@ -55,10 +55,15 @@
   --color-info-600: #0284C7;
   --color-info-700: #0369A1;
 
-  /* Fonts */
-  --font-heading: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Fonts — point at the variables next/font actually declares.
+     Previously these hardcoded the family NAMES, so `@theme inline` inlined
+     'Plus Jakarta Sans' into .font-heading and the self-hosted
+     __Plus_Jakarta_Sans_<hash> family next/font generates was never referenced.
+     Elements with font-heading fell back to system sans AND lost next/font's
+     size-adjust fallback metrics, so those headings could shift on load. */
+  --font-heading: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* Type scale */
   --text-display: 2.25rem;

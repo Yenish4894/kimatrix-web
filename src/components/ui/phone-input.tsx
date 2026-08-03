@@ -92,7 +92,7 @@ export function PhoneInput({
         <span
           className={cn(
             "flex items-center justify-center px-3 border-r border-slate-200 bg-slate-50 text-sm font-medium select-none whitespace-nowrap",
-            dialCode ? "text-slate-700" : "text-slate-400"
+            dialCode ? "text-slate-700" : "text-slate-500"
           )}
         >
           {dialCode ? `+${dialCode}` : "+?"}
@@ -119,7 +119,7 @@ export function PhoneInput({
         </p>
       )}
       {helperText && !error && (
-        <p id={`${inputId}-helper`} className="mt-1 text-[13px] text-slate-400">
+        <p id={`${inputId}-helper`} className="mt-1 text-[13px] text-slate-500">
           {!country
             ? "Select a country first"
             : helperText}

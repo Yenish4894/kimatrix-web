@@ -32,6 +32,8 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               )}
               ref={ref}
               name={name}
+              aria-invalid={!!error}
+              aria-describedby={error ? `${checkboxId}-error` : undefined}
               {...props}
             />
             <Check className="absolute h-3.5 w-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
@@ -46,7 +48,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           )}
         </div>
         {error && (
-          <p className="mt-1 text-[13px] text-error-500" role="alert">
+          <p id={`${checkboxId}-error`} className="mt-1 text-[13px] text-error-500" role="alert">
             {error}
           </p>
         )}

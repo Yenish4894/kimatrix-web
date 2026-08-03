@@ -15,6 +15,20 @@ interface CustomerPhoneInputProps {
   error?: string;
   helperText?: string;
   disabled?: boolean;
+  /**
+   * ISO-2 code to pre-select, e.g. "ZA". Without it the number field starts disabled
+   * behind a ~240-entry country list — on the public QR form that is the first field a
+   * walk-up customer meets, and effectively all of a given merchant's customers are in
+   * the merchant's own country, which the page already knows.
+   */
+  defaultCountry?: string | undefined;
+}
+
+/** Maps a country NAME (as stored on the company record) to its ISO-2 code. */
+export function isoFromCountryName(name: string | undefined | null): string | undefined {
+  if (!name) return undefined;
+  const target = name.trim().toLowerCase();
+  return Country.getAllCountries().find((c) => c.name.toLowerCase() === target)?.isoCode;
 }
 
 interface CountryOption {
@@ -45,8 +59,9 @@ export function CustomerPhoneInput({
   error,
   helperText,
   disabled,
+  defaultCountry,
 }: CustomerPhoneInputProps) {
-  const [countryCode, setCountryCode] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>(defaultCountry ?? "");
 
   const countries = useMemo(buildCountryList, []);
 
@@ -66,8 +81,17 @@ export function CustomerPhoneInput({
   }, [value, dialCode]);
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCountryCode(e.target.value);
-    onChange("");
+    const next = e.target.value;
+    const digits = localPart; // capture before countryCode changes under us
+    setCountryCode(next);
+    // Re-prefix rather than wipe. Clearing on every country change meant correcting a
+    // mis-tapped country silently deleted the number the customer had already typed.
+    try {
+      const nextDial = getCountryCallingCode(next as CountryCode);
+      onChange(digits ? `+${nextDial}${digits}` : "");
+    } catch {
+      onChange("");
+    }
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +154,7 @@ export function CustomerPhoneInput({
         <span
           className={cn(
             "flex items-center justify-center px-3 border-r border-slate-200 bg-slate-50 text-sm font-medium select-none whitespace-nowrap",
-            dialCode ? "text-slate-700" : "text-slate-400"
+            dialCode ? "text-slate-700" : "text-slate-500"
           )}
         >
           {dialCode ? `+${dialCode}` : "+?"}
@@ -163,7 +187,7 @@ export function CustomerPhoneInput({
         </p>
       )}
       {helperText && !error && (
-        <p id={`${inputId}-helper`} className="mt-1 text-[13px] text-slate-400">
+        <p id={`${inputId}-helper`} className="mt-1 text-[13px] text-slate-500">
           {helperText}
         </p>
       )}

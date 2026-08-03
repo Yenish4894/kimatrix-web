@@ -78,7 +78,7 @@ function VerifyEmailInner() {
               Go to dashboard
             </Button>
           </Link>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Not signed in?{" "}
             <Link href="/login" className="text-primary-600 hover:underline">
               Log in

@@ -8,19 +8,19 @@ import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-body",
+  variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600"],
 });
 
 const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-heading",
+  variable: "--font-plus-jakarta",
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700", "800"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+  variable: "--font-jetbrains",
   subsets: ["latin"],
   weight: ["400"],
 });

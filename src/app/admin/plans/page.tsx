@@ -96,6 +96,21 @@ export default function AdminPlansPage() {
               <div key={i} className="h-52 rounded-2xl bg-slate-100 animate-pulse" />
             ))}
 
+          {/* Without this, a fresh install renders a heading, a button and blank
+              space — indistinguishable from a rendering failure, on the screen an
+              admin lands on during first-time setup. */}
+          {!plansQ.isLoading && live.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-300 p-10 text-center">
+              <p className="text-sm font-medium text-slate-700">No plans yet</p>
+              <p className="text-sm text-slate-500 mt-1">
+                Companies can&apos;t subscribe until you create one.
+              </p>
+              <Button className="mt-4" onClick={() => setIsCreating(true)}>
+                Create the first plan
+              </Button>
+            </div>
+          )}
+
           {live.map((plan) => {
             const status = planStatus(plan);
             const isOnlyActive = plan.isActive && activeCount <= 1;
@@ -127,7 +142,7 @@ export default function AdminPlansPage() {
                   </p>
 
                   {(plan.hasPayments || plan.hasSubscribers) && (
-                    <p className="mt-3 text-xs text-slate-400 leading-relaxed">
+                    <p className="mt-3 text-xs text-slate-500 leading-relaxed">
                       This plan has been sold. Changing its price or length will create a new
                       version — existing companies keep what they bought.
                     </p>
@@ -189,7 +204,7 @@ export default function AdminPlansPage() {
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-600">{plan.name}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     {formatMoney(plan.price, plan.currency)} · {plan.durationDays} days
                   </p>
                 </div>

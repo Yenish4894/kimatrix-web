@@ -88,7 +88,7 @@ export default function QRCodePage() {
             <p className="text-lg font-semibold text-slate-800 font-heading">
               {company?.name ?? "Loading..."}
             </p>
-            {company && <p className="text-xs text-slate-400 mt-1">{formatAddress(company)}</p>}
+            {company && <p className="text-xs text-slate-500 mt-1">{formatAddress(company)}</p>}
 
             {company?.qrUrl && (
               <div className="mt-6 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 max-w-sm mx-auto">
@@ -117,7 +117,7 @@ export default function QRCodePage() {
                 <Download className="h-5 w-5" aria-hidden="true" /> Download Poster (PDF)
               </Button>
             </div>
-            <p className="text-xs text-slate-400 mt-3 max-w-xs mx-auto">
+            <p className="text-xs text-slate-500 mt-3 max-w-xs mx-auto">
               A branded poster with your QR, company name, and address — ready to print.
             </p>
           </CardContent>

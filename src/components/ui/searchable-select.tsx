@@ -133,6 +133,14 @@ export function SearchableSelect({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
+          // Without this the active option is conveyed by background colour alone —
+          // arrowing through the country list announced nothing at all, and the user
+          // heard silence until Enter changed the input value.
+          aria-activedescendant={
+            open && filtered[activeIndex]
+              ? `${fieldId}-opt-${filtered[activeIndex].value}`
+              : undefined
+          }
           aria-invalid={!!error}
           aria-describedby={
             error ? `${fieldId}-error` : helperText ? `${fieldId}-helper` : undefined
@@ -167,7 +175,7 @@ export function SearchableSelect({
             className="absolute z-30 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg"
           >
             {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-slate-400">{emptyText}</li>
+              <li className="px-3 py-2 text-sm text-slate-500">{emptyText}</li>
             ) : (
               filtered.map((option, i) => {
                 const isSelected = option.value === value;
@@ -175,6 +183,8 @@ export function SearchableSelect({
                 return (
                   <li
                     key={option.value}
+                    // id is what aria-activedescendant on the input points at.
+                    id={`${fieldId}-opt-${option.value}`}
                     ref={isActive ? activeRef : null}
                     role="option"
                     aria-selected={isSelected}
@@ -206,7 +216,7 @@ export function SearchableSelect({
         </p>
       )}
       {helperText && !error && (
-        <p id={`${fieldId}-helper`} className="mt-1 text-[13px] text-slate-400">{helperText}</p>
+        <p id={`${fieldId}-helper`} className="mt-1 text-[13px] text-slate-500">{helperText}</p>
       )}
     </div>
   );

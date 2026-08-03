@@ -46,14 +46,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             )}
             ref={ref}
             aria-invalid={!!error}
-            aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+            // Reference BOTH when both are present. Previously an error replaced the
+            // helper text in the a11y tree, so on the QR form the vehicle-format rule
+            // ("Letters, numbers, dashes — no spaces") stopped being announced at
+            // exactly the moment the user got it wrong.
+            aria-describedby={
+              [error && `${inputId}-error`, helperText && `${inputId}-helper`]
+                .filter(Boolean)
+                .join(" ") || undefined
+            }
             {...props}
           />
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 transition-colors"
               tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
@@ -66,8 +74,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {error}
           </p>
         )}
-        {helperText && !error && (
-          <p id={`${inputId}-helper`} className="mt-1 text-[13px] text-slate-400">
+        {/* Kept rendered alongside an error so the format rule stays visible and
+            stays referenced by aria-describedby. slate-500 (4.76:1), not slate-400
+            (2.56:1) — this is instructional text, not decoration. */}
+        {helperText && (
+          <p id={`${inputId}-helper`} className="mt-1 text-[13px] text-slate-500">
             {helperText}
           </p>
         )}

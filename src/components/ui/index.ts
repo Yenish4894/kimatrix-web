@@ -1,5 +1,5 @@
 export { Button } from "./button";
-export { CustomerPhoneInput } from "./customer-phone-input";
+export { CustomerPhoneInput, isoFromCountryName } from "./customer-phone-input";
 export { Input } from "./input";
 export { Select } from "./select";
 export { SearchableSelect } from "./searchable-select";

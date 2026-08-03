@@ -47,7 +47,7 @@ export function Header({ title, onMenuToggle }: Readonly<HeaderProps>) {
             <p className="text-[13px] font-medium text-slate-700 leading-none">
               {user?.username}
             </p>
-            <p className="text-[11px] text-slate-400 mt-0.5">{displayRole}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{displayRole}</p>
           </div>
         </div>
       </div>

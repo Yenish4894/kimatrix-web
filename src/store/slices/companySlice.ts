@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { CompanyProfile, SubscriptionPlan } from "@/types";
 import { companyService } from "@/services";
 import { paymentService } from "@/services/payment.service";
+import { parseApiError } from "@/lib/errors";
 
 interface CompanyState {
   profile: CompanyProfile | null;
@@ -9,6 +10,8 @@ interface CompanyState {
   isLoadingProfile: boolean;
   isLoadingPlans: boolean;
   profileFetchFailed: boolean;
+  /** HTTP status of the last profile failure. 0 = network/timeout, null = no failure. */
+  profileErrorStatus: number | null;
   plansFetchFailed: boolean;
 }
 
@@ -18,6 +21,7 @@ const initialState: CompanyState = {
   isLoadingProfile: false,
   isLoadingPlans: false,
   profileFetchFailed: false,
+  profileErrorStatus: null,
   plansFetchFailed: false,
 };
 
@@ -82,8 +86,13 @@ const companySlice = createSlice({
         state.profile = action.payload;
         state.isLoadingProfile = false;
         state.profileFetchFailed = false;
+        state.profileErrorStatus = null;
       })
-      .addCase(fetchCompanyProfile.rejected, (state) => {
+      .addCase(fetchCompanyProfile.rejected, (state, action) => {
+        // Capture the status so the route gate can tell "not subscribed" (403) apart
+        // from "the request failed" (500 / offline / timeout). Treating both as the
+        // former sent paying customers to the payment page.
+        state.profileErrorStatus = parseApiError(action.payload).status;
         state.isLoadingProfile = false;
         state.profileFetchFailed = true;
       })

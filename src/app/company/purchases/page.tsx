@@ -75,7 +75,7 @@ export default function PurchasesPage() {
       render: (row: Purchase) => (
         <div>
           <p className="font-medium text-slate-700">{row.fullNameSnapshot}</p>
-          <p className="text-xs text-slate-400">{row.customer?.mobile}</p>
+          <p className="text-xs text-slate-500">{row.customer?.mobile}</p>
         </div>
       ),
     },
@@ -143,7 +143,7 @@ export default function PurchasesPage() {
               aria-label="From date"
             />
           </div>
-          <span className="px-2 text-xs text-slate-400 select-none" aria-hidden="true">to</span>
+          <span className="px-2 text-xs text-slate-500 select-none" aria-hidden="true">to</span>
           <div className="flex items-center gap-1.5 px-3">
             <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input

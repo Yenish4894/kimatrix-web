@@ -12,7 +12,10 @@ import { cn } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
 
 function formatPrice(price: string): string {
-  return `${Number.parseFloat(price).toFixed(2)}`;
+  // An admin can save a plan with a blank price; without this the customer sees
+  // "ZAR NaN" on the card they are about to buy, and nobody completes that checkout.
+  const n = Number.parseFloat(price);
+  return Number.isFinite(n) ? n.toFixed(2) : "—";
 }
 
 function PlanCard({
@@ -25,10 +28,14 @@ function PlanCard({
   onSelect: (id: string) => void;
 }>) {
   const price = Number.parseFloat(plan.price);
-  // Guard the per-day figure: rounding to 0dp renders "≈ R 0/day" for anything under
-  // about 1.50 a day, which reads as a bug on a cheap or short plan.
-  const perDay = price / plan.durationDays;
-  const dailyRate = perDay >= 1 ? perDay.toFixed(0) : perDay.toFixed(2);
+  // Guard the per-day figure twice over: rounding to 0dp renders "≈ R 0/day" for
+  // anything under about 1.50 a day, and a zero duration would render "Infinity".
+  const perDay = plan.durationDays > 0 ? price / plan.durationDays : Number.NaN;
+  const dailyRate = Number.isFinite(perDay)
+    ? perDay >= 1
+      ? perDay.toFixed(0)
+      : perDay.toFixed(2)
+    : null;
   // Admin-controlled. Was hardcoded to `durationDays === 30`, which silently
   // un-featured everything as soon as an admin created their own plans.
   const isPopular = plan.isPopular === true;
@@ -58,7 +65,9 @@ function PlanCard({
           {plan.description && (
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">{plan.description}</p>
           )}
-          <p className="text-xs text-slate-400 mt-0.5">≈ {plan.currency} {dailyRate}/day</p>
+          {dailyRate && (
+            <p className="text-xs text-slate-500 mt-0.5">≈ {plan.currency} {dailyRate}/day</p>
+          )}
         </div>
         <div className="text-right shrink-0">
           <p className="text-xl font-extrabold text-slate-900">{plan.currency} {formatPrice(plan.price)}</p>
@@ -194,7 +203,7 @@ export default function BillingPage() {
                 <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
                 {isRedirecting ? "Redirecting to PayPal…" : "Pay with PayPal"}
               </Button>
-              <p className="text-center text-xs text-slate-400 mt-3">
+              <p className="text-center text-xs text-slate-500 mt-3">
                 You will be redirected to PayPal to complete your payment securely.
               </p>
             </div>

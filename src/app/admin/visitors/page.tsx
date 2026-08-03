@@ -17,7 +17,7 @@ export default function AdminVisitorsPage() {
             <p className="text-slate-500 mt-2 max-w-md mx-auto">
               Visitor analytics is under development and will be available in a future release.
             </p>
-            <div className="mt-6 inline-flex items-center gap-2 text-xs text-slate-400">
+            <div className="mt-6 inline-flex items-center gap-2 text-xs text-slate-500">
               <Eye className="h-3.5 w-3.5" aria-hidden="true" />
               Feature coming soon
             </div>

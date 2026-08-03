@@ -123,7 +123,7 @@ function buildTop10(purchases: Purchase[]): CustomerRow[] {
 function PreviewTable({ rows, ranked, fmtCurrency }: { rows: CustomerRow[]; ranked: boolean; fmtCurrency: (amount: string | number) => string }) {
   if (rows.length === 0) {
     return (
-      <div className="text-center py-10 text-slate-400">
+      <div className="text-center py-10 text-slate-500">
         <Users className="h-10 w-10 mx-auto mb-3 opacity-25" aria-hidden="true" />
         <p className="text-sm">No data available.</p>
       </div>
@@ -146,13 +146,13 @@ function PreviewTable({ rows, ranked, fmtCurrency }: { rows: CustomerRow[]; rank
             <tr key={row.customerId} className={`border-b border-slate-100 last:border-0 ${ranked && i < 3 ? "bg-primary-50/40" : ""}`}>
               <td className="py-3 px-3 text-base text-center">
                 {ranked && i === 0 ? <span aria-hidden="true">🥇</span> : ranked && i === 1 ? <span aria-hidden="true">🥈</span> : ranked && i === 2 ? <span aria-hidden="true">🥉</span> : (
-                  <span className="text-sm text-slate-400 font-mono">{i + 1}</span>
+                  <span className="text-sm text-slate-500 font-mono">{i + 1}</span>
                 )}
               </td>
               <td className="py-3 px-3 text-slate-700 font-medium">
                 {row.fullName}
                 {row.vehicleNumber && (
-                  <span className="ml-2 text-xs text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                  <span className="ml-2 text-xs text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
                     {row.vehicleNumber}
                   </span>
                 )}
@@ -251,7 +251,7 @@ export default function ReportsPage() {
               <Trophy className="h-4 w-4 text-accent-500" aria-hidden="true" />
               Top 10 Customers — Monthly
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Top 10 by spend within a selected month.
             </p>
           </div>
@@ -296,12 +296,12 @@ export default function ReportsPage() {
                     <h3 className="font-semibold text-slate-800">
                       Top 10 — {top10Label}
                       {top10Report.length > 10 && (
-                        <span className="ml-2 text-xs font-normal text-slate-400">
+                        <span className="ml-2 text-xs font-normal text-slate-500">
                           ({top10Report.length} shown — includes {top10Report.length - 10} tied at the cutoff)
                         </span>
                       )}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{companyName}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{companyName}</p>
                   </div>
                   <Button
                     variant="secondary"
@@ -327,7 +327,7 @@ export default function ReportsPage() {
               <Users className="h-4 w-4 text-primary-600" aria-hidden="true" />
               All Customers — Full Report
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Complete customer list sorted by all-time total spend.
             </p>
           </div>
@@ -339,7 +339,7 @@ export default function ReportsPage() {
                   <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                   Generate Report
                 </Button>
-                <p className="text-xs text-slate-400">Fetches all customer records — may take a moment for large datasets.</p>
+                <p className="text-xs text-slate-500">Fetches all customer records — may take a moment for large datasets.</p>
               </div>
               {allError && <p className="mt-3 text-sm text-error-600">{allError}</p>}
             </CardContent>
@@ -352,9 +352,9 @@ export default function ReportsPage() {
                   <div>
                     <h3 className="font-semibold text-slate-800">
                       All Customers
-                      <span className="ml-2 text-xs font-normal text-slate-400">({allReport.length} total)</span>
+                      <span className="ml-2 text-xs font-normal text-slate-500">({allReport.length} total)</span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{companyName} · All-time</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{companyName} · All-time</p>
                   </div>
                   <Button
                     variant="secondary"

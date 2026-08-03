@@ -137,16 +137,17 @@ export default function RegisterPage() {
     loadPlans();
   }, []);
 
-  const validate = () => {
+  /** Pure — builds the error map without touching state, so the caller can both set
+   *  it and use it to decide which field to focus. */
+  const computeErrors = (): Record<string, string> => {
     const { error } = schema.validate(form, { abortEarly: false });
-    if (!error) { setErrors({}); return true; }
+    if (!error) return {};
     const newErrors: Record<string, string> = {};
     error.details.forEach((d) => {
       const key = d.path[0] as string;
       if (!newErrors[key]) newErrors[key] = d.message;
     });
-    setErrors(newErrors);
-    return false;
+    return newErrors;
   };
 
   // Validate a single field on blur using the full schema so cross-field refs
@@ -179,14 +180,44 @@ export default function RegisterPage() {
     }
   };
 
+  /**
+   * Scroll the first invalid field into view and focus it.
+   *
+   * This form is ~15 fields across five sections; the submit button sits well below
+   * the fold. Without this, a failed validation set state and returned silently — the
+   * errors rendered hundreds of pixels above the viewport and the user experienced it
+   * as "the register button does nothing".
+   */
+  const focusFirstError = (errs: Record<string, string>) => {
+    const firstKey = Object.keys(errs).find((k) => errs[k]);
+    if (!firstKey) return;
+    const el =
+      document.querySelector<HTMLElement>(`[name="${firstKey}"]`) ??
+      document.getElementById("plan-picker");
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.focus({ preventScroll: true });
+  };
+
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     // Defensive guard against double-submit on slow connections / Suspense
     if (isLoading || isProcessing) return;
-    if (!validate()) return;
+
+    const validationErrors = computeErrors();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      focusFirstError(validationErrors);
+      return;
+    }
 
     if (!selectedPlanId) {
       setErrors((prev) => ({ ...prev, plan: "Please choose a plan to continue." }));
+      // The plan picker is the one error field-level blur validation can't catch, and
+      // it sits far above the button.
+      document.getElementById("plan-picker")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       return;
     }
 
@@ -253,7 +284,7 @@ export default function RegisterPage() {
     <AuthLayout title="Create Account" subtitle="Register your business to get started">
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h3>
+          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h2>
           <div className="space-y-4">
             <Input label="Company Name" name="name" placeholder="e.g. Sahel Fuel Co." value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -276,7 +307,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Address</h3>
+          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Address</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <CountrySelect
@@ -330,7 +361,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Contact Information</h3>
+          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Contact Information</h2>
           <div className="space-y-4">
             <Input label="Contact Email" name="contactEmail" type="email" placeholder="contact@company.com" value={form.contactEmail} onChange={handleChange} onBlur={handleBlur} error={errors.contactEmail} helperText="Public contact email" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -366,7 +397,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Account Setup</h3>
+          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Account Setup</h2>
           <div className="space-y-4">
             <Input label="Login Email" name="email" type="email" placeholder="admin@company.com" value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} helperText="Private email for logging in" />
             <Input label="Username" name="username" placeholder="Choose a unique username" value={form.username} onChange={handleChange} onBlur={handleBlur} error={errors.username} helperText="Letters, numbers, dots, dashes, underscores only" />
@@ -377,8 +408,10 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Choose Your Plan</h3>
+        {/* id is the scroll target for the "choose a plan" error, which is the one
+            validation failure blur-checking can't catch. */}
+        <div id="plan-picker" tabIndex={-1} className="focus:outline-none">
+          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Choose Your Plan</h2>
           {plansLoading ? (
             <div role="status" className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 text-primary-400 animate-spin" aria-hidden="true" />
@@ -419,7 +452,7 @@ export default function RegisterPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="text-sm font-bold text-slate-800">{plan.name}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{plan.durationDays} days</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{plan.durationDays} days</p>
                       </div>
                       {selected && (
                         <span className="h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0" aria-hidden="true">
@@ -438,7 +471,7 @@ export default function RegisterPage() {
           {errors.plan && (
             <p className="mt-2 text-[13px] text-error-500" role="alert">{errors.plan}</p>
           )}
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-slate-500 mt-3">
             You&apos;ll be securely redirected to PayPal to complete payment right after registering.
           </p>
         </div>

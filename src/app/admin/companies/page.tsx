@@ -87,7 +87,7 @@ export default function AdminCompaniesPage() {
       render: (row: Company) => (
         <div>
           <p className="font-medium text-slate-700">{row.name}</p>
-          <p className="text-xs text-slate-400 font-mono">{row.registrationNumber}</p>
+          <p className="text-xs text-slate-500 font-mono">{row.registrationNumber}</p>
         </div>
       ),
     },
@@ -106,7 +106,7 @@ export default function AdminCompaniesPage() {
       render: (row: Company) => (
         <div>
           <p className="text-sm text-slate-700">{row.owner?.username ?? "—"}</p>
-          <p className="text-xs text-slate-400">{row.owner?.email ?? "—"}</p>
+          <p className="text-xs text-slate-500">{row.owner?.email ?? "—"}</p>
         </div>
       ),
     },
