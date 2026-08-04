@@ -71,4 +71,38 @@ export const companyService = {
     return data.data;
   },
 
-};
+
+  // GET /api/company/reports/monthly?year=&month=
+  //
+  // Aggregated server-side. Takes year+month as numbers rather than an ISO date range
+  // on purpose: the previous code built `new Date(year, month, 1)` in LOCAL time and
+  // then called .toISOString(), so in any timezone behind UTC the "1st of the month"
+  // became the last day of the previous month and the report silently covered the
+  // wrong window.
+  getMonthlyReport: async (year: number, month: number) => {
+    const { data } = await api.get<{ data: MonthlyReport }>("/company/reports/monthly", {
+      params: { year, month },
+    });
+    return data.data;
+  },
+}
+
+export interface MonthlyReport {
+  from: string;
+  to: string;
+  totals: {
+    purchaseCount: number;
+    /** String, not number: numeric(14,2) through a JS float loses cents. */
+    totalAmount: string;
+    uniqueCustomers: number;
+  };
+  topCustomers: {
+    customerId: string;
+    fullName: string;
+    mobile: string;
+    vehicleNumber: string | null;
+    totalSpend: string;
+    purchaseCount: number;
+    lastActivity: string;
+  }[];
+}

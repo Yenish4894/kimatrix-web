@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { AlertCircle, Check, CreditCard, Loader2, RefreshCw, Zap } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
+import { SubscriptionCard } from "@/components/billing/subscription-card";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -194,6 +195,10 @@ export default function BillingPage() {
           <Zap className={cn("h-5 w-5 mt-0.5 shrink-0", isPending || isExpired ? "text-accent-500" : "text-primary-500")} aria-hidden="true" />
           <p className="text-sm text-slate-700">{bannerMessage}</p>
         </div>
+
+        {/* Manage an existing recurring subscription. Renders nothing for a customer
+            who has never subscribed, or who is on the legacy one-time flow. */}
+        <SubscriptionCard plans={plans} />
 
         {/* Plan selection */}
         <Card>

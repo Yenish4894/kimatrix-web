@@ -22,14 +22,21 @@ function CaptureHandler() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
-  const paypalOrderId = searchParams.get("token");
+  // Read `subscription_id` FIRST.
+  //
+  // A subscription return carries BOTH `subscription_id` and `token` — where `token`
+  // is the billing-agreement token, not an order id. Checking `token` first (as this
+  // did) therefore sent a BA token to captureOrder on every subscription approval,
+  // which fails and leaves the customer staring at an error after they have just paid.
+  const paypalSubscriptionId = searchParams.get("subscription_id");
+  const paypalOrderId = paypalSubscriptionId ? null : searchParams.get("token");
 
   const [state, setState] = useState<CaptureState>("loading");
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const capturedRef = useRef(false);
 
   useEffect(() => {
-    if (!paypalOrderId) {
+    if (!paypalOrderId && !paypalSubscriptionId) {
       setState("error");
       return;
     }
@@ -37,8 +44,21 @@ function CaptureHandler() {
     if (capturedRef.current) return;
     capturedRef.current = true;
 
+    if (paypalSubscriptionId) {
+      paymentService
+        .confirmSubscription(paypalSubscriptionId)
+        .then((status) => {
+          setExpiresAt(status.currentPeriodEnd);
+          dispatch(setCompanyIsActive(true));
+          void invalidateCompanyProfile(queryClient);
+          setState("success");
+        })
+        .catch(() => setState("error"));
+      return;
+    }
+
     paymentService
-      .captureOrder(paypalOrderId)
+      .captureOrder(paypalOrderId!)
       .then((result) => {
         setExpiresAt(result.subscriptionEndsAt);
         dispatch(setCompanyIsActive(true));
@@ -56,7 +76,7 @@ function CaptureHandler() {
           parsed.message || "We couldn't confirm your payment. Please contact support if you were charged."
         );
       });
-  }, [paypalOrderId, dispatch]);
+  }, [paypalOrderId, paypalSubscriptionId, dispatch]);
 
   if (state === "loading") {
     return (

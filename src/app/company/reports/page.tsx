@@ -10,7 +10,7 @@ import { companyService } from "@/services";
 import { parseApiError } from "@/lib/errors";
 // PDF generators are lazy-loaded on click — saves ~200KB from initial bundle.
 // See handlers below for dynamic import().
-import type { Purchase, Customer } from "@/types";
+import type { Customer } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -33,18 +33,6 @@ const MONTHS = [
 ];
 
 // ─── Data fetchers ─────────────────────────────────────────────
-
-async function fetchMonthPurchases(from: string, to: string): Promise<Purchase[]> {
-  const all: Purchase[] = [];
-  let page = 1;
-  while (true) {
-    const res = await companyService.getPurchases({ page, limit: 100, from, to });
-    all.push(...res.items);
-    if (page >= res.pagination.totalPages) break;
-    page++;
-  }
-  return all;
-}
 
 async function fetchAllCustomers(): Promise<Customer[]> {
   const all: Customer[] = [];
@@ -85,37 +73,6 @@ function topNWithTies(rows: CustomerRow[], n: number): CustomerRow[] {
   let i = n;
   while (i < rows.length && rows[i].totalSpend === cutoff) i++;
   return rows.slice(0, i);
-}
-
-function buildTop10(purchases: Purchase[]): CustomerRow[] {
-  const map = new Map<string, CustomerRow>();
-  for (const p of purchases) {
-    const key = p.customer?.id ?? p.fullNameSnapshot;
-    const amount = Number.parseFloat(p.invoiceAmount);
-    const existing = map.get(key);
-    if (existing) {
-      existing.totalSpend += amount;
-      existing.purchaseCount += 1;
-      existing.fullName = p.fullNameSnapshot;
-      if (p.vehicleNumberSnapshot) existing.vehicleNumber = p.vehicleNumberSnapshot;
-      // Keep the most recent submission timestamp
-      if (new Date(p.submittedAt) > new Date(existing.lastActivity)) {
-        existing.lastActivity = p.submittedAt;
-      }
-    } else {
-      map.set(key, {
-        customerId: key,
-        fullName: p.fullNameSnapshot,
-        mobile: p.customer?.mobile ?? "—",
-        vehicleNumber: p.vehicleNumberSnapshot,
-        totalSpend: amount,
-        purchaseCount: 1,
-        lastActivity: p.submittedAt,
-      });
-    }
-  }
-  const sorted = Array.from(map.values()).sort(compareRows);
-  return topNWithTies(sorted, 10);
 }
 
 // ─── Shared preview table ──────────────────────────────────────
@@ -210,10 +167,27 @@ export default function ReportsPage() {
     setTop10Error(null);
     setTop10Report(null);
     try {
-      const from = new Date(selectedYear, selectedMonth, 1).toISOString().split("T")[0];
-      const to = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split("T")[0];
-      const purchases = await fetchMonthPurchases(from, to);
-      setTop10Report(buildTop10(purchases));
+      // One aggregated request. This used to page through every purchase in the month,
+      // 100 rows at a time and sequentially, then sum them in the browser — a busy
+      // month meant 100 round trips before anything rendered, with every row crossing
+      // the wire only to be reduced to ten numbers. The database does the grouping now.
+      //
+      // Passing year/month rather than an ISO range also fixes a timezone bug: the old
+      // code built `new Date(year, month, 1)` in LOCAL time and then called
+      // .toISOString(), so in any timezone behind UTC the "1st" became the previous
+      // month's last day and the report covered the wrong window.
+      const report = await companyService.getMonthlyReport(selectedYear, selectedMonth + 1);
+      setTop10Report(
+        report.topCustomers.map((c) => ({
+          customerId: c.customerId,
+          fullName: c.fullName,
+          mobile: c.mobile,
+          vehicleNumber: c.vehicleNumber,
+          totalSpend: Number.parseFloat(c.totalSpend),
+          purchaseCount: c.purchaseCount,
+          lastActivity: c.lastActivity,
+        })),
+      );
       setTop10Label(`${MONTHS[selectedMonth]} ${selectedYear}`);
     } catch (err) {
       setTop10Error(parseApiError(err).message);
