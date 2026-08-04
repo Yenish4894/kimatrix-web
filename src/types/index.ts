@@ -135,6 +135,8 @@ export interface CompanyProfile extends Company {
   subscriptionStatus?: SubscriptionStatus;
   /** Unified end-of-access across trial, paid and comp. `null` = perpetual or not started. */
   accessUntil?: string | null;
+  /** Both ends of the trial window — the progress bar needs the span, not just the end. */
+  trialStartedAt?: string | null;
   trialEndsAt?: string | null;
   isTrial?: boolean;
   isComped?: boolean;

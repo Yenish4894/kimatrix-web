@@ -9,6 +9,7 @@ import { StatCard, Card, CardContent, Button, Table, QueryErrorState } from "@/c
 import { formatDate } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { EmailVerificationBanner } from "@/components/billing/email-verification-banner";
+import { TrialBanner } from "@/components/subscription/trial-banner";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
@@ -73,6 +74,7 @@ export default function CompanyDashboardPage() {
 
   return (
     <DashboardShell title="Dashboard" requiredRole="company">
+      <TrialBanner />
       {hasFatalError ? (
         <QueryErrorState
           error={profileQ.error ?? statsQ.error}

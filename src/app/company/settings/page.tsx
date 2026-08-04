@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, Input, Button, Badge, Checkbox } from "@
 import { CountrySelect, StateSelect, CityInput } from "@/components/ui/country-state-select";
 import { PhoneInput, validatePhoneForCountry } from "@/components/ui/phone-input";
 import { PasswordChangeCard } from "@/components/settings/password-change-card";
+import { ExportDataCard } from "@/components/subscription/export-data-card";
 import { formatDate } from "@/lib/utils";
 import { companyService } from "@/services";
 import { useAppSelector } from "@/store/hooks";
@@ -62,6 +63,23 @@ type ProfileForm = {
 };
 
 export default function CompanySettingsPage() {
+  // `?export=1` — where the paywall's "Download my data" button and both expiry emails
+  // land. Scroll the export card into view so the customer is not dropped at the top
+  // of a long settings form wondering what they were sent here for.
+  //
+  // Reads `window.location.search` rather than `useSearchParams()` deliberately: the
+  // latter forces this route into a Suspense boundary for static rendering, which is a
+  // lot of machinery for one optional query flag.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!new URLSearchParams(window.location.search).has("export")) return;
+    // rAF so the scroll runs after the first paint, when the card actually has a box.
+    const id = window.requestAnimationFrame(() => {
+      document.getElementById("export")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   const user = useAppSelector((state) => state.auth.user);
   const qc = useQueryClient();
 
@@ -364,6 +382,12 @@ export default function CompanySettingsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Data export — reachable at ?export=1, which is where the paywall's
+            "Download my data" button and both expiry emails point. */}
+        <div id="export">
+          <ExportDataCard />
+        </div>
 
         {/* Password change */}
         <PasswordChangeCard />

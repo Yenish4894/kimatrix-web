@@ -12,6 +12,35 @@ interface ModalProps {
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
   className?: string;
+  /**
+   * When false the dialog cannot be dismissed: no close button, no overlay click, no
+   * Escape. Used only by the paywall, where there is no "back to the page behind"
+   * because the page behind is no longer the customer's to view.
+   *
+   * A non-dismissible dialog is only defensible when it offers real exits of its own.
+   * The paywall offers three, all keyboard-reachable: subscribe, download my data, log
+   * out. Do not set this false on a dialog that is merely important.
+   *
+   * Defaults to true, so all existing call sites keep their current behaviour.
+   */
+  dismissible?: boolean;
+  /**
+   * `alertdialog` tells a screen reader this interrupts the workflow and requires a
+   * response, which is exactly right for the paywall and wrong for an ordinary form.
+   */
+  role?: "dialog" | "alertdialog";
+  /**
+   * Where to put focus on open. Without it the first focusable element wins, which on
+   * the paywall is the primary "Choose a plan" button — fine, but the heading carries
+   * the context a screen-reader user needs first.
+   */
+  initialFocusRef?: React.RefObject<HTMLElement | null>;
+  /**
+   * Accessible name when the dialog draws its own header instead of using `title`.
+   * A dialog with neither is announced only as "dialog", which tells a screen-reader
+   * user nothing about what just interrupted them.
+   */
+  ariaLabel?: string;
 }
 
 const sizeClasses = {
@@ -30,14 +59,28 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-export function Modal({ open, onClose, title, children, footer, size = "md", className }: Readonly<ModalProps>) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  size = "md",
+  className,
+  dismissible = true,
+  role = "dialog",
+  initialFocusRef,
+  ariaLabel,
+}: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        // The focus trap below still runs when non-dismissible: the dialog stays
+        // keyboard-navigable, it just cannot be escaped out of.
+        if (dismissible) onClose();
         return;
       }
       // Focus trap on Tab: cycle focus within the dialog
@@ -57,7 +100,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
         }
       }
     },
-    [onClose]
+    [onClose, dismissible]
   );
 
   useEffect(() => {
@@ -72,8 +115,9 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
     // Move initial focus into the dialog (the first focusable, or the dialog root)
     const dialog = dialogRef.current;
     if (dialog) {
+      const explicit = initialFocusRef?.current;
       const first = dialog.querySelector<HTMLElement>(FOCUSABLE);
-      (first ?? dialog).focus();
+      (explicit ?? first ?? dialog).focus();
     }
 
     return () => {
@@ -81,7 +125,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };
-  }, [open, handleKeyDown]);
+  }, [open, handleKeyDown, initialFocusRef]);
 
   if (!open) return null;
 
@@ -94,14 +138,14 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
+        {...(dismissible ? { onClick: onClose } : {})}
       />
       {/* Content */}
       <div
         ref={dialogRef}
-        role="dialog"
+        role={role}
         aria-modal="true"
-        aria-label={title}
+        aria-label={title ?? ariaLabel}
         tabIndex={-1}
         className={cn(
           // flex + capped height so a tall body scrolls INSIDE the panel. Without this,
@@ -119,6 +163,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
         {title && (
           <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-slate-200">
             <h3 className="text-h3 font-heading font-semibold text-slate-800">{title}</h3>
+            {dismissible && (
             <button
               onClick={onClose}
               className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
@@ -127,6 +172,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md", cla
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
+            )}
           </div>
         )}
         {/* Body — scrolls independently; overscroll-contain stops the page behind it

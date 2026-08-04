@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
+import { toEntitlement, useCountdown } from "@/hooks/useEntitlement";
 import { logout } from "@/store/slices/authSlice";
 
 interface NavItem {
@@ -102,8 +103,28 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
     router.push("/login");
   };
 
-  const daysLeft = getDaysLeft(profile?.subscriptionExpiresAt);
-  const planDuration = profile?.currentPlan?.durationDays ?? 30;
+  // `accessUntil` unifies trial, paid and comp — `subscriptionExpiresAt` is the PAID
+  // expiry only, so during a trial it is null and the whole block below vanished
+  // exactly when the countdown mattered most.
+  const entitlement = profile ? toEntitlement(profile) : null;
+  const countdown = useCountdown(entitlement?.accessUntil ?? null);
+  const daysLeft = getDaysLeft(entitlement?.accessUntil?.toISOString() ?? null);
+
+  // The denominator, and the bug it replaces: this was
+  // `profile?.currentPlan?.durationDays ?? 30`. A trial has no `currentPlan`, so day
+  // one of a 7-day trial divided 7 by 30 and drew a ~23% bar — the customer's brand
+  // new trial looked nearly spent. Use the trial length while trialing.
+  const trialSpanDays =
+    entitlement?.isTrial && profile?.trialStartedAt && profile?.trialEndsAt
+      ? Math.max(
+          1,
+          Math.round(
+            (new Date(profile.trialEndsAt).getTime() - new Date(profile.trialStartedAt).getTime()) /
+              86_400_000,
+          ),
+        )
+      : null;
+  const planDuration = trialSpanDays ?? profile?.currentPlan?.durationDays ?? 30;
   // Server-computed. This used to be `companyIsActive === true && daysLeft > 0`, where
   // `companyIsActive` was a localStorage-cached boolean refreshed only at login. A
   // comped company (hasAccess true, no expiry ⇒ daysLeft null) therefore saw a red
@@ -208,14 +229,16 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                 ? "bg-success-100 text-success-700"
                 : "bg-error-100 text-error-700"
             )}>
-              {subscriptionActive ? "Active" : "Inactive"}
+              {!subscriptionActive ? "Inactive" : entitlement?.isTrial ? "Free trial" : "Active"}
             </span>
           </div>
           {subscriptionActive && daysLeft !== null && (
             <div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500">
                 <Clock className="h-3 w-3" aria-hidden="true" />
-                <span>{daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining</span>
+                {/* Hours-then-minutes inside the last two days. "1 day left" sitting
+                    unchanged for a full 24 hours tells nobody whether to act now. */}
+                <span>{countdown ? `${countdown.label} remaining` : `${daysLeft} days remaining`}</span>
               </div>
               {/* Progress bar */}
               <div className="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
