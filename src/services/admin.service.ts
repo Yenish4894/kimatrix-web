@@ -41,6 +41,45 @@ export const adminService = {
     await api.patch(`/admin/companies/${companyId}/activate`);
   },
 
+  // ─── Subscription / trial administration ─────────────────────
+
+  // POST /api/admin/companies/:id/trial/extend
+  // Stacks onto any remaining trial time rather than replacing it.
+  extendTrial: async (companyId: string, days: number) => {
+    const { data } = await api.post<{ data: { trialEndsAt: string; status: string } }>(
+      `/admin/companies/${companyId}/trial/extend`,
+      { days },
+    );
+    return data.data;
+  },
+
+  // PATCH /api/admin/companies/:id/comp
+  // `reason` is REQUIRED when granting — the API rejects a grant without one.
+  // `compedUntil: null` means perpetual.
+  setComp: async (
+    companyId: string,
+    payload: { isComped: boolean; reason?: string; compedUntil?: string | null },
+  ) => {
+    const { data } = await api.patch<{ data: { status: string; hasAccess: boolean } }>(
+      `/admin/companies/${companyId}/comp`,
+      payload,
+    );
+    return data.data;
+  },
+
+  // GET /api/admin/companies/:id/trial-identities
+  getTrialIdentities: async (companyId: string) => {
+    const { data } = await api.get<{ data: AdminTrialIdentity[] }>(
+      `/admin/companies/${companyId}/trial-identities`,
+    );
+    return data.data;
+  },
+
+  // POST /api/admin/trial-identities/:id/release
+  releaseTrialIdentity: async (identityId: string, reason: string) => {
+    await api.post(`/admin/trial-identities/${identityId}/release`, { reason });
+  },
+
   // ─── Plans ───────────────────────────────────────────────────
 
   // GET /api/admin/plans — includes disabled and archived plans
@@ -99,4 +138,20 @@ export interface PlanFormPayload {
   isPopular?: boolean;
   isActive?: boolean;
   sortOrder?: number;
+}
+
+/**
+ * A burned trial identifier, as the admin screen sees it.
+ *
+ * `preview` is a masked form (`j••••h@gmail.com`). The server never returns the real
+ * value — it only stores an HMAC, which is not reversible — and the preview is what
+ * support actually needs to confirm they have the right record.
+ */
+export interface AdminTrialIdentity {
+  id: string;
+  type: "email" | "phone";
+  preview: string;
+  claimedAt: string;
+  releasedAt: string | null;
+  releaseReason: string | null;
 }

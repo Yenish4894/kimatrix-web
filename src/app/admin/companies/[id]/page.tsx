@@ -14,6 +14,7 @@ import { formatDate, formatDateTime, formatAddress } from "@/lib/utils";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { getCompanyStatus, STATUS_LABEL, STATUS_BADGE_VARIANT } from "@/lib/company-status";
+import { SubscriptionPanel } from "@/components/admin/subscription-panel";
 
 export default function AdminCompanyDetailPage({
   params,
@@ -122,6 +123,12 @@ export default function AdminCompanyDetailPage({
             </Button>
           </CardContent>
         </Card>
+
+        {/* Subscription, trial and complimentary-access controls. Full width: it holds
+            the burned-identifier list, which needs the room. */}
+        <div className="mb-4 sm:mb-6">
+          <SubscriptionPanel company={company} />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card>

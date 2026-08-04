@@ -91,6 +91,21 @@ export interface Company extends CompanyAddress {
   qrUrl: string;
   subscriptionExpiresAt: string | null;
   currentPlan: SubscriptionPlan | null;
+  /**
+   * Entitlement fields. Present on the admin company endpoint, which returns the raw
+   * entity, and on the company profile. Optional because the customer-facing list
+   * endpoints do not select them.
+   *
+   * `subscriptionStatus` is a materialised projection maintained by the hourly cron —
+   * fine for a badge or a filter, never for deciding access. Access is
+   * `profile.hasAccess`, computed server-side per request.
+   */
+  subscriptionStatus?: SubscriptionStatus;
+  trialStartedAt?: string | null;
+  trialEndsAt?: string | null;
+  isComped?: boolean;
+  compedUntil?: string | null;
+  compReason?: string | null;
   createdAt?: string;
   updatedAt?: string;
   owner?: {
