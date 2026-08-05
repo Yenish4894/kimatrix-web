@@ -52,6 +52,13 @@ export interface SubscriptionPlan {
   price: string;
   currency: string;
   /**
+   * Whether this plan can be bought as a recurring subscription. Decides which flow
+   * the Pay button takes. Optional so this frontend still works against a backend
+   * that predates Subscriptions — absent means "one-time only", which is the safe
+   * reading.
+   */
+  isRecurring?: boolean;
+  /**
    * Drives the "Most Popular" badge. Replaces the old hardcoded `durationDays === 30`
    * check, which would have un-featured everything the moment an admin created plans.
    */

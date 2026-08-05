@@ -119,7 +119,16 @@ export default function BillingPage() {
     if (!selectedPlanId || isRedirecting) return;
     setIsRedirecting(true);
     try {
-      const { approvalUrl } = await paymentService.createOrder(selectedPlanId);
+      // Recurring where the plan supports it, one-time otherwise.
+      //
+      // The fallback is not just for older backends: a plan whose PayPal billing plan
+      // has not been synced yet has `isRecurring: false`, and sending it down the
+      // subscription path would fail at checkout. Degrading to the Orders flow means
+      // an unsynced plan still sells, just without auto-renew.
+      const selected = plans.find((p) => p.id === selectedPlanId);
+      const { approvalUrl } = selected?.isRecurring
+        ? await paymentService.subscribe(selectedPlanId)
+        : await paymentService.createOrder(selectedPlanId);
       // Hard redirect to PayPal — must NOT use Next.js router (external URL)
       globalThis.location.href = approvalUrl;
     } catch {
