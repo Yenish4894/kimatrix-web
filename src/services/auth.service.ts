@@ -24,13 +24,24 @@ interface RegisterCompanyResponse {
   company: Company;
   companyId?: string;
   companyIsActive?: boolean;
+  /** False until the confirmation link is clicked. The trial clock starts on confirm. */
+  emailVerified?: boolean;
+  /**
+   * Whether a free trial is coming once they confirm their email.
+   *
+   * Advisory — the server re-decides authoritatively at confirmation time. It never
+   * says WHICH identifier was already used: registration is unauthenticated, and
+   * naming the field would turn it into an enumeration oracle.
+   */
+  trial?: { eligible: boolean; durationDays: number };
   tokens: AuthTokens;
 }
 
 export const authService = {
   // POST /api/auth/register/company
-  // Creates the company (pending) and returns a session (tokens) so the caller
-  // can immediately start the subscription payment.
+  // Creates the company (pending) and returns a session, so the caller can land the
+  // customer straight inside the app. Payment is NOT part of registration any more —
+  // the default path is a free trial that starts when they confirm their email.
   registerCompany: async (
     payload: Omit<RegistrationFormData, "businessType"> & { businessType: BusinessType }
   ) => {

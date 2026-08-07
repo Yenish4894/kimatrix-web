@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Check, CreditCard, Loader2, RefreshCw } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button, Input, Select, Checkbox } from "@/components/ui";
 import { CountrySelect, StateSelect, CityInput } from "@/components/ui/country-state-select";
 import { PhoneInput, validatePhoneForCountry } from "@/components/ui/phone-input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { registerCompany } from "@/store/slices/authSlice";
-import { paymentService } from "@/services/payment.service";
+import { authService } from "@/services/auth.service";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 import { toast } from "react-toastify";
-import type { BusinessType, SubscriptionPlan } from "@/types";
+import type { BusinessType } from "@/types";
 import Joi from "joi";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
@@ -112,30 +112,12 @@ const initialForm = {
 export default function RegisterPage() {
   const [form, setForm] = useState<typeof initialForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [plansLoading, setPlansLoading] = useState(true);
-  const [plansError, setPlansError] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { isLoading } = useAppSelector((state) => state.auth);
 
-  // Plans endpoint is public — fetch directly so the picker is available
-  // before the user has any session.
-  const loadPlans = () => {
-    setPlansLoading(true);
-    setPlansError(false);
-    paymentService
-      .getPlans()
-      .then((data) => setPlans(data))
-      .catch(() => setPlansError(true))
-      .finally(() => setPlansLoading(false));
-  };
 
-  useEffect(() => {
-    loadPlans();
-  }, []);
 
   /** Pure — builds the error map without touching state, so the caller can both set
    *  it and use it to decide which field to focus. */
@@ -210,17 +192,6 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!selectedPlanId) {
-      setErrors((prev) => ({ ...prev, plan: "Please choose a plan to continue." }));
-      // The plan picker is the one error field-level blur validation can't catch, and
-      // it sits far above the button.
-      document.getElementById("plan-picker")?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-      return;
-    }
-
     // Country-specific phone validation (libphonenumber-js)
     // Joi already enforced E.164 shape; this checks length + country-specific rules.
     const phoneErrors: Record<string, string> = {};
@@ -240,10 +211,11 @@ export default function RegisterPage() {
 
     setIsProcessing(true);
 
-    // Step 1 — create the account. This also establishes a session (auto-login)
-    // so we can start the payment immediately.
+    // Create the account. This also establishes a session (auto-login), so the
+    // customer lands inside the app rather than back at a login screen.
+    let result: Awaited<ReturnType<typeof authService.registerCompany>>;
     try {
-      await dispatch(
+      result = await dispatch(
         registerCompany({ ...form, businessType: form.businessType as BusinessType })
       ).unwrap();
     } catch (err) {
@@ -258,19 +230,25 @@ export default function RegisterPage() {
       return;
     }
 
-    // Step 2 — start the PayPal order for the chosen plan and redirect out.
-    // The account now exists (pending); if this fails or the user abandons
-    // PayPal, they remain logged in and can finish paying from /company/billing.
-    try {
-      const { approvalUrl } = await paymentService.createOrder(selectedPlanId);
-      globalThis.location.href = approvalUrl; // hard redirect to PayPal (external URL)
-    } catch {
-      setIsProcessing(false);
-      toast.error(
-        "Your account was created, but we couldn't start the payment. You can complete it from the billing page."
-      );
+    // Registration is finished. No payment step.
+    //
+    // It used to redirect straight to PayPal, which meant the free trial was
+    // unreachable — the trial existed in the backend and no customer could ever get
+    // to it, because the front door demanded a plan and a card. The default path is
+    // now the trial; paying is something they choose later from the billing page.
+    //
+    // `trial.eligible` is advisory (the server re-decides at confirmation), so it is
+    // only used to pick a destination, never to promise anything.
+    if (result.trial?.eligible === false) {
+      // A repeat email or phone. Deliberately not told which — that would be an
+      // enumeration oracle — and never blocked from registering, only from the trial.
+      toast.info("Account created. Choose a plan to activate your QR code.");
       router.replace("/company/billing");
+      return;
     }
+
+    toast.success("Account created. Check your email to start your free trial.");
+    router.replace("/company/dashboard");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -281,7 +259,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout title="Create Account" subtitle="Register your business to get started">
+    <AuthLayout title="Create Account" subtitle="Start your free trial — no card required">
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div>
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h2>
@@ -408,72 +386,23 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* id is the scroll target for the "choose a plan" error, which is the one
-            validation failure blur-checking can't catch. */}
-        <div id="plan-picker" tabIndex={-1} className="focus:outline-none">
-          <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Choose Your Plan</h2>
-          {plansLoading ? (
-            <div role="status" className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 text-primary-400 animate-spin" aria-hidden="true" />
-              <span className="sr-only">Loading plans…</span>
+        {/* What used to be the plan picker. Registration no longer takes payment —
+            the default path is the free trial, and paying is a later, separate choice
+            made from the billing page. */}
+        <div className="rounded-xl border border-primary-100 bg-primary-50/60 p-4">
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-semibold text-primary-900">
+                Your free trial starts when you confirm your email
+              </p>
+              <p className="mt-1 text-sm text-primary-800/80">
+                No card needed. We&apos;ll email you a confirmation link — click it and your QR
+                code goes live straight away. You can choose a plan any time before the trial
+                ends.
+              </p>
             </div>
-          ) : plansError ? (
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <AlertCircle className="h-7 w-7 text-error-400" aria-hidden="true" />
-              <p className="text-sm text-slate-500">Could not load plans. Check your connection and try again.</p>
-              <button
-                type="button"
-                onClick={loadPlans}
-                className="inline-flex items-center gap-2 text-sm text-primary-600 hover:underline"
-              >
-                <RefreshCw className="h-4 w-4" aria-hidden="true" /> Retry
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {plans.map((plan) => {
-                const selected = selectedPlanId === plan.id;
-                return (
-                  <button
-                    type="button"
-                    key={plan.id}
-                    onClick={() => {
-                      setSelectedPlanId(plan.id);
-                      if (errors.plan) setErrors((prev) => ({ ...prev, plan: "" }));
-                    }}
-                    aria-pressed={selected}
-                    className={cn(
-                      "relative text-left rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-sm",
-                      selected
-                        ? "border-primary-500 bg-primary-50/50 shadow-[0_0_0_3px_rgba(8,145,178,0.12)]"
-                        : "border-slate-200 bg-white hover:border-primary-200"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{plan.name}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{plan.durationDays} days</p>
-                      </div>
-                      {selected && (
-                        <span className="h-5 w-5 rounded-full bg-primary-500 flex items-center justify-center shrink-0" aria-hidden="true">
-                          <Check className="h-3 w-3 text-white" />
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-lg font-extrabold text-slate-900 mt-2">
-                      {plan.currency} {Number.parseFloat(plan.price).toFixed(2)}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {errors.plan && (
-            <p className="mt-2 text-[13px] text-error-500" role="alert">{errors.plan}</p>
-          )}
-          <p className="text-xs text-slate-500 mt-3">
-            You&apos;ll be securely redirected to PayPal to complete payment right after registering.
-          </p>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -494,9 +423,9 @@ export default function RegisterPage() {
           />
         </div>
 
-        <Button type="submit" fullWidth isLoading={isLoading || isProcessing} disabled={plansLoading}>
-          <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
-          {isProcessing ? "Processing…" : "Register & Pay"}
+        <Button type="submit" fullWidth isLoading={isLoading || isProcessing}>
+          <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
+          {isProcessing ? "Creating your account…" : "Start my free trial"}
         </Button>
 
         <p className="text-center text-sm text-slate-500">
