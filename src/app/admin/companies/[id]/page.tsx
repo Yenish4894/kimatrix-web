@@ -15,6 +15,7 @@ import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { getCompanyStatus, STATUS_LABEL, STATUS_BADGE_VARIANT } from "@/lib/company-status";
 import { SubscriptionPanel } from "@/components/admin/subscription-panel";
+import { DeletionCard } from "@/components/admin/deletion-card";
 
 export default function AdminCompanyDetailPage({
   params,
@@ -129,6 +130,10 @@ export default function AdminCompanyDetailPage({
         <div className="mb-4 sm:mb-6">
           <SubscriptionPanel company={company} />
         </div>
+
+        {/* Deletion actioned on the customer's behalf — the privacy policy points them
+            at support, and until this existed there was no way to honour that. */}
+        <DeletionCard companyId={company.id} companyName={company.name} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card>

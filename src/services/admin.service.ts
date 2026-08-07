@@ -80,6 +80,32 @@ export const adminService = {
     await api.post(`/admin/trial-identities/${identityId}/release`, { reason });
   },
 
+  // ─── Account deletion on a customer's behalf ─────────────────
+  //
+  // The privacy policy tells customers to request deletion by emailing support, so the
+  // person who reads that mailbox needs a way to carry it out. The customer-facing
+  // endpoints require the customer to be logged in, which the emailing customer is not.
+
+  getDeletionStatus: async (companyId: string) => {
+    const { data } = await api.get<{ data: AdminDeletionStatus }>(
+      `/admin/companies/${companyId}/deletion-request`,
+    );
+    return data.data;
+  },
+
+  requestDeletion: async (companyId: string, reason: string) => {
+    const { data } = await api.post<{ data: AdminDeletionStatus }>(
+      `/admin/companies/${companyId}/deletion-request`,
+      { reason },
+    );
+    return data.data;
+  },
+
+  cancelDeletion: async (companyId: string, reason: string) => {
+    // DELETE with a body — the reason is required, and it belongs in the audit row.
+    await api.delete(`/admin/companies/${companyId}/deletion-request`, { data: { reason } });
+  },
+
   // ─── Plans ───────────────────────────────────────────────────
 
   // GET /api/admin/plans — includes disabled and archived plans
@@ -154,4 +180,12 @@ export interface AdminTrialIdentity {
   claimedAt: string;
   releasedAt: string | null;
   releaseReason: string | null;
+}
+
+export interface AdminDeletionStatus {
+  requested: boolean;
+  requestedAt: string | null;
+  /** When the data is actually erased. Null when nothing is pending. */
+  purgeAt: string | null;
+  daysRemaining: number | null;
 }
