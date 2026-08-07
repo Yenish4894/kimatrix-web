@@ -16,6 +16,8 @@ export function isBillingRoute(pathname: string): boolean {
 interface SubscriptionGateProps {
   entitlement: Entitlement;
   companyName?: string;
+  /** Lets the paywall offer a confirmation resend instead of demanding payment. */
+  emailVerified?: boolean;
   children: React.ReactNode;
 }
 
@@ -38,6 +40,7 @@ interface SubscriptionGateProps {
 export function SubscriptionGate({
   entitlement,
   companyName,
+  emailVerified,
   children,
 }: Readonly<SubscriptionGateProps>) {
   const pathname = usePathname();
@@ -53,7 +56,11 @@ export function SubscriptionGate({
   return (
     <>
       <LockedShell />
-      <PaywallModal entitlement={entitlement} {...(companyName ? { companyName } : {})} />
+      <PaywallModal
+        entitlement={entitlement}
+        {...(companyName ? { companyName } : {})}
+        {...(emailVerified !== undefined ? { emailVerified } : {})}
+      />
     </>
   );
 }

@@ -79,6 +79,7 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
     <SubscriptionGate
       entitlement={entitlement}
       {...(profile?.name ? { companyName: profile.name } : {})}
+      {...(profile?.emailVerified !== undefined ? { emailVerified: profile.emailVerified } : {})}
     >
       {children}
     </SubscriptionGate>
