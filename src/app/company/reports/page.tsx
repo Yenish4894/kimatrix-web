@@ -34,21 +34,44 @@ const MONTHS = [
 
 // ─── Data fetchers ─────────────────────────────────────────────
 
-async function fetchAllCustomers(): Promise<Customer[]> {
-  const all: Customer[] = [];
-  let page = 1;
-  while (true) {
-    const res = await companyService.getCustomers({
+/**
+ * Hard ceiling on how many pages this report will pull.
+ *
+ * 100 pages x 100 rows = 10,000 customers. Beyond that the browser is the wrong tool
+ * and the CSV export — which streams server-side in batches — is the right one. The
+ * cap is surfaced to the user rather than silently truncating: a report that quietly
+ * omits rows is worse than one that says it did.
+ */
+const MAX_REPORT_PAGES = 100;
+const REPORT_PAGE_SIZE = 100;
+/** Pages in flight at once. Enough to hide latency without flooding the API. */
+const FETCH_CONCURRENCY = 6;
+
+async function fetchAllCustomers(): Promise<{ customers: Customer[]; truncated: boolean }> {
+  const fetchPage = (page: number) =>
+    companyService.getCustomers({
       page,
-      limit: 100,
+      limit: REPORT_PAGE_SIZE,
       sortBy: "totalInvoiceAmount",
       sortOrder: "DESC",
     });
-    all.push(...res.items);
-    if (page >= res.pagination.totalPages) break;
-    page++;
+
+  // Page 1 tells us how many there are; everything after it can go out in parallel.
+  // The previous version awaited each page before requesting the next, so a company
+  // with 3,000 customers paid 30 sequential round trips of latency before the report
+  // could render anything.
+  const first = await fetchPage(1);
+  const totalPages = Math.min(first.pagination.totalPages, MAX_REPORT_PAGES);
+  const customers = [...first.items];
+
+  for (let start = 2; start <= totalPages; start += FETCH_CONCURRENCY) {
+    const batch: number[] = [];
+    for (let p = start; p < start + FETCH_CONCURRENCY && p <= totalPages; p++) batch.push(p);
+    const results = await Promise.all(batch.map(fetchPage));
+    for (const r of results) customers.push(...r.items);
   }
-  return all;
+
+  return { customers, truncated: first.pagination.totalPages > MAX_REPORT_PAGES };
 }
 
 // ─── Aggregation ──────────────────────────────────────────────
@@ -201,7 +224,12 @@ export default function ReportsPage() {
     setAllError(null);
     setAllReport(null);
     try {
-      const customers = await fetchAllCustomers();
+      const { customers, truncated } = await fetchAllCustomers();
+      if (truncated) {
+        setAllError(
+          `This report shows your top ${(MAX_REPORT_PAGES * REPORT_PAGE_SIZE).toLocaleString()} customers by spend. Use the CSV export in Settings to download all of them.`,
+        );
+      }
       // Re-sort client-side with tiebreaker — BE sorts by amount only, so
       // ties across page boundaries can land in arbitrary order.
       const rows = customers
