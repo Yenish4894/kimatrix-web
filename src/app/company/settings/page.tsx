@@ -10,6 +10,7 @@ import {Card, CardContent, CardHeader, Input, Button, Badge, Checkbox} from "@/c
 import {CountrySelect, StateSelect, CityInput} from "@/components/ui/country-state-select";
 import {PhoneInput, validatePhoneForCountry} from "@/components/ui/phone-input";
 import {PasswordChangeCard} from "@/components/settings/password-change-card";
+import { DeleteAccountCard } from "@/components/settings/delete-account-card";
 import {ExportDataCard} from "@/components/subscription/export-data-card";
 import {formatDate} from "@/lib/utils";
 import {companyService} from "@/services";
@@ -393,6 +394,10 @@ export default function CompanySettingsPage() {
 
         {/* Password change */}
         <PasswordChangeCard />
+
+        {/* Closing the account — last on the page, after the data export, which is
+            the order somebody leaving should meet them in. */}
+        <DeleteAccountCard />
       </div>
     </DashboardShell>
   );

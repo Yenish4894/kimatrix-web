@@ -85,6 +85,34 @@ export const companyService = {
     });
     return data.data;
   },
+
+  // ─── Account deletion (the customer's own account) ────────────────────────
+  //
+  // Deliberately NOT behind the subscription gate on the server: someone closing
+  // their account may well have lapsed already, and making a person pay in order to
+  // leave would be indefensible.
+
+  getDeletionStatus: async (): Promise<DeletionStatus> => {
+    const { data } = await api.get<{ data: DeletionStatus }>("/company/deletion-request");
+    return data.data;
+  },
+
+  requestDeletion: async (): Promise<DeletionStatus> => {
+    const { data } = await api.post<{ data: DeletionStatus }>("/company/deletion-request");
+    return data.data;
+  },
+
+  cancelDeletion: async (): Promise<void> => {
+    await api.delete("/company/deletion-request");
+  },
+}
+
+export interface DeletionStatus {
+  requested: boolean;
+  requestedAt: string | null;
+  /** When the data is actually erased. Null when nothing is pending. */
+  purgeAt: string | null;
+  daysRemaining: number | null;
 }
 
 export interface MonthlyReport {
