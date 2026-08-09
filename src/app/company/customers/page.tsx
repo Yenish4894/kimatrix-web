@@ -9,6 +9,7 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
 import type { Customer } from "@/types";
 
@@ -24,10 +25,11 @@ export default function CustomersPage() {
   const [sortKey, setSortKey] = useState<SortKey>("totalInvoiceAmount");
   const [sortDir, setSortDir] = useState<"ASC" | "DESC">("DESC");
 
-  const profileQ = useQuery({
-    queryKey: ["company", "profile"],
-    queryFn: companyService.getProfile,
-  });
+  // Shared hook, not an inline useQuery on the same key: the hook sets
+  // `retry: 1` because the access gate depends on this query, and an inline copy
+  // silently inherits the default retry instead — whichever observer fetches
+  // first decides, which made the gate\'s retry behaviour nondeterministic.
+  const profileQ = useCompanyProfile();
   const isFuelStation = profileQ.data?.businessType === "fuel_station";
 
   const customersQ = useQuery({

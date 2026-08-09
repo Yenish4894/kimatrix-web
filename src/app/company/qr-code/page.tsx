@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { QRCodeCanvas } from "qrcode.react";
-import { Download, Copy, Check, Loader2 } from "lucide-react";
-import { toast } from "react-toastify";
-import { useQuery } from "@tanstack/react-query";
-import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Card, CardContent, Button } from "@/components/ui";
-import { companyService } from "@/services";
-import { formatAddress } from "@/lib/utils";
+import {useRef, useState} from "react";
+import {QRCodeCanvas} from "qrcode.react";
+import {Download, Copy, Check, Loader2} from "lucide-react";
+import {toast} from "react-toastify";
+
+import {DashboardShell} from "@/components/layouts/dashboard-shell";
+import {Card, CardContent, Button} from "@/components/ui";
+
+import {useCompanyProfile} from "@/hooks/useCompanyProfile";
+import {formatAddress} from "@/lib/utils";
 // generateQrPosterPdf is lazy-loaded on click — saves ~150KB on initial render.
 
 export default function QRCodePage() {
@@ -17,10 +18,11 @@ export default function QRCodePage() {
   // Container ref — we grab the inner <canvas> at click time
   const qrContainerRef = useRef<HTMLDivElement>(null);
 
-  const profileQ = useQuery({
-    queryKey: ["company", "profile"],
-    queryFn: companyService.getProfile,
-  });
+  // Shared hook, not an inline useQuery on the same key: the hook sets
+  // `retry: 1` because the access gate depends on this query, and an inline copy
+  // silently inherits the default retry instead — whichever observer fetches
+  // first decides, which made the gate\'s retry behaviour nondeterministic.
+  const profileQ = useCompanyProfile();
 
   const company = profileQ.data;
 

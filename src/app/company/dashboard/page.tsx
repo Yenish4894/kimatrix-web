@@ -8,16 +8,18 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, Card, CardContent, Button, Table, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { EmailVerificationBanner } from "@/components/billing/email-verification-banner";
 import { TrialBanner } from "@/components/subscription/trial-banner";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
 export default function CompanyDashboardPage() {
-  const profileQ = useQuery({
-    queryKey: ["company", "profile"],
-    queryFn: companyService.getProfile,
-  });
+  // Shared hook, not an inline useQuery on the same key: the hook sets
+  // `retry: 1` because the access gate depends on this query, and an inline copy
+  // silently inherits the default retry instead — whichever observer fetches
+  // first decides, which made the gate\'s retry behaviour nondeterministic.
+  const profileQ = useCompanyProfile();
 
   const statsQ = useQuery({
     queryKey: ["company", "stats"],

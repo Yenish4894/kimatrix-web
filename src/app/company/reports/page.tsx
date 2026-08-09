@@ -1,13 +1,14 @@
 "use client";
 
-import { memo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Trophy, Users, Download, FileText } from "lucide-react";
-import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Button, Card, CardContent } from "@/components/ui";
-import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
-import { companyService } from "@/services";
-import { parseApiError } from "@/lib/errors";
+import {memo, useState} from "react";
+
+import {Trophy, Users, Download, FileText} from "lucide-react";
+import {DashboardShell} from "@/components/layouts/dashboard-shell";
+import {Button, Card, CardContent} from "@/components/ui";
+import {useCurrencyFormatter} from "@/hooks/useCurrencyFormatter";
+import {useCompanyProfile} from "@/hooks/useCompanyProfile";
+import {companyService} from "@/services";
+import {parseApiError} from "@/lib/errors";
 // PDF generators are lazy-loaded on click — saves ~200KB from initial bundle.
 // See handlers below for dynamic import().
 import type { Customer } from "@/types";
@@ -84,7 +85,6 @@ function compareRows(a: CustomerRow, b: CustomerRow): number {
   if (b.totalSpend !== a.totalSpend) return b.totalSpend - a.totalSpend;
   return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
 }
-
 
 // ─── Shared preview table ──────────────────────────────────────
 
@@ -165,10 +165,11 @@ export default function ReportsPage() {
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [allError, setAllError] = useState<string | null>(null);
 
-  const profileQ = useQuery({
-    queryKey: ["company", "profile"],
-    queryFn: companyService.getProfile,
-  });
+  // Shared hook, not an inline useQuery on the same key: the hook sets
+  // `retry: 1` because the access gate depends on this query, and an inline copy
+  // silently inherits the default retry instead — whichever observer fetches
+  // first decides, which made the gate\'s retry behaviour nondeterministic.
+  const profileQ = useCompanyProfile();
   const companyName = profileQ.data?.name ?? "Your Company";
   const companyCountry = profileQ.data?.country ?? "";
   const fmtCurrency = useCurrencyFormatter();

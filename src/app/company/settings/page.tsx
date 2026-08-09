@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-import { Building2, Lock as LockIcon } from "lucide-react";
+import {useEffect, useState} from "react";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {toast} from "react-toastify";
+import {Building2, Lock as LockIcon} from "lucide-react";
 import Joi from "joi";
-import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Card, CardContent, CardHeader, Input, Button, Badge, Checkbox } from "@/components/ui";
-import { CountrySelect, StateSelect, CityInput } from "@/components/ui/country-state-select";
-import { PhoneInput, validatePhoneForCountry } from "@/components/ui/phone-input";
-import { PasswordChangeCard } from "@/components/settings/password-change-card";
-import { ExportDataCard } from "@/components/subscription/export-data-card";
-import { formatDate } from "@/lib/utils";
-import { companyService } from "@/services";
-import { useAppSelector } from "@/store/hooks";
-import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
+import {DashboardShell} from "@/components/layouts/dashboard-shell";
+import {Card, CardContent, CardHeader, Input, Button, Badge, Checkbox} from "@/components/ui";
+import {CountrySelect, StateSelect, CityInput} from "@/components/ui/country-state-select";
+import {PhoneInput, validatePhoneForCountry} from "@/components/ui/phone-input";
+import {PasswordChangeCard} from "@/components/settings/password-change-card";
+import {ExportDataCard} from "@/components/subscription/export-data-card";
+import {formatDate} from "@/lib/utils";
+import {companyService} from "@/services";
+import {useCompanyProfile} from "@/hooks/useCompanyProfile";
+import {useAppSelector} from "@/store/hooks";
+import {parseApiError, fieldErrorsFromDetails, errorMessageWithId} from "@/lib/errors";
 import type { UpdateCompanyProfilePayload } from "@/types";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
@@ -83,10 +84,11 @@ export default function CompanySettingsPage() {
   const user = useAppSelector((state) => state.auth.user);
   const qc = useQueryClient();
 
-  const profileQ = useQuery({
-    queryKey: ["company", "profile"],
-    queryFn: companyService.getProfile,
-  });
+  // Shared hook, not an inline useQuery on the same key: the hook sets
+  // `retry: 1` because the access gate depends on this query, and an inline copy
+  // silently inherits the default retry instead — whichever observer fetches
+  // first decides, which made the gate\'s retry behaviour nondeterministic.
+  const profileQ = useCompanyProfile();
 
   const company = profileQ.data;
 
