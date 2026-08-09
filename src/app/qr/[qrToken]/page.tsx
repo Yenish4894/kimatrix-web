@@ -376,7 +376,7 @@ export default function QRSubmissionPage({
       <main className="max-w-md mx-auto px-4 py-6 sm:py-8">
         {/* Brand */}
         <div className="text-center mb-6 flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           {/* Above the fold on the highest-traffic mobile route — hint the browser to
               fetch it early rather than at its default low priority. */}
           <img

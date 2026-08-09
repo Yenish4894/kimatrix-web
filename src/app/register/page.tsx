@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
@@ -12,7 +12,6 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { registerCompany } from "@/store/slices/authSlice";
 import { authService } from "@/services/auth.service";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
-import { cn } from "@/lib/utils";
 import { toast } from "react-toastify";
 import type { BusinessType } from "@/types";
 import Joi from "joi";

@@ -16,7 +16,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
-      // eslint-disable-next-line no-console
+       
       console.error("[global error]", error);
     }
   }, [error]);
@@ -36,7 +36,7 @@ export default function GlobalError({
         }}
       >
         <div style={{ textAlign: "center", padding: "32px", maxWidth: "440px" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           {/* Intrinsic width/height so the error screen doesn't reflow as the logo
               loads — the one screen where a second layout jump is least welcome. */}
           <img

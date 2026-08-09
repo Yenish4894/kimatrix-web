@@ -105,7 +105,7 @@ function buildReport({ title, subtitle, companyName, country = "", rows, filenam
   const totalSpend = rows.reduce((s, r) => s + r.totalSpend, 0);
   const totalPurchases = rows.reduce((s, r) => s + r.purchaseCount, 0);
 
-  let sy = finalY + 8;
+  const sy = finalY + 8;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.textSoft);

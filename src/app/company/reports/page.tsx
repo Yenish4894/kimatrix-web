@@ -85,18 +85,6 @@ function compareRows(a: CustomerRow, b: CustomerRow): number {
   return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
 }
 
-/**
- * Tie-aware "Top N" — keep the first N rows, plus any subsequent rows whose
- * totalSpend equals the Nth row's total. Prevents arbitrarily dropping
- * customers tied at the cutoff (e.g. four customers at ₣150 — all kept).
- */
-function topNWithTies(rows: CustomerRow[], n: number): CustomerRow[] {
-  if (rows.length <= n) return rows;
-  const cutoff = rows[n - 1].totalSpend;
-  let i = n;
-  while (i < rows.length && rows[i].totalSpend === cutoff) i++;
-  return rows.slice(0, i);
-}
 
 // ─── Shared preview table ──────────────────────────────────────
 
