@@ -150,7 +150,7 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
                     <span className="text-[10px] text-white/70 font-medium">{row.name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-semibold text-white">R {row.amount}</p>
+                    <p className="text-[10px] font-semibold text-white">FCFA {row.amount}</p>
                     <p className="text-[8px] text-white/30">{row.time}</p>
                   </div>
                 </div>

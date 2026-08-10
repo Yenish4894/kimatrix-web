@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 
 interface HeaderProps {
@@ -28,18 +28,7 @@ export function Header({ title, onMenuToggle }: Readonly<HeaderProps>) {
       </div>
 
       <div className="flex items-center gap-2">
-        <div title="Notifications coming soon">
-          <button
-            type="button"
-            className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-300 cursor-not-allowed"
-            aria-label="Notifications — coming soon"
-            disabled
-          >
-            <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="hidden sm:flex items-center gap-2.5 ml-2 pl-3 border-l border-slate-100">
+        <div className="hidden sm:flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-bold">
             {initials}
           </div>
