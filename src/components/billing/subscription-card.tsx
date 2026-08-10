@@ -8,6 +8,7 @@ import { Badge, Button, Card, CardContent, CardHeader, Modal, Select } from "@/c
 import { paymentService } from "@/services/payment.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
+import { isAwaitingFirstPayment } from "@/lib/billing";
 import { invalidateCompanyProfile } from "@/hooks/useCompanyProfile";
 import type { SubscriptionPlan } from "@/types";
 
@@ -90,6 +91,19 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
   const canManage = status.status === "active" || status.status === "past_due";
   const otherPlans = plans.filter((p) => p.id !== status.planId);
 
+  /**
+   * Nothing has been charged yet.
+   *
+   * Someone who subscribes DURING their trial has billing deferred to the day the
+   * trial ends, so they don't forfeit the days they still have. Until that first
+   * charge lands there is no completed period, so `currentPeriodEnd` is null.
+   *
+   * Calling that date "Next payment" was actively misleading: it reads as "you have
+   * already paid, and here is the renewal", when in fact no money has moved at all.
+   * The honest label is "First payment", with the reason stated.
+   */
+  const awaitingFirstPayment = isAwaitingFirstPayment(status);
+
   return (
     <>
       <Card className="mb-6">
@@ -118,6 +132,20 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
             </p>
           )}
 
+          {awaitingFirstPayment && !status.accessUntilPeriodEnd && (
+            <p className="flex items-start gap-2 rounded-lg bg-primary-50 px-4 py-3 text-sm text-primary-900">
+              <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-primary-500" aria-hidden="true" />
+              <span>
+                You haven&apos;t been charged yet. Your free trial runs its full course first —
+                billing starts on{" "}
+                <strong>
+                  {status.nextBillingTime ? formatDate(status.nextBillingTime) : "your trial end date"}
+                </strong>
+                , so you keep every day you have left.
+              </span>
+            </p>
+          )}
+
           {status.accessUntilPeriodEnd && (
             <p className="flex items-start gap-2 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700">
               <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -131,7 +159,13 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
           <dl className="space-y-2 text-sm">
             <Row label="Plan" value={status.planName ?? "—"} />
             <Row
-              label={status.accessUntilPeriodEnd ? "Access until" : "Next payment"}
+              label={
+                status.accessUntilPeriodEnd
+                  ? "Access until"
+                  : awaitingFirstPayment
+                    ? "First payment"
+                    : "Next payment"
+              }
               value={
                 status.nextBillingTime
                   ? formatDate(status.nextBillingTime)

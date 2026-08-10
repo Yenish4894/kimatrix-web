@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import { AlertCircle, Check, CreditCard, Loader2, RefreshCw, Zap } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { SubscriptionCard } from "@/components/billing/subscription-card";
+import { useQuery } from "@tanstack/react-query";
+import { hasLiveSubscription } from "@/lib/billing";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -87,6 +89,21 @@ function PlanCard({
 export default function BillingPage() {
   const dispatch = useAppDispatch();
   const { plans, isLoadingPlans, plansFetchFailed } = useAppSelector((state) => state.company);
+
+  /**
+   * Same key as SubscriptionCard, so this shares one request rather than adding a
+   * second. Used only to decide whether the plan picker belongs on the page at all.
+   */
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription", "status"],
+    queryFn: paymentService.getSubscriptionStatus,
+  });
+
+  // Someone with a live subscription must not be shown a plan picker and a Pay
+  // button: the API rejects a second subscription outright, so the only thing that
+  // block can produce is an error. Changing plans is the supported path, and it lives
+  // on the card above.
+  const subscriptionIsLive = hasLiveSubscription(subscription);
   const companyIsActive = useAppSelector((state) => state.auth.companyIsActive);
   // From the shared query, not Redux. The layout used to skip fetching the profile on
   // billing routes, so this was ALWAYS null on every real entry path — the gate
@@ -209,7 +226,8 @@ export default function BillingPage() {
             who has never subscribed, or who is on the legacy one-time flow. */}
         <SubscriptionCard plans={plans} />
 
-        {/* Plan selection */}
+        {/* Plan selection — hidden once a subscription exists; see hasLiveSubscription. */}
+        {!subscriptionIsLive && (
         <Card>
           <CardContent className="p-6">
             <h2 className="text-base font-semibold text-slate-800 mb-4">Choose a Plan</h2>
@@ -232,6 +250,7 @@ export default function BillingPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Current subscription info (if any) */}
         {profile?.currentPlan && (
