@@ -11,7 +11,9 @@ export function formatNumber(n: number): string {
 }
 
 // Country → currency symbol mapping. Falls back to "$" for unknown countries.
-const COUNTRY_CURRENCY: Record<string, string> = {
+// Exported so the PDF layer can assert every symbol here survives its own encoding —
+// see lib/pdf/currency.ts.
+export const COUNTRY_CURRENCY: Record<string, string> = {
   // Africa
   "South Africa": "R", "Nigeria": "₦", "Kenya": "KSh", "Ghana": "GH₵",
   "Ethiopia": "Br", "Tanzania": "TSh", "Uganda": "USh", "Rwanda": "FRw",

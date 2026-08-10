@@ -2,19 +2,17 @@
 // the fuel station / shop. Customers scan it to submit a purchase.
 
 import { jsPDF } from "jspdf";
-import { BRAND, PAGE, savePdf } from "./branding";
+import {
+  BRAND,
+  PAGE,
+  PLATFORM_DOMAIN,
+  WORDMARK_RATIO,
+  drawWordmark,
+  loadBrandAssets,
+  savePdf,
+} from "./branding";
 import { formatAddress } from "@/lib/utils";
 import type { Company } from "@/types";
-
-// Load a same-origin image as an HTMLImageElement (jsPDF.addImage accepts it).
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("image load failed"));
-    img.src = src;
-  });
-}
 
 /**
  * Generate a printable QR poster.
@@ -26,6 +24,8 @@ export async function generateQrPosterPdf(
   company: Company,
   qrCanvas: HTMLCanvasElement,
 ): Promise<void> {
+  const assets = await loadBrandAssets();
+
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const { width, height, margin } = PAGE;
 
@@ -35,24 +35,30 @@ export async function generateQrPosterPdf(
   doc.rect(margin / 2, margin / 2, width - margin, height - margin);
 
   // ─── Top brand strip ───────────────────────────────────────
+  // Taller than it needs to be for the logo alone: this poster goes on a wall and is
+  // read from a distance, so the band is the thing that identifies it across a room.
+  const bandHeight = 27;
+  const bandTop = margin / 2;
   doc.setFillColor(...BRAND.primary);
-  doc.rect(margin / 2, margin / 2, width - margin, 18, "F");
+  doc.rect(bandTop, bandTop, width - margin, bandHeight, "F");
 
-  // White KIMates logo centered on the teal strip (falls back to text if it can't load)
-  const logo = await loadImage("/brand/kimates-logo-white.png").catch(() => null);
-  if (logo && logo.naturalHeight > 0) {
-    const logoH = 10; // mm
-    const logoW = logoH * (logo.naturalWidth / logo.naturalHeight);
-    doc.addImage(logo, "PNG", (width - logoW) / 2, margin / 2 + (18 - logoH) / 2, logoW, logoH);
-  } else {
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("KIMATES", width / 2, margin / 2 + 12, { align: "center" });
-  }
+  // The logo sits on a white plate rather than being reversed out of the teal. The
+  // full-colour lockup is the strongest version of the mark, and it is the only asset
+  // that is tightly cropped — the white variant carries ~35% transparent padding, so
+  // at any given box height it renders visibly smaller than it should.
+  const plateW = 108;
+  const plateH = 18;
+  const plateX = (width - plateW) / 2;
+  const plateY = bandTop + (bandHeight - plateH) / 2;
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(plateX, plateY, plateW, plateH, 2.5, 2.5, "F");
+
+  const logoH = 12.5;
+  const logoW = logoH * WORDMARK_RATIO;
+  drawWordmark(doc, assets, plateX + (plateW - logoW) / 2, plateY + (plateH - logoH) / 2, logoH);
 
   // ─── Headline ──────────────────────────────────────────────
-  let y = margin + 18;
+  let y = bandTop + bandHeight + 12;
   doc.setTextColor(...BRAND.text);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(28);
@@ -77,7 +83,7 @@ export async function generateQrPosterPdf(
   doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
 
   // ─── Company info under the QR ─────────────────────────────
-  let infoY = qrY + qrSize + 22;
+  let infoY = qrY + qrSize + 18;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.setTextColor(...BRAND.text);
@@ -119,11 +125,26 @@ export async function generateQrPosterPdf(
   const steps = "1. Scan with your phone camera   2. Fill in your purchase details   3. Submit";
   doc.text(steps, width / 2, hintY + 4, { align: "center" });
 
-  // ─── @KIMates attribution at very bottom ─────────────────
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...BRAND.accent);
-  doc.text("@KIMates", width / 2, height - margin / 2 - 2, { align: "center" });
+  // ─── "Powered by KIMates" lockup at the very bottom ────────
+  // Anchored to the page rather than to the company block above it: the address wraps
+  // to an unknown number of lines, and this must not be pushed into it.
+  const markH = 6.5;
+  const markW = markH * WORDMARK_RATIO;
+  const markBaseline = height - margin / 2 - 11;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...BRAND.textSoft);
+  const prefix = "Powered by ";
+  const prefixW = doc.getTextWidth(prefix);
+  const lockupX = (width - (prefixW + markW)) / 2;
+  doc.text(prefix, lockupX, markBaseline);
+  drawWordmark(doc, assets, lockupX + prefixW, markBaseline - markH + 1.4, markH);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...BRAND.textFaint);
+  doc.text(PLATFORM_DOMAIN, width / 2, height - margin / 2 - 4, { align: "center" });
 
   // ─── Save ──────────────────────────────────────────────────
   const safeName = company.name.replaceAll(/[^a-z0-9]+/gi, "-").toLowerCase();

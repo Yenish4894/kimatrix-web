@@ -2,6 +2,7 @@
 
 import {memo, useState} from "react";
 
+import {toast} from "react-toastify";
 import {Trophy, Users, Download, FileText} from "lucide-react";
 import {DashboardShell} from "@/components/layouts/dashboard-shell";
 import {Button, Card, CardContent} from "@/components/ui";
@@ -306,8 +307,12 @@ export default function ReportsPage() {
                   <Button
                     variant="secondary"
                     onClick={async () => {
-                      const { generateTop10Pdf } = await import("@/lib/pdf/customer-reports");
-                      generateTop10Pdf(top10Report, top10Label, companyName, companyCountry);
+                      try {
+                        const { generateTop10Pdf } = await import("@/lib/pdf/customer-reports");
+                        await generateTop10Pdf(top10Report, top10Label, companyName, companyCountry);
+                      } catch {
+                        toast.error("Could not generate the PDF. Please try again.");
+                      }
                     }}
                   >
                     <Download className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -359,8 +364,12 @@ export default function ReportsPage() {
                   <Button
                     variant="secondary"
                     onClick={async () => {
-                      const { generateAllCustomersPdf } = await import("@/lib/pdf/customer-reports");
-                      generateAllCustomersPdf(allReport, companyName, companyCountry);
+                      try {
+                        const { generateAllCustomersPdf } = await import("@/lib/pdf/customer-reports");
+                        await generateAllCustomersPdf(allReport, companyName, companyCountry);
+                      } catch {
+                        toast.error("Could not generate the PDF. Please try again.");
+                      }
                     }}
                   >
                     <Download className="h-4 w-4 mr-2" aria-hidden="true" />

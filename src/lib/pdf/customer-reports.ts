@@ -4,8 +4,17 @@
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { BRAND, PAGE, drawHeader, drawFooterOnAllPages, savePdf } from "./branding";
-import { formatCurrency } from "@/lib/utils";
+import {
+  BRAND,
+  PAGE,
+  RUNNING_HEADER_HEIGHT,
+  drawFooterOnAllPages,
+  drawHeader,
+  drawRunningHeader,
+  loadBrandAssets,
+  savePdf,
+} from "./branding";
+import { formatPdfCurrency } from "./currency";
 
 export interface ReportRow {
   fullName: string;
@@ -31,9 +40,13 @@ interface ReportOpts {
   ranked?: boolean;
 }
 
-function buildReport({ title, subtitle, companyName, country = "", rows, filename, ranked = false }: ReportOpts) {
+async function buildReport({ title, subtitle, companyName, country = "", rows, filename, ranked = false }: ReportOpts) {
+  // Awaited before anything is drawn so the logo is in hand synchronously by the time
+  // autoTable's page callbacks run. Cached, so a second download costs nothing.
+  const assets = await loadBrandAssets();
+
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const startY = drawHeader(doc, { title, subtitle, companyName });
+  const startY = drawHeader(doc, assets, { title, subtitle, companyName });
 
   // Empty state
   if (rows.length === 0) {
@@ -41,7 +54,7 @@ function buildReport({ title, subtitle, companyName, country = "", rows, filenam
     doc.setFontSize(11);
     doc.setTextColor(...BRAND.textFaint);
     doc.text("No data available for this period.", PAGE.width / 2, startY + 30, { align: "center" });
-    drawFooterOnAllPages(doc);
+    drawFooterOnAllPages(doc, assets);
     savePdf(doc, filename);
     return;
   }
@@ -59,7 +72,7 @@ function buildReport({ title, subtitle, companyName, country = "", rows, filenam
     r.fullName + (r.vehicleNumber ? `\n${r.vehicleNumber}` : ""),
     r.mobile,
     String(r.purchaseCount),
-    formatCurrency(r.totalSpend, country),
+    formatPdfCurrency(r.totalSpend, country),
   ]);
 
   autoTable(doc, {
@@ -67,7 +80,14 @@ function buildReport({ title, subtitle, companyName, country = "", rows, filenam
     head: [["#", "Customer", "Mobile", "Purchases", "Total Spend"]],
     body,
     theme: "plain",
-    margin: { left: PAGE.margin, right: PAGE.margin, bottom: PAGE.margin + 5 },
+    // `top` applies to continuation pages only (page 1 uses startY), which is exactly
+    // the room drawRunningHeader needs.
+    margin: {
+      left: PAGE.margin,
+      right: PAGE.margin,
+      top: RUNNING_HEADER_HEIGHT,
+      bottom: PAGE.margin + 5,
+    },
     styles: {
       font: "helvetica",
       fontSize: 9.5,
@@ -91,6 +111,11 @@ function buildReport({ title, subtitle, companyName, country = "", rows, filenam
       4: { halign: "right", cellWidth: 32, fontStyle: "bold" },
     },
     alternateRowStyles: { fillColor: [248, 250, 252] }, // slate-50
+    didDrawPage: (data) => {
+      // Page 1 already has the full masthead; every page after it would otherwise be
+      // an unbranded table, and on a long customer list that is most of the document.
+      if (data.pageNumber > 1) drawRunningHeader(doc, assets, title);
+    },
     didParseCell: (data) => {
       // Podium tint on top 3 in ranked mode
       if (ranked && data.section === "body" && data.row.index < 3) {
@@ -110,18 +135,18 @@ function buildReport({ title, subtitle, companyName, country = "", rows, filenam
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.textSoft);
   doc.text(
-    `${rows.length} customer${rows.length === 1 ? "" : "s"}  •  ${totalPurchases} purchase${totalPurchases === 1 ? "" : "s"}  •  Total: ${formatCurrency(totalSpend, country)}`,
+    `${rows.length} customer${rows.length === 1 ? "" : "s"}  •  ${totalPurchases} purchase${totalPurchases === 1 ? "" : "s"}  •  Total: ${formatPdfCurrency(totalSpend, country)}`,
     PAGE.width - PAGE.margin,
     sy,
     { align: "right" }
   );
 
-  drawFooterOnAllPages(doc);
+  drawFooterOnAllPages(doc, assets);
   savePdf(doc, filename);
 }
 
 export function generateTop10Pdf(rows: ReportRow[], monthLabel: string, companyName: string, country = "") {
-  buildReport({
+  return buildReport({
     title: "Top 10 Customers",
     subtitle: monthLabel,
     companyName,
@@ -133,7 +158,7 @@ export function generateTop10Pdf(rows: ReportRow[], monthLabel: string, companyN
 }
 
 export function generateAllCustomersPdf(rows: ReportRow[], companyName: string, country = "") {
-  buildReport({
+  return buildReport({
     title: "All Customers",
     subtitle: "All-time totals — sorted by spend",
     companyName,
