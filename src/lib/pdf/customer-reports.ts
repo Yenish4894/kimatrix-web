@@ -15,6 +15,7 @@ import {
   savePdf,
 } from "./branding";
 import { formatPdfCurrency } from "./currency";
+import { formatNumber } from "@/lib/utils";
 
 export interface ReportRow {
   fullName: string;
@@ -28,6 +29,22 @@ export interface ReportRow {
    */
   lastActivity: string;
 }
+
+/**
+ * Fixed column widths in mm. The Customer column takes whatever is left of the
+ * 170mm content width, so these four decide how much room a name gets.
+ *
+ * Each is the widest string the column can hold, measured with jsPDF at the styles
+ * below, plus the 6mm of horizontal cell padding:
+ *   rank      "1234"                 7.4 + 6
+ *   mobile    "+234 8012345678"     28.6 + 6   (the longest format in the country list)
+ *   purchases the "Purchases" label 15.7 + 6
+ *   spend     "FCFA 999,999,999.99" 32.7 + 6
+ */
+const COL = { rank: 14, mobile: 36, purchases: 22, spend: 40 } as const;
+
+/** Header labels must sit on the same side as the figures under them. */
+const HEAD_ALIGN: Record<number, "center" | "right"> = { 0: "center", 3: "right", 4: "right" };
 
 interface ReportOpts {
   title: string;
@@ -103,13 +120,20 @@ async function buildReport({ title, subtitle, companyName, country = "", rows, f
       fontSize: 9,
       cellPadding: { top: 4, right: 3, bottom: 4, left: 3 },
     },
+    // Widths are sized to the widest value each column can actually hold, measured
+    // rather than guessed. Text wraps, which is right for a name and wrong for a
+    // number: "FCFA 12,345,678.90" broken over two lines reads as a mangled figure.
+    // FCFA amounts run large by nature — a station's all-time total is routinely in
+    // the millions — so Total Spend gets the room to hold a 10-digit figure whole.
     columnStyles: {
-      0: { halign: "center", cellWidth: 14, fontStyle: "bold" },
+      0: { halign: "center", cellWidth: COL.rank, fontStyle: "bold" },
       1: { cellWidth: "auto" },
-      2: { cellWidth: 38, font: "courier", fontSize: 9 },
-      3: { halign: "right", cellWidth: 22 },
-      4: { halign: "right", cellWidth: 32, fontStyle: "bold" },
+      2: { cellWidth: COL.mobile, font: "courier", fontSize: 9 },
+      3: { halign: "right", cellWidth: COL.purchases },
+      4: { halign: "right", cellWidth: COL.spend, fontStyle: "bold" },
     },
+    // A row whose name wraps to three lines must not be torn in half by a page break.
+    rowPageBreak: "avoid",
     alternateRowStyles: { fillColor: [248, 250, 252] }, // slate-50
     didDrawPage: (data) => {
       // Page 1 already has the full masthead; every page after it would otherwise be
@@ -117,6 +141,13 @@ async function buildReport({ title, subtitle, companyName, country = "", rows, f
       if (data.pageNumber > 1) drawRunningHeader(doc, assets, title);
     },
     didParseCell: (data) => {
+      // columnStyles.halign does not reach the header row, so the "Purchases" and
+      // "Total Spend" labels sat left while their figures sat right.
+      if (data.section === "head") {
+        const halign = HEAD_ALIGN[data.column.index];
+        if (halign) data.cell.styles.halign = halign;
+      }
+
       // Podium tint on top 3 in ranked mode
       if (ranked && data.section === "body" && data.row.index < 3) {
         data.cell.styles.fillColor = BRAND.rowAlt;
@@ -135,7 +166,7 @@ async function buildReport({ title, subtitle, companyName, country = "", rows, f
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.textSoft);
   doc.text(
-    `${rows.length} customer${rows.length === 1 ? "" : "s"}  •  ${totalPurchases} purchase${totalPurchases === 1 ? "" : "s"}  •  Total: ${formatPdfCurrency(totalSpend, country)}`,
+    `${formatNumber(rows.length)} customer${rows.length === 1 ? "" : "s"}  •  ${formatNumber(totalPurchases)} purchase${totalPurchases === 1 ? "" : "s"}  •  Total: ${formatPdfCurrency(totalSpend, country)}`,
     PAGE.width - PAGE.margin,
     sy,
     { align: "right" }
