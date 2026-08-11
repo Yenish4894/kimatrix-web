@@ -11,7 +11,13 @@ import { Table, Pagination, Input, Badge, Button, Modal, Select, QueryErrorState
 import { formatDate } from "@/lib/utils";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
-import { getCompanyStatus, STATUS_LABEL, STATUS_BADGE_VARIANT } from "@/lib/company-status";
+import {
+  getAdminToggleAction,
+  getCompanyStatus,
+  STATUS_BADGE_VARIANT,
+  STATUS_LABEL,
+  TOGGLE_LABEL,
+} from "@/lib/company-status";
 import type { Company } from "@/types";
 
 const PAGE_SIZE = 20;
@@ -66,7 +72,7 @@ export default function AdminCompaniesPage() {
       toast.success(
         action === "deactivate"
           ? "Company deactivated. Owner signed out of all devices."
-          : "Company activated successfully"
+          : "Ban lifted. Their access now follows their subscription."
       );
       qc.invalidateQueries({ queryKey: ["admin", "companies"] });
       qc.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -132,10 +138,11 @@ export default function AdminCompaniesPage() {
       header: "",
       className: "w-12",
       render: (row: Company) => {
-        const status = getCompanyStatus(row);
-        // Active → can deactivate. Pending or Deactivated → can activate.
-        const toggleAction = status === "active" ? "deactivate" : "activate";
-        const toggleLabel = toggleAction === "deactivate" ? "Deactivate" : "Activate";
+        // Driven by whether the company is banned, NOT by the status badge: an
+        // expired company reads as "pending" but was never banned, and offering it
+        // Activate produced an error every time. See getAdminToggleAction.
+        const toggleAction = getAdminToggleAction(row);
+        const toggleLabel = TOGGLE_LABEL[toggleAction];
         return (
           <div className="relative">
             <button
@@ -248,7 +255,7 @@ export default function AdminCompaniesPage() {
         <Modal
           open={true}
           onClose={() => setConfirmModal(null)}
-          title={`${confirmModal.action === "activate" ? "Activate" : "Deactivate"} Company`}
+          title={`${TOGGLE_LABEL[confirmModal.action]} — ${confirmModal.company.name}`}
           footer={
             <>
               <Button variant="ghost" onClick={() => setConfirmModal(null)}>Cancel</Button>
@@ -257,14 +264,15 @@ export default function AdminCompaniesPage() {
                 isLoading={toggleMut.isPending}
                 onClick={() => toggleMut.mutate(confirmModal)}
               >
-                {confirmModal.action === "activate" ? "Activate" : "Deactivate"}
+                {TOGGLE_LABEL[confirmModal.action]}
               </Button>
             </>
           }
         >
           <p className="text-sm text-slate-600">
-            Are you sure you want to {confirmModal.action}{" "}
-            <strong>{confirmModal.company.name}</strong>?
+            {confirmModal.action === "activate"
+              ? "This lifts the ban. Access is then decided by their subscription — if it has expired, they will land on the paywall rather than a working dashboard."
+              : "This bans the company. It does not end their subscription period; it overrides it."}
           </p>
           {confirmModal.action === "deactivate" && (
             <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">

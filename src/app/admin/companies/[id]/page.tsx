@@ -13,7 +13,13 @@ import { Card, CardContent, CardHeader, Badge, Button, Modal } from "@/component
 import { formatDate, formatDateTime, formatAddress } from "@/lib/utils";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
-import { getCompanyStatus, STATUS_LABEL, STATUS_BADGE_VARIANT } from "@/lib/company-status";
+import {
+  getAdminToggleAction,
+  getCompanyStatus,
+  STATUS_BADGE_VARIANT,
+  STATUS_LABEL,
+  TOGGLE_LABEL,
+} from "@/lib/company-status";
 import { SubscriptionPanel } from "@/components/admin/subscription-panel";
 import { DeletionCard } from "@/components/admin/deletion-card";
 
@@ -44,7 +50,7 @@ export default function AdminCompanyDetailPage({
       toast.success(
         action === "deactivate"
           ? "Company deactivated. Owner signed out of all devices."
-          : "Company activated"
+          : "Ban lifted. Their access now follows their subscription."
       );
       qc.invalidateQueries({ queryKey: ["admin", "companies", id] });
       qc.invalidateQueries({ queryKey: ["admin", "companies"] });
@@ -89,6 +95,7 @@ export default function AdminCompanyDetailPage({
   const isFuelStation = company.businessType === "fuel_station";
   const BizIcon = isFuelStation ? Fuel : Store;
   const status = getCompanyStatus(company);
+  const toggleAction = getAdminToggleAction(company);
 
   return (
     <DashboardShell title="Company Detail" requiredRole="super_admin">
@@ -114,13 +121,16 @@ export default function AdminCompanyDetailPage({
                 {company.promoEmailOptIn && <Badge variant="info">Promo opt-in</Badge>}
               </div>
             </div>
+            {/* Keyed off whether the company is banned, not off the status badge —
+                an expired company is inactive but was never banned, and offering it
+                "Activate" only ever produced an error. See getAdminToggleAction. */}
             <Button
-              variant={status === "active" ? "danger" : "primary"}
-              onClick={() => setConfirmModal(status === "active" ? "deactivate" : "activate")}
+              variant={toggleAction === "deactivate" ? "danger" : "primary"}
+              onClick={() => setConfirmModal(toggleAction)}
               className="shrink-0"
             >
               <Power className="h-4 w-4" aria-hidden="true" />
-              {status === "active" ? "Deactivate" : "Activate"}
+              {TOGGLE_LABEL[toggleAction]}
             </Button>
           </CardContent>
         </Card>
@@ -186,7 +196,7 @@ export default function AdminCompanyDetailPage({
         <Modal
           open={true}
           onClose={() => setConfirmModal(null)}
-          title={`${confirmModal === "activate" ? "Activate" : "Deactivate"} Company`}
+          title={`${TOGGLE_LABEL[confirmModal]} — ${company.name}`}
           footer={
             <>
               <Button variant="ghost" onClick={() => setConfirmModal(null)}>Cancel</Button>
@@ -195,13 +205,15 @@ export default function AdminCompanyDetailPage({
                 isLoading={toggleMut.isPending}
                 onClick={() => toggleMut.mutate(confirmModal)}
               >
-                {confirmModal === "activate" ? "Activate" : "Deactivate"}
+                {TOGGLE_LABEL[confirmModal]}
               </Button>
             </>
           }
         >
           <p className="text-sm text-slate-600">
-            Are you sure you want to {confirmModal} <strong>{company.name}</strong>?
+            {confirmModal === "activate"
+              ? "This lifts the ban. Access is then decided by their subscription — if it has expired, they will land on the paywall rather than a working dashboard."
+              : "This bans the company. It does not end their subscription period; it overrides it."}
           </p>
           {confirmModal === "deactivate" && (
             <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">

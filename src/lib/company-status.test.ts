@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getCompanyStatus, STATUS_LABEL, STATUS_BADGE_VARIANT } from "./company-status";
+import {
+  getAdminToggleAction,
+  getCompanyStatus,
+  STATUS_BADGE_VARIANT,
+  STATUS_LABEL,
+  TOGGLE_LABEL,
+} from "./company-status";
 
 describe("getCompanyStatus", () => {
   it("active when the company is switched on", () => {
@@ -26,6 +32,32 @@ describe("getCompanyStatus", () => {
       getCompanyStatus({ isActive: true, deactivatedAt: "2026-01-01T00:00:00Z" }),
       "active",
     );
+  });
+});
+
+describe("getAdminToggleAction", () => {
+  it("offers to lift the ban only on a company that is actually banned", () => {
+    assert.equal(
+      getAdminToggleAction({ deactivatedAt: "2026-08-01T00:00:00Z" }),
+      "activate",
+    );
+  });
+
+  it("does not offer Activate to an expired company", () => {
+    // The reported bug. An expired or trial-expired company is inactive but was never
+    // banned, so it reads as "pending" — and the old menu offered Activate, which the
+    // API can only refuse with "This company is not deactivated."
+    assert.equal(getAdminToggleAction({ deactivatedAt: null }), "deactivate");
+  });
+
+  it("offers Deactivate on a healthy active company", () => {
+    assert.equal(getAdminToggleAction({ deactivatedAt: null }), "deactivate");
+  });
+
+  it("every action has a label", () => {
+    for (const a of ["activate", "deactivate"] as const) {
+      assert.ok(TOGGLE_LABEL[a], `${a} needs a label`);
+    }
   });
 });
 
