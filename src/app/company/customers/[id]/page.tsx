@@ -7,6 +7,7 @@ import { ArrowLeft, Phone, Car, Calendar, TrendingUp, Receipt } from "lucide-rea
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, Badge, Table, Pagination, Button, StatCard, QueryErrorState } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { PAGE_SIZE } from "@/lib/pagination";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
@@ -20,7 +21,6 @@ export default function CustomerDetailPage({
   const { id } = use(params);
   const fmtCurrency = useCurrencyFormatter();
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   const customerQ = useQuery({
     queryKey: ["company", "customers", id],

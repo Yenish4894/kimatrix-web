@@ -9,6 +9,7 @@ import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, Badge, Button, Modal, Select, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { PAGE_SIZE } from "@/lib/pagination";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import {
@@ -20,7 +21,6 @@ import {
 } from "@/lib/company-status";
 import type { Company } from "@/types";
 
-const PAGE_SIZE = 20;
 
 type StatusFilter = "all" | "active" | "inactive";
 type BusinessFilter = "all" | "fuel_station" | "shop";

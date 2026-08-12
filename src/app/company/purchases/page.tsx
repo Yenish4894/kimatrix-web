@@ -8,12 +8,12 @@ import { Search, Eye, Calendar } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDateTime } from "@/lib/utils";
+import { PAGE_SIZE } from "@/lib/pagination";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
-const PAGE_SIZE = 20;
 
 export default function PurchasesPage() {
   const fmtCurrency = useCurrencyFormatter();

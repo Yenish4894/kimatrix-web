@@ -8,12 +8,12 @@ import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { PAGE_SIZE } from "@/lib/pagination";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
 import type { Customer } from "@/types";
 
-const PAGE_SIZE = 20;
 
 type SortKey = "totalInvoiceAmount" | "submissionCount" | "lastSubmissionAt" | "firstSubmissionAt";
 
