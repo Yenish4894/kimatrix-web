@@ -71,7 +71,7 @@ export default function AdminCompaniesPage() {
     onSuccess: (_, { action }) => {
       toast.success(
         action === "deactivate"
-          ? "Company deactivated. Owner signed out of all devices."
+          ? "Company banned. Owner signed out of all devices."
           : "Ban lifted. Their access now follows their subscription."
       );
       qc.invalidateQueries({ queryKey: ["admin", "companies"] });
@@ -271,12 +271,12 @@ export default function AdminCompaniesPage() {
         >
           <p className="text-sm text-slate-600">
             {confirmModal.action === "activate"
-              ? "This lifts the ban. Access is then decided by their subscription — if it has expired, they will land on the paywall rather than a working dashboard."
-              : "This bans the company. It does not end their subscription period; it overrides it."}
+              ? "This lifts the ban and lets the owner log in again. Access is then decided by their subscription — if it has expired or never started, they will land on the paywall rather than a working dashboard."
+              : "This blocks the owner from logging in at all and signs them out everywhere. It does not cancel any subscription — it overrides it."}
           </p>
           {confirmModal.action === "deactivate" && (
             <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">
-              <span aria-hidden="true">⚠</span>{" "}The owner will be signed out of all devices immediately and cannot log in until reactivated.
+              <span aria-hidden="true">⚠</span>{" "}The owner is signed out of every device immediately and cannot log in again until the ban is lifted.
             </p>
           )}
         </Modal>

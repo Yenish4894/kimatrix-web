@@ -31,10 +31,18 @@ export function getAdminToggleAction(
   return company.deactivatedAt ? "activate" : "deactivate";
 }
 
-/** Says what the action does, rather than naming an internal flag. */
+/**
+ * Says what the action does, rather than naming an internal flag.
+ *
+ * "Deactivate" read as nonsense on a company that was never active — a pending
+ * signup is already switched off, so being offered to switch it off again looks
+ * like a bug. The action is a ban: it hard-blocks the owner from logging in at all,
+ * which is meaningful at any status and is how a junk registration gets shut down.
+ * Naming it that way also pairs properly with its inverse.
+ */
 export const TOGGLE_LABEL: Record<"activate" | "deactivate", string> = {
   activate: "Lift ban",
-  deactivate: "Deactivate",
+  deactivate: "Ban",
 };
 
 export const STATUS_LABEL: Record<CompanyStatus, string> = {
