@@ -35,9 +35,10 @@ export async function generateQrPosterPdf(
   doc.rect(margin / 2, margin / 2, width - margin, height - margin);
 
   // ─── Top brand strip ───────────────────────────────────────
-  // Taller than it needs to be for the logo alone: this poster goes on a wall and is
-  // read from a distance, so the band is the thing that identifies it across a room.
-  const bandHeight = 27;
+  // The band identifies the poster across a room, but it is deliberately restrained:
+  // the poster's job is to get someone to scan the code, and a masthead that competes
+  // with the QR for attention works against that.
+  const bandHeight = 22;
   const bandTop = margin / 2;
   doc.setFillColor(...BRAND.primary);
   doc.rect(bandTop, bandTop, width - margin, bandHeight, "F");
@@ -46,14 +47,16 @@ export async function generateQrPosterPdf(
   // full-colour lockup is the strongest version of the mark, and it is the only asset
   // that is tightly cropped — the white variant carries ~35% transparent padding, so
   // at any given box height it renders visibly smaller than it should.
-  const plateW = 108;
-  const plateH = 18;
+  const plateW = 86;
+  const plateH = 14;
   const plateX = (width - plateW) / 2;
   const plateY = bandTop + (bandHeight - plateH) / 2;
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(plateX, plateY, plateW, plateH, 2.5, 2.5, "F");
 
-  const logoH = 12.5;
+  // Dialled back from 12.5mm: at that size the wordmark competed with the QR for
+  // attention, and the poster's job is to get someone to scan the code.
+  const logoH = 9.5;
   const logoW = logoH * WORDMARK_RATIO;
   drawWordmark(doc, assets, plateX + (plateW - logoW) / 2, plateY + (plateH - logoH) / 2, logoH);
 

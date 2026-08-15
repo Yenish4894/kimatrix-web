@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, Card, CardContent, Button, Table, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { QR_COLORS, qrLogoSettings } from "@/lib/qr";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { EmailVerificationBanner } from "@/components/billing/email-verification-banner";
@@ -130,7 +131,14 @@ export default function CompanyDashboardPage() {
             <div className="bg-primary-50 rounded-2xl p-4 sm:p-6 inline-block mb-6 border border-primary-100">
               <div className="bg-white rounded-xl p-3">
                 {company?.qrUrl ? (
-                  <QRCodeSVG value={company.qrUrl} size={160} level="H" bgColor="#ffffff" fgColor="#0891B2" />
+                  <QRCodeSVG
+                    value={company.qrUrl}
+                    size={160}
+                    level="H"
+                    bgColor={QR_COLORS.bg}
+                    fgColor={QR_COLORS.fg}
+                    imageSettings={qrLogoSettings(160)}
+                  />
                 ) : (
                   <div className="h-40 w-40 bg-slate-100 animate-pulse rounded" />
                 )}

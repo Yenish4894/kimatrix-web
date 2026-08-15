@@ -10,6 +10,7 @@ import {Card, CardContent, Button} from "@/components/ui";
 
 import {useCompanyProfile} from "@/hooks/useCompanyProfile";
 import {formatAddress} from "@/lib/utils";
+import {QR_COLORS, qrLogoSettings} from "@/lib/qr";
 // generateQrPosterPdf is lazy-loaded on click — saves ~150KB on initial render.
 
 export default function QRCodePage() {
@@ -73,9 +74,12 @@ export default function QRCodePage() {
                   <QRCodeCanvas
                     value={company.qrUrl}
                     size={660}
+                    // Must stay "H". The centre logo covers modules, and only the 30%
+                    // recovery of level H reconstructs them. See lib/qr.ts.
                     level="H"
-                    bgColor="#ffffff"
-                    fgColor="#0891B2"
+                    bgColor={QR_COLORS.bg}
+                    fgColor={QR_COLORS.fg}
+                    imageSettings={qrLogoSettings(660)}
                     style={{ width: 220, height: 220 }}
                   />
                 ) : (
