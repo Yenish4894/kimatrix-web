@@ -186,7 +186,7 @@ export function PaywallModal({
         {entitlement.canExport && (
           <Button
             variant="secondary"
-            onClick={() => router.push("/company/settings?export=1")}
+            onClick={() => router.push("/company/export")}
             className="w-full justify-center"
           >
             <Download className="h-4 w-4" aria-hidden="true" />

@@ -25,41 +25,49 @@ describe("decideGate — the status x route matrix", () => {
     label: string;
     p: Record<string, unknown>;
     dashboard: string;
+    exportRoute: string;
   }[] = [
     {
       label: "trialing",
       p: { subscriptionStatus: "trialing", hasAccess: true, isTrial: true, accessUntil: future },
       dashboard: "children",
+      exportRoute: "children",
     },
     {
       label: "active (paid)",
       p: { subscriptionStatus: "active", hasAccess: true, accessUntil: future },
       dashboard: "children",
+      exportRoute: "children",
     },
     {
       label: "active (comped, perpetual)",
       p: { subscriptionStatus: "active", hasAccess: true, isComped: true, accessUntil: null },
       dashboard: "children",
+      exportRoute: "children",
     },
     {
       label: "trial_expired",
       p: { subscriptionStatus: "trial_expired", hasAccess: false, canExport: true },
       dashboard: "paywall",
+      exportRoute: "children",
     },
     {
       label: "expired",
       p: { subscriptionStatus: "expired", hasAccess: false, canExport: true },
       dashboard: "paywall",
+      exportRoute: "children",
     },
     {
       label: "pending",
       p: { subscriptionStatus: "pending", hasAccess: false, canExport: true },
       dashboard: "paywall",
+      exportRoute: "children",
     },
     {
       label: "deactivated",
       p: { subscriptionStatus: "deactivated", hasAccess: false, canExport: false },
       dashboard: "deactivated-notice",
+      exportRoute: "deactivated-notice",
     },
   ];
 
@@ -71,6 +79,18 @@ describe("decideGate — the status x route matrix", () => {
       // A customer who cannot reach the payment page cannot pay, and rendering a
       // paywall on top of the payment page is a loop.
       assert.equal(decideGate(toEntitlement(profile(c.p), NOW), "/company/billing"), "children");
+    });
+    it(`${c.label} on export -> ${c.exportRoute}`, () => {
+      // "Download your data and leave" is the other half of the deal. This route was
+      // NOT allowed through, so the paywall's own "Download my data" button landed
+      // straight back on the paywall — the only exit it offered was a dead end.
+      //
+      // The one exception is a banned company: the backend refuses its download, so
+      // the gate must not hand it a page of buttons that 403.
+      assert.equal(
+        decideGate(toEntitlement(profile(c.p), NOW), "/company/export"),
+        c.exportRoute,
+      );
     });
   }
 });

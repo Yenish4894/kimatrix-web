@@ -107,15 +107,33 @@ export function formatCountdown(msRemaining: number): Countdown {
  */
 export type GateDecision = "children" | "deactivated-notice" | "paywall";
 
+/**
+ * Routes that stay reachable after access lapses.
+ *
+ * Billing, because a customer who cannot reach the payment page cannot pay, and
+ * rendering a paywall on top of the payment page is a loop.
+ *
+ * Export, because "download your data and leave" is the other half of the deal, and it
+ * was broken: the paywall offered a "Download my data" button, but the page it pointed
+ * at was not on this list — so the gate answered with the same paywall, and the only
+ * exit the modal offered was a dead end. The backend had allowed the export all along.
+ */
+const BILLING_ROUTE = "/company/billing";
+const EXPORT_ROUTE = "/company/export";
+
+function isRoute(pathname: string, route: string): boolean {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
 export function decideGate(entitlement: Entitlement, pathname: string): GateDecision {
-  // Billing routes always pass through. A customer who cannot reach the payment page
-  // cannot pay, and rendering a paywall on top of the payment page is a loop.
-  if (pathname === "/company/billing" || pathname.startsWith("/company/billing/")) {
-    return "children";
-  }
+  if (isRoute(pathname, BILLING_ROUTE)) return "children";
   // Checked before hasAccess: a deactivated account gets a notice, never a "choose a
   // plan" CTA — taking money from someone we just banned would change nothing.
   if (entitlement.status === "deactivated") return "deactivated-notice";
+  // Export sits AFTER the deactivated check, and asks `canExport` rather than assuming
+  // it. A banned company is the one case where the backend refuses the download, so
+  // sending it to a page of buttons that 403 would be its own small betrayal.
+  if (isRoute(pathname, EXPORT_ROUTE) && entitlement.canExport) return "children";
   if (entitlement.hasAccess) return "children";
   return "paywall";
 }
