@@ -92,12 +92,12 @@ export function ExportDataCard() {
     {
       dataset: "customers",
       label: "Customers",
-      description: "Every customer, with their total spend and submission count.",
+      description: "Every customer, ranked by total spend — ready to run a draw from.",
     },
     {
       dataset: "purchases",
       label: "Purchases",
-      description: "Every individual submission, newest first.",
+      description: "Every individual submission, largest amount first.",
     },
   ];
 

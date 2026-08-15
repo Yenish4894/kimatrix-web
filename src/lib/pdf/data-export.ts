@@ -51,6 +51,58 @@ const COLUMNS: Record<ExportDataset, Cell[]> = {
   ],
 };
 
+/**
+ * The column each dataset is ranked on.
+ *
+ * The API streams in keyset-pagination order — newest submission first — because that
+ * is what its cursor requires. Re-sorting server-side would mean a different cursor
+ * column and a new index, and would change CSV and JSON too. The PDF holds every row
+ * in memory by the time it renders, so it ranks here and leaves the stream alone.
+ */
+const RANK_BY: Record<ExportDataset, string> = {
+  customers: "total_invoice_amount",
+  purchases: "invoice_amount",
+};
+
+function amount(row: Record<string, unknown>, key: string): number {
+  const n = Number(row[key]);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Highest value first, so the top of page one is the customer who spent the most and
+ * the document can be used to run a draw directly.
+ *
+ * Ties break on mobile — an arbitrary rule, but a fixed one. Without it two customers
+ * on the same total could swap places between two downloads of identical data, and a
+ * prize list that reorders itself is not one anyone can trust.
+ */
+export function rankRows(
+  dataset: ExportDataset,
+  rows: Record<string, unknown>[],
+): { row: Record<string, unknown>; rank: number }[] {
+  const key = RANK_BY[dataset];
+  const sorted = [...rows].sort((a, b) => {
+    const diff = amount(b, key) - amount(a, key);
+    if (diff !== 0) return diff;
+    return String(a["mobile"] ?? "").localeCompare(String(b["mobile"] ?? ""));
+  });
+
+  // RANK(), not ROW_NUMBER(): equal totals share a position. Printing 1, 2, 3 down a
+  // column of identical amounts would tell someone running a draw there is a winner
+  // where there is actually a tie to resolve.
+  const out: { row: Record<string, unknown>; rank: number }[] = [];
+  let rank = 0;
+  let previous: number | null = null;
+  sorted.forEach((row, i) => {
+    const value = amount(row, key);
+    if (previous === null || value !== previous) rank = i + 1;
+    previous = value;
+    out.push({ row, rank });
+  });
+  return out;
+}
+
 const TITLE: Record<ExportDataset, string> = {
   customers: "Customer export",
   purchases: "Purchase export",
@@ -109,11 +161,12 @@ export async function generateExportPdf({
 
   const columns = COLUMNS[dataset];
   const title = TITLE[dataset];
-  const subtitle = `${formatNumber(rows.length)} ${
+  const noun =
     dataset === "customers"
       ? `customer${rows.length === 1 ? "" : "s"}`
-      : `purchase${rows.length === 1 ? "" : "s"}`
-  } — complete export`;
+      : `purchase${rows.length === 1 ? "" : "s"}`;
+  const orderedBy = dataset === "customers" ? "total spend" : "purchase amount";
+  const subtitle = `${formatNumber(rows.length)} ${noun} — complete export, highest ${orderedBy} first`;
 
   const startY = drawHeader(doc, assets, { title, subtitle, companyName });
 
@@ -127,10 +180,15 @@ export async function generateExportPdf({
     return;
   }
 
+  const ranked = rankRows(dataset, rows);
+
   autoTable(doc, {
     startY,
-    head: [columns.map((c) => c.header)],
-    body: rows.map((row) => columns.map((c) => renderCell(c, row[c.key], country))),
+    head: [["#", ...columns.map((c) => c.header)]],
+    body: ranked.map(({ row, rank }) => [
+      String(rank),
+      ...columns.map((c) => renderCell(c, row[c.key], country)),
+    ]),
     theme: "plain",
     margin: { left: margin, right: margin, top: RUNNING_HEADER_HEIGHT, bottom: PAGE.margin + 5 },
     styles: {
@@ -152,7 +210,14 @@ export async function generateExportPdf({
     // A row torn across a page break loses the line that identifies it.
     rowPageBreak: "avoid",
     didParseCell: (data) => {
-      const column = columns[data.column.index];
+      if (data.column.index === 0) {
+        data.cell.styles.halign = "center";
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.cellWidth = 12;
+        return;
+      }
+      // Offset by the rank column, which is not part of the backend contract.
+      const column = columns[data.column.index - 1];
       if (!column) return;
       if (column.align === "right") data.cell.styles.halign = "right";
       // Mobile numbers are easier to scan and compare in a fixed-width face.
