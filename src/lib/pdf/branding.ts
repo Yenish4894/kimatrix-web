@@ -15,12 +15,29 @@ export const BRAND = {
   rowAlt: [240, 253, 250] as [number, number, number],   // teal-50
 };
 
-// A4 dimensions in mm (jsPDF default unit)
+// A4 portrait dimensions in mm (jsPDF default unit).
+// Kept for callers that lay out against a known portrait page; anything that has a
+// `doc` in hand should use `pageSize(doc)` instead, which also works in landscape.
 export const PAGE = {
   width: 210,
   height: 297,
   margin: 20,
 };
+
+/**
+ * The page's real dimensions, read off the document rather than assumed.
+ *
+ * The data export is landscape — seven columns do not fit across 170mm — and every
+ * helper below used to hard-code the portrait width, so a landscape page drew its
+ * masthead and footer three-quarters of the way across and stopped.
+ */
+export function pageSize(doc: jsPDF): { width: number; height: number; margin: number } {
+  return {
+    width: doc.internal.pageSize.getWidth(),
+    height: doc.internal.pageSize.getHeight(),
+    margin: PAGE.margin,
+  };
+}
 
 /** The one-line description of what the platform is. Used under the wordmark. */
 export const PLATFORM_TAGLINE = "Customer Purchase Tracking Platform";
@@ -142,7 +159,7 @@ export function drawHeader(
   assets: BrandAssets,
   opts: { title: string; subtitle?: string; companyName?: string },
 ): number {
-  const { margin, width } = PAGE;
+  const { margin, width } = pageSize(doc);
 
   // Full-bleed brand bar. The orange segment carries the secondary brand colour into
   // documents that are otherwise entirely teal.
@@ -221,7 +238,7 @@ export function drawHeader(
  * of the document once a merchant exports their full customer list.
  */
 export function drawRunningHeader(doc: jsPDF, assets: BrandAssets, title: string) {
-  const { margin, width } = PAGE;
+  const { margin, width } = pageSize(doc);
 
   doc.setFillColor(...BRAND.primary);
   doc.rect(0, 0, width, 2.5, "F");
@@ -248,7 +265,7 @@ export const RUNNING_HEADER_HEIGHT = 24;
  * count on the right. Call after content is written, before saving.
  */
 export function drawFooterOnAllPages(doc: jsPDF, assets: BrandAssets) {
-  const { margin, width, height } = PAGE;
+  const { margin, width, height } = pageSize(doc);
   const pageCount = doc.getNumberOfPages();
 
   for (let i = 1; i <= pageCount; i++) {

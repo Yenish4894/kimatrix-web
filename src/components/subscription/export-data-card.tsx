@@ -1,13 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileJson, FileSpreadsheet } from "lucide-react";
+import { Download, FileJson, FileSpreadsheet, FileText } from "lucide-react";
 import { Button, Card, CardContent, CardHeader } from "@/components/ui";
 import api from "@/lib/api";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { parseApiError } from "@/lib/errors";
 
 type Dataset = "customers" | "purchases";
-type Format = "csv" | "json";
+type Format = "csv" | "json" | "pdf";
+
+/**
+ * Which download buttons the card offers.
+ *
+ * CSV and JSON are fully built and still work end-to-end — the backend streams both,
+ * and `run()` below still handles them. They are hidden rather than deleted because
+ * the product currently offers PDF only; add them back to this list to re-expose them
+ * with no other change.
+ */
+const VISIBLE_FORMATS: Format[] = ["pdf"];
 
 /**
  * Downloads an export.
@@ -46,11 +57,27 @@ async function downloadExport(dataset: Dataset, format: Format): Promise<void> {
 export function ExportDataCard() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { data: profile } = useCompanyProfile();
 
   const run = async (dataset: Dataset, format: Format): Promise<void> => {
     setBusy(`${dataset}-${format}`);
     setError(null);
     try {
+      if (format === "pdf") {
+        // Built from the JSON the API already streams, so the PDF needs no new
+        // endpoint and cannot drift from what CSV and JSON contain.
+        const { data } = await api.get(`/company/export/${dataset}`, {
+          params: { format: "json" },
+        });
+        const { generateExportPdf } = await import("@/lib/pdf/data-export");
+        await generateExportPdf({
+          dataset,
+          rows: Array.isArray(data) ? data : [],
+          companyName: profile?.name ?? "",
+          country: profile?.country ?? "",
+        });
+        return;
+      }
       await downloadExport(dataset, format);
     } catch (err) {
       // A blob-typed error response arrives as a Blob, so the usual JSON parsing finds
@@ -99,42 +126,38 @@ export function ExportDataCard() {
               <p className="text-sm text-slate-500">{option.description}</p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => void run(option.dataset, "csv")}
-                disabled={busy !== null}
-                aria-label={`Download ${option.label.toLowerCase()} as CSV`}
-              >
-                {busy === `${option.dataset}-csv` ? (
-                  <Download className="h-4 w-4 animate-pulse" aria-hidden="true" />
-                ) : (
-                  <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-                )}
-                CSV
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void run(option.dataset, "json")}
-                disabled={busy !== null}
-                aria-label={`Download ${option.label.toLowerCase()} as JSON`}
-              >
-                {busy === `${option.dataset}-json` ? (
-                  <Download className="h-4 w-4 animate-pulse" aria-hidden="true" />
-                ) : (
-                  <FileJson className="h-4 w-4" aria-hidden="true" />
-                )}
-                JSON
-              </Button>
+              {VISIBLE_FORMATS.map((format) => (
+                <Button
+                  key={format}
+                  variant={format === "pdf" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => void run(option.dataset, format)}
+                  disabled={busy !== null}
+                  aria-label={`Download ${option.label.toLowerCase()} as ${format.toUpperCase()}`}
+                >
+                  {busy === `${option.dataset}-${format}` ? (
+                    <Download className="h-4 w-4 animate-pulse" aria-hidden="true" />
+                  ) : (
+                    <FormatIcon format={format} />
+                  )}
+                  {format.toUpperCase()}
+                </Button>
+              ))}
             </div>
           </div>
         ))}
 
         <p className="text-xs text-slate-500">
-          CSV opens in Excel or Google Sheets. JSON is for importing into another system.
+          A branded PDF you can print, file or send on. Downloads stay available after a
+          plan ends.
         </p>
       </CardContent>
     </Card>
   );
+}
+
+function FormatIcon({ format }: Readonly<{ format: Format }>) {
+  if (format === "json") return <FileJson className="h-4 w-4" aria-hidden="true" />;
+  if (format === "csv") return <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />;
+  return <FileText className="h-4 w-4" aria-hidden="true" />;
 }
