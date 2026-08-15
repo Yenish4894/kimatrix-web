@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { companyService } from "@/services";
+import { useAppSelector } from "@/store/hooks";
 import type { CompanyProfile } from "@/types";
 
 /**
@@ -26,9 +27,20 @@ import type { CompanyProfile } from "@/types";
 export const COMPANY_PROFILE_KEY = ["company", "profile"] as const;
 
 export function useCompanyProfile() {
+  // `/company/profile` is a company endpoint and answers a super admin with 403. The
+  // shared sidebar calls this hook on every page including /admin/*, so every admin
+  // page load fired a request that could only fail — twice, with the retry. It showed
+  // up in the access log as a steady trickle of 403s refered from /admin/dashboard.
+  //
+  // Guarded here rather than at the call site: the sidebar is not the only shared
+  // surface, and the rule is a property of the endpoint, not of any one component.
+  const isSuperAdmin =
+    useAppSelector((state) => state.auth.user?.userType) === "super_admin";
+
   return useQuery<CompanyProfile>({
     queryKey: COMPANY_PROFILE_KEY,
     queryFn: companyService.getProfile,
+    enabled: !isSuperAdmin,
     // The gate depends on this, so a failure must surface rather than retry forever.
     retry: 1,
   });
