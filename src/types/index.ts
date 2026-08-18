@@ -343,3 +343,16 @@ export interface PasswordChangePayload {
 // ─── Company status (derived) ──────────────────────────────
 
 export type CompanyStatus = "pending" | "active" | "deactivated";
+
+// ─── Bulk email ───────────────────────────────────────────────────────────
+
+export interface BulkEmailLog {
+  id: string;
+  subject: string;
+  body: string;
+  sentByEmail: string;
+  recipientCount: number;
+  recipientIds: string[];
+  sentAt: string;
+  createdAt: string;
+}

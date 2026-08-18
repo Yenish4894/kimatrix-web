@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import type { AdminPlan, AdminStats, Company, PaginatedResponse, PlatformSettings } from "@/types";
+import type { AdminPlan, AdminStats, BulkEmailLog, Company, PaginatedResponse, PlatformSettings } from "@/types";
 
 interface AdminCompaniesParams {
   page?: number;
@@ -138,6 +138,26 @@ export const adminService = {
       { isActive },
     );
     return data;
+  },
+
+  // ─── Bulk email ───────────────────────────────────────────────
+
+  // POST /api/admin/bulk-email
+  sendBulkEmail: async (payload: { subject: string; body: string; companyIds: string[] }) => {
+    const { data } = await api.post<{ data: { recipientCount: number; logId: string }; message: string }>(
+      "/admin/bulk-email",
+      payload,
+    );
+    return data;
+  },
+
+  // GET /api/admin/bulk-email/logs
+  getBulkEmailLogs: async (page = 1, limit = 10) => {
+    const { data } = await api.get<{ data: PaginatedResponse<BulkEmailLog> }>(
+      "/admin/bulk-email/logs",
+      { params: { page, limit } },
+    );
+    return data.data;
   },
 
   // ─── Platform settings ───────────────────────────────────────
