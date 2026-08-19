@@ -9,6 +9,7 @@ import { adminService, type AdminTrialIdentity } from "@/services/admin.service"
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
 import type { Company } from "@/types";
+import { GrantTrialModal } from "@/components/admin/grant-trial-modal";
 
 interface SubscriptionPanelProps {
   company: Company;
@@ -37,7 +38,6 @@ const STATUS_LABEL: Record<string, string> = {
 export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>) {
   const queryClient = useQueryClient();
   const [modal, setModal] = useState<"trial" | "comp" | "release" | null>(null);
-  const [trialDays, setTrialDays] = useState("7");
   const [compReason, setCompReason] = useState("");
   const [compUntil, setCompUntil] = useState("");
   const [releaseTarget, setReleaseTarget] = useState<AdminTrialIdentity | null>(null);
@@ -69,16 +69,6 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
     const parsed = parseApiError(err);
     toast.error(errorMessageWithId(parsed));
   };
-
-  const trialMut = useMutation({
-    mutationFn: () => adminService.extendTrial(company.id, Number(trialDays)),
-    onSuccess: async (result) => {
-      toast.success(`Trial now runs until ${formatDate(result.trialEndsAt)}.`);
-      await refresh();
-      close();
-    },
-    onError,
-  });
 
   const compMut = useMutation({
     mutationFn: (grant: boolean) =>
@@ -233,33 +223,11 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
         </CardContent>
       </Card>
 
-      {/* ── Grant / extend trial ── */}
-      <Modal
-        open={modal === "trial"}
+      <GrantTrialModal
+        company={modal === "trial" ? company : null}
         onClose={close}
-        title={company.trialEndsAt ? "Extend trial" : "Grant trial"}
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button onClick={() => trialMut.mutate()} disabled={trialMut.isPending}>
-              {trialMut.isPending ? "Saving…" : "Confirm"}
-            </Button>
-          </>
-        }
-      >
-        <Input
-          label="Days"
-          type="number"
-          min={1}
-          max={365}
-          value={trialDays}
-          onChange={(e) => setTrialDays(e.target.value)}
-          helperText="Added on top of any trial time still remaining, not instead of it."
-        />
-      </Modal>
+        onGranted={refresh}
+      />
 
       {/* ── Grant complimentary access ── */}
       <Modal

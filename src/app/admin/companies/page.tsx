@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, MoreVertical, Power, Eye } from "lucide-react";
+import { Search, MoreVertical, Power, Eye, CalendarPlus } from "lucide-react";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
@@ -10,6 +10,7 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, Badge, Button, Modal, Select, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { PAGE_SIZE } from "@/lib/pagination";
+import { GrantTrialModal } from "@/components/admin/grant-trial-modal";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import {
@@ -33,6 +34,7 @@ export default function AdminCompaniesPage() {
   const [businessFilter, setBusinessFilter] = useState<BusinessFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const [trialTarget, setTrialTarget] = useState<Company | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ company: Company; action: "activate" | "deactivate" } | null>(null);
 
   useEffect(() => {
@@ -164,6 +166,20 @@ export default function AdminCompaniesPage() {
                 >
                   <Eye className="h-4 w-4" aria-hidden="true" /> View Details
                 </Link>
+                {/* Granting access is the everyday admin action and used to be
+                    reachable only from the detail page, which is why "Activate" on
+                    this menu got reached for instead and always failed. */}
+                <button
+                  role="menuitem"
+                  className="w-full px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2"
+                  onClick={() => {
+                    setActionMenuId(null);
+                    setTrialTarget(row);
+                  }}
+                >
+                  <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+                  {row.trialEndsAt ? "Extend trial" : "Grant trial"}
+                </button>
                 <button
                   role="menuitem"
                   className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
@@ -250,6 +266,12 @@ export default function AdminCompaniesPage() {
           )}
         </>
       )}
+
+      <GrantTrialModal
+        company={trialTarget}
+        onClose={() => setTrialTarget(null)}
+        onGranted={() => qc.invalidateQueries({ queryKey: ["admin", "companies"] })}
+      />
 
       {confirmModal && (
         <Modal
