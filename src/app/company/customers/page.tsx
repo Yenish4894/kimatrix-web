@@ -8,7 +8,7 @@ import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
-import { PAGE_SIZE } from "@/lib/pagination";
+import { PAGE_SIZE, formatPageRange } from "@/lib/pagination";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
@@ -133,7 +133,12 @@ export default function CustomersPage() {
           />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">{pagination?.total ?? 0} total</span>
+          <span className="text-sm text-slate-500">
+            {formatPageRange(pagination?.page ?? 1, PAGE_SIZE, pagination?.total ?? 0, {
+              one: "customer",
+              many: "customers",
+            }) ?? "No customers"}
+          </span>
         </div>
       </div>
 

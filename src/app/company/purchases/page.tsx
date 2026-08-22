@@ -8,7 +8,7 @@ import { Search, Eye, Calendar } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDateTime } from "@/lib/utils";
-import { PAGE_SIZE } from "@/lib/pagination";
+import { PAGE_SIZE, formatPageRange } from "@/lib/pagination";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
@@ -158,7 +158,12 @@ export default function PurchasesPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 ml-auto">
-          <span className="text-sm text-slate-500">{pagination?.total ?? 0} purchases</span>
+          <span className="text-sm text-slate-500">
+            {formatPageRange(pagination?.page ?? 1, PAGE_SIZE, pagination?.total ?? 0, {
+              one: "purchase",
+              many: "purchases",
+            }) ?? "No purchases"}
+          </span>
         </div>
       </div>
 

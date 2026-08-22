@@ -9,7 +9,7 @@ import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, Badge, Button, Modal, Select, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
-import { PAGE_SIZE } from "@/lib/pagination";
+import { PAGE_SIZE, formatPageRange } from "@/lib/pagination";
 import { GrantTrialModal } from "@/components/admin/grant-trial-modal";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
@@ -237,7 +237,12 @@ export default function AdminCompaniesPage() {
             ]}
           />
         </div>
-        <span className="text-sm text-slate-500 ml-auto">{pagination?.total ?? 0} companies</span>
+        <span className="text-sm text-slate-500 ml-auto">
+          {formatPageRange(pagination?.page ?? 1, PAGE_SIZE, pagination?.total ?? 0, {
+            one: "company",
+            many: "companies",
+          }) ?? "No companies"}
+        </span>
       </div>
 
       {companiesQ.isError ? (
