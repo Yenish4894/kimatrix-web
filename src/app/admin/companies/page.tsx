@@ -18,6 +18,8 @@ import {
   getCompanyStatus,
   STATUS_BADGE_VARIANT,
   STATUS_LABEL,
+  SUBSCRIPTION_STATUS_LABEL,
+  SUBSCRIPTION_STATUS_TONE,
   TOGGLE_LABEL,
 } from "@/lib/company-status";
 import type { Company } from "@/types";
@@ -128,9 +130,21 @@ export default function AdminCompaniesPage() {
       header: "Status",
       render: (row: Company) => {
         const status = getCompanyStatus(row);
+        // Prefers the precise subscription state over the coarse
+        // active/pending/deactivated view. A company whose trial ended today is
+        // "Trial expired", not "Pending" — "Pending" reads as never having started,
+        // which is a different situation needing a different response. The detail
+        // page already showed the precise state, so the two screens disagreed about
+        // the same company.
+        const label = row.subscriptionStatus
+          ? (SUBSCRIPTION_STATUS_LABEL[row.subscriptionStatus] ?? STATUS_LABEL[status])
+          : STATUS_LABEL[status];
+        const tone = row.subscriptionStatus
+          ? (SUBSCRIPTION_STATUS_TONE[row.subscriptionStatus] ?? STATUS_BADGE_VARIANT[status])
+          : STATUS_BADGE_VARIANT[status];
         return (
-          <Badge variant={STATUS_BADGE_VARIANT[status]}>
-            {STATUS_LABEL[status]}
+          <Badge variant={tone}>
+            {label}
           </Badge>
         );
       },
