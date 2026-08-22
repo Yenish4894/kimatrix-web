@@ -26,6 +26,7 @@ export default function AdminBulkEmailPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const [extraInput, setExtraInput] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
@@ -44,13 +45,42 @@ export default function AdminBulkEmailPage() {
     queryFn: () => adminService.getBulkEmailLogs(logsPage, LOGS_PAGE_SIZE),
   });
 
+  // Split on comma, semicolon, whitespace or newline — people paste address lists in
+  // every one of those shapes, and rejecting the paste is a worse answer than
+  // accepting it.
+  const extraEmails = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          extraInput
+            .split(/[\s,;]+/)
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean),
+        ),
+      ),
+    [extraInput],
+  );
+
+  // Deliberately permissive: the API is the authority on what a valid address is, and
+  // this only decides whether to warn before the request is made.
+  const invalidExtras = useMemo(
+    () => extraEmails.filter((e) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)),
+    [extraEmails],
+  );
+
   const sendMut = useMutation({
     mutationFn: () =>
-      adminService.sendBulkEmail({ subject: subject.trim(), body: body.trim(), companyIds: Array.from(selectedIds) }),
+      adminService.sendBulkEmail({
+        subject: subject.trim(),
+        body: body.trim(),
+        companyIds: Array.from(selectedIds),
+        extraEmails,
+      }),
     onSuccess: (res) => {
       toast.success(res.message ?? `Email queued for ${res.data.recipientCount} recipient(s).`);
       setSubject("");
       setBody("");
+      setExtraInput("");
       setSelectedIds(new Set());
       qc.invalidateQueries({ queryKey: ["admin", "bulk-email-logs"] });
     },
@@ -110,7 +140,19 @@ export default function AdminBulkEmailPage() {
     }
   };
 
-  const canSend = selectedIds.size > 0 && subject.trim().length > 0 && body.trim().length > 0;
+  // Only what is on screen can be counted — the selection may span pages this query
+  // has not loaded. Deliberately an "at least" signal, not a precise total.
+  const optedOutSelected = useMemo(
+    () => items.filter((c) => selectedIds.has(c.id) && c.promoEmailOptIn === false).length,
+    [items, selectedIds],
+  );
+
+  const totalRecipients = selectedIds.size + extraEmails.length;
+  const canSend =
+    totalRecipients > 0 &&
+    invalidExtras.length === 0 &&
+    subject.trim().length > 0 &&
+    body.trim().length > 0;
 
   return (
     <DashboardShell title="Bulk Email" requiredRole="super_admin">
@@ -179,6 +221,30 @@ export default function AdminBulkEmailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+              <label htmlFor="extra-emails" className="block text-sm font-medium text-slate-700 mb-1">
+                Other recipients{" "}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <textarea
+                id="extra-emails"
+                className="w-full min-h-[70px] rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
+                placeholder="someone@example.com, another@example.com"
+                value={extraInput}
+                onChange={(e) => setExtraInput(e.target.value)}
+                aria-describedby="extra-emails-help"
+              />
+              <p id="extra-emails-help" className="mt-1 text-xs text-slate-500">
+                Anyone who is not a registered company — separate addresses with a comma,
+                space or new line. Up to 50.
+              </p>
+              {invalidExtras.length > 0 && (
+                <p role="alert" className="mt-1 text-xs text-error-600">
+                  Not a valid email address: {invalidExtras.slice(0, 3).join(", ")}
+                  {invalidExtras.length > 3 ? ` and ${invalidExtras.length - 3} more` : ""}
+                </p>
+              )}
+            </div>
+            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
               <Input placeholder="Email subject..." value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={255} />
             </div>
@@ -194,11 +260,33 @@ export default function AdminBulkEmailPage() {
               <p className="text-xs text-slate-400 mt-1 text-right">{body.length}/10,000</p>
             </div>
             <div className="flex items-center justify-between pt-1">
-              <p className="text-sm text-slate-500">
-                {selectedIds.size === 0
-                  ? "No recipients selected."
-                  : `Sending to ${selectedIds.size} company${selectedIds.size > 1 ? "s" : ""}.`}
-              </p>
+              <div className="text-sm text-slate-500">
+                {totalRecipients === 0 ? (
+                  "No recipients yet."
+                ) : (
+                  <>
+                    Sending to{" "}
+                    <strong className="text-slate-700">
+                      {totalRecipients} recipient{totalRecipients === 1 ? "" : "s"}
+                    </strong>
+                    {selectedIds.size > 0 && extraEmails.length > 0 && (
+                      <span className="text-slate-400">
+                        {" "}
+                        ({selectedIds.size} compan{selectedIds.size === 1 ? "y" : "ies"} +{" "}
+                        {extraEmails.length} other)
+                      </span>
+                    )}
+                    {/* An address in both lists is one email, not two — the server
+                        deduplicates, so the count here would otherwise overstate it. */}
+                    {optedOutSelected > 0 && (
+                      <span className="block mt-1 text-warning-700">
+                        {optedOutSelected} of the selected companies turned off promotional
+                        email. Sending anyway will still reach them.
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
               <Button variant="primary" onClick={() => sendMut.mutate()} isLoading={sendMut.isPending} disabled={!canSend}>
                 <Send className="h-4 w-4 mr-2" aria-hidden="true" />
                 Send Email
@@ -299,6 +387,12 @@ function CompanyTable({
                 <td className="px-4 py-3">
                   <p className="font-medium text-slate-700">{row.name}</p>
                   <p className="text-xs text-slate-500">{row.owner?.email ?? "—"}</p>
+                  {/* Shown where the decision is made. This flag is collected at
+                      registration and editable in settings, but nothing has ever read
+                      it — so an admin could not tell who had asked not to be emailed. */}
+                  {row.promoEmailOptIn === false && (
+                    <p className="mt-0.5 text-[11px] text-warning-700">Opted out of promo email</p>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
                   {row.businessType === "fuel_station" ? "Fuel Station" : "Shop"}
@@ -359,7 +453,16 @@ function LogsTable({
               <>
                 <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-slate-700 max-w-xs truncate">{row.subject}</td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{row.recipientCount}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {row.recipientCount}
+                    {/* Which of them were typed in by hand rather than selected, so the
+                        history can answer "who did we actually email" later. */}
+                    {(row.extraEmails?.length ?? 0) > 0 && (
+                      <span className="block text-[11px] text-slate-400">
+                        incl. {row.extraEmails!.length} direct
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm text-slate-500">{row.sentByEmail}</td>
                   <td className="px-4 py-3 text-xs text-slate-500">{formatDate(row.sentAt)}</td>
                   <td className="px-4 py-3 w-10">

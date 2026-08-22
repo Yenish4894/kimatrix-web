@@ -143,7 +143,13 @@ export const adminService = {
   // ─── Bulk email ───────────────────────────────────────────────
 
   // POST /api/admin/bulk-email
-  sendBulkEmail: async (payload: { subject: string; body: string; companyIds: string[] }) => {
+  sendBulkEmail: async (payload: {
+    subject: string;
+    body: string;
+    companyIds: string[];
+    /** Addresses typed in by hand, belonging to no registered company. */
+    extraEmails?: string[];
+  }) => {
     const { data } = await api.post<{ data: { recipientCount: number; logId: string }; message: string }>(
       "/admin/bulk-email",
       payload,

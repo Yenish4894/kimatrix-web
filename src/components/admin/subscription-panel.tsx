@@ -10,30 +10,15 @@ import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
 import type { Company } from "@/types";
 import { GrantTrialModal } from "@/components/admin/grant-trial-modal";
+import {
+  SUBSCRIPTION_STATUS_LABEL as STATUS_LABEL,
+  SUBSCRIPTION_STATUS_TONE as STATUS_TONE,
+} from "@/lib/company-status";
 
 interface SubscriptionPanelProps {
   company: Company;
 }
 
-const STATUS_TONE: Record<string, "success" | "warning" | "error" | "info"> = {
-  active: "success",
-  trialing: "info",
-  pending: "warning",
-  trial_expired: "error",
-  expired: "error",
-  past_due: "warning",
-  deactivated: "error",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  active: "Active",
-  trialing: "On free trial",
-  pending: "Never subscribed",
-  trial_expired: "Trial expired",
-  expired: "Subscription expired",
-  past_due: "Payment failed",
-  deactivated: "Deactivated",
-};
 
 export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>) {
   const queryClient = useQueryClient();

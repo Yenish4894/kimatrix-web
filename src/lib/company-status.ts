@@ -56,3 +56,31 @@ export const STATUS_BADGE_VARIANT: Record<CompanyStatus, "warning" | "success" |
   active: "success",
   deactivated: "error",
 };
+
+/**
+ * The seven real subscription states, in the words a person would use.
+ *
+ * Separate from STATUS_LABEL above, which names the coarse three-state
+ * isActive/deactivatedAt view. The two disagreed on the same screen: the badge at the
+ * top of a company said "Pending" while the panel below it said "Never subscribed"
+ * about the identical row. Same vocabulary in both places now.
+ */
+export const SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
+  active: "Active",
+  trialing: "On free trial",
+  pending: "Never subscribed",
+  trial_expired: "Trial expired",
+  expired: "Subscription expired",
+  past_due: "Payment failed",
+  deactivated: "Deactivated",
+};
+
+export const SUBSCRIPTION_STATUS_TONE: Record<string, "success" | "warning" | "error" | "info"> = {
+  active: "success",
+  trialing: "info",
+  pending: "warning",
+  trial_expired: "error",
+  expired: "error",
+  past_due: "warning",
+  deactivated: "error",
+};

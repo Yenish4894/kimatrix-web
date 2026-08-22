@@ -121,6 +121,8 @@ export interface Company extends CompanyAddress {
     username: string;
     isActive: boolean;
     lastLoginAt: string | null;
+    /** Null until the owner confirms their address. The trial clock starts here. */
+    emailVerifiedAt?: string | null;
   };
 }
 
@@ -353,6 +355,8 @@ export interface BulkEmailLog {
   sentByEmail: string;
   recipientCount: number;
   recipientIds: string[];
+  /** Addresses typed in by hand, belonging to no registered company. */
+  extraEmails?: string[];
   sentAt: string;
   createdAt: string;
 }

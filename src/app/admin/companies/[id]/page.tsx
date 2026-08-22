@@ -18,6 +18,8 @@ import {
   getCompanyStatus,
   STATUS_BADGE_VARIANT,
   STATUS_LABEL,
+  SUBSCRIPTION_STATUS_LABEL,
+  SUBSCRIPTION_STATUS_TONE,
   TOGGLE_LABEL,
 } from "@/lib/company-status";
 import { SubscriptionPanel } from "@/components/admin/subscription-panel";
@@ -117,7 +119,20 @@ export default function AdminCompanyDetailPage({
               <p className="text-sm text-slate-500 mt-1 font-mono">{company.registrationNumber}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge variant="brand">{isFuelStation ? "Fuel Station" : "Shop"}</Badge>
-                <Badge variant={STATUS_BADGE_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
+                {/* Prefers the precise subscription state over the coarse
+                    active/pending/deactivated view, so this badge and the Subscription
+                    panel below cannot describe the same row differently. */}
+                <Badge
+                  variant={
+                    company.subscriptionStatus
+                      ? SUBSCRIPTION_STATUS_TONE[company.subscriptionStatus] ?? STATUS_BADGE_VARIANT[status]
+                      : STATUS_BADGE_VARIANT[status]
+                  }
+                >
+                  {company.subscriptionStatus
+                    ? SUBSCRIPTION_STATUS_LABEL[company.subscriptionStatus] ?? STATUS_LABEL[status]
+                    : STATUS_LABEL[status]}
+                </Badge>
                 {company.promoEmailOptIn && <Badge variant="info">Promo opt-in</Badge>}
               </div>
             </div>
@@ -174,12 +189,35 @@ export default function AdminCompanyDetailPage({
                 <>
                   <Detail icon={User} label="Username" value={company.owner.username} mono />
                   <Detail icon={Mail} label="Login Email" value={company.owner.email} />
+                  {/* "Sign-in", not "Account Status".
+                      This measures whether the owner can log in — nothing else. The
+                      badge at the top of the page measures whether the BUSINESS is
+                      entitled to operate. Both were labelled "status" and both used the
+                      word "Active", so a pending company with a working login read as a
+                      contradiction. They are not in conflict: only a ban stops sign-in,
+                      precisely so a lapsed customer can still log in to pay or export. */}
                   <div className="flex items-center gap-3 pt-1">
-                    <span className="text-sm text-slate-600">Account Status:</span>
+                    <span className="text-sm text-slate-600">Sign-in:</span>
                     <Badge variant={company.owner.isActive ? "success" : "error"}>
-                      {company.owner.isActive ? "Active" : "Inactive"}
+                      {company.owner.isActive ? "Allowed" : "Blocked"}
                     </Badge>
                   </div>
+                  {/* The usual reason a company sits at Pending forever: the trial clock
+                      starts on verification, so an unverified owner never gets one. It
+                      was not shown anywhere, leaving no way to tell a stuck company from
+                      one that simply hasn't paid. */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-600">Email verified:</span>
+                    <Badge variant={company.owner.emailVerifiedAt ? "success" : "warning"}>
+                      {company.owner.emailVerifiedAt ? "Yes" : "Not yet"}
+                    </Badge>
+                  </div>
+                  {!company.owner.emailVerifiedAt && (
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Their free trial has not started, and will not until they confirm this
+                      address. You can start one for them with <strong>Grant trial</strong> above.
+                    </p>
+                  )}
                   {company.owner.lastLoginAt && (
                     <Detail icon={Calendar} label="Last Login" value={formatDateTime(company.owner.lastLoginAt)} />
                   )}
