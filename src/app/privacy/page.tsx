@@ -61,7 +61,7 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-heading font-semibold text-slate-800 mt-8 mb-3">5. Your Rights</h2>
           <p className="text-slate-600">
             You may request deletion of your account and associated data at any time by contacting{" "}
-            <a href="mailto:support@kimates.com" className="text-primary-600 hover:underline">support@kimates.com</a>.
+            <a href="mailto:info@kimates.com" className="text-primary-600 hover:underline">info@kimates.com</a>.
           </p>
 
         </div>

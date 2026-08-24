@@ -49,7 +49,7 @@ export function DeactivatedNotice({ companyName }: Readonly<{ companyName?: stri
           <Button
             variant="secondary"
             onClick={() => {
-              window.location.href = "mailto:support@kimates.com";
+              window.location.href = "mailto:info@kimates.com";
             }}
             className="w-full justify-center"
           >

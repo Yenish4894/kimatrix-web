@@ -536,7 +536,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold text-slate-200 mb-3 text-sm">Contact</h4>
               <ul className="space-y-2 text-sm">
-                <li>support@kimates.com</li>
+                <li>info@kimates.com</li>
                 <li>Johannesburg, South Africa</li>
               </ul>
             </div>

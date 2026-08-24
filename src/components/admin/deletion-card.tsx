@@ -18,7 +18,7 @@ interface DeletionCardProps {
  * Lets support action the deletion request a customer sent by email.
  *
  * This exists because the privacy policy says "request deletion by contacting
- * support@kimates.com" — and every deletion endpoint until now required the *customer*
+ * info@kimates.com" — and every deletion endpoint until now required the *customer*
  * to be logged in. The promise was unfulfillable: whoever read that mailbox had no way
  * to carry it out, and the alternative was hand-editing five tables in psql, where the
  * rules differ per table (purchases and customers hard-deleted, company and owner
@@ -161,7 +161,7 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
             required
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. Owner emailed support@kimates.com on 7 Aug"
+            placeholder="e.g. Owner emailed info@kimates.com on 7 Aug"
             helperText="Required, and kept on the record — the email is the only other evidence this was requested."
           />
         </div>
