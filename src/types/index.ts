@@ -357,6 +357,9 @@ export interface BulkEmailLog {
   recipientIds: string[];
   /** Addresses typed in by hand, belonging to no registered company. */
   extraEmails?: string[];
+  /** What was attached, for the history. Null when the send carried no file. */
+  attachmentFilename?: string | null;
+  attachmentSize?: number | null;
   sentAt: string;
   createdAt: string;
 }

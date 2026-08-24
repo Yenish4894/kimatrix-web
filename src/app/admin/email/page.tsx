@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { ChevronDown, ChevronUp, Paperclip, Search, Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Pagination, Input, Button, Card, CardContent, CardHeader, QueryErrorState } from "@/components/ui";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ATTACHMENT_ACCEPT,
+  ATTACHMENT_MAX_BYTES,
+  attachmentError,
+  formatBytes,
+} from "@/lib/attachments";
 import { formatDate } from "@/lib/utils";
 import { PAGE_SIZE } from "@/lib/pagination";
 import { adminService } from "@/services";
@@ -29,6 +35,11 @@ export default function AdminBulkEmailPage() {
   const [extraInput, setExtraInput] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachmentIssue, setAttachmentIssue] = useState<string | null>(null);
+  const [uploadPercent, setUploadPercent] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [logsPage, setLogsPage] = useState(1);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
@@ -71,6 +82,8 @@ export default function AdminBulkEmailPage() {
   const sendMut = useMutation({
     mutationFn: () =>
       adminService.sendBulkEmail({
+        attachment,
+        onUploadProgress: setUploadPercent,
         subject: subject.trim(),
         body: body.trim(),
         companyIds: Array.from(selectedIds),
@@ -79,6 +92,7 @@ export default function AdminBulkEmailPage() {
     onSuccess: (res) => {
       toast.success(res.message ?? `Email queued for ${res.data.recipientCount} recipient(s).`);
       setSubject("");
+      clearAttachment();
       setBody("");
       setExtraInput("");
       setSelectedIds(new Set());
@@ -148,6 +162,32 @@ export default function AdminBulkEmailPage() {
   );
 
   const totalRecipients = selectedIds.size + extraEmails.length;
+  const clearAttachment = (): void => {
+    setAttachment(null);
+    setAttachmentIssue(null);
+    setUploadPercent(0);
+    // Without this, choosing the same file again fires no change event and the picker
+    // appears dead — the classic file-input trap.
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const issue = attachmentError(file);
+    if (issue) {
+      // Rejected before the upload starts, so nobody waits on a 10 MB transfer that
+      // the server was always going to refuse.
+      setAttachment(null);
+      setAttachmentIssue(issue);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setAttachment(file);
+    setAttachmentIssue(null);
+    setUploadPercent(0);
+  };
+
   const canSend =
     totalRecipients > 0 &&
     invalidExtras.length === 0 &&
@@ -259,6 +299,79 @@ export default function AdminBulkEmailPage() {
               />
               <p className="text-xs text-slate-400 mt-1 text-right">{body.length}/10,000</p>
             </div>
+            {/* ── Attachment ── */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Attachment <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+
+              {attachment ? (
+                <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                  <Paperclip className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    {/* `truncate` plus min-w-0: a long filename would otherwise push the
+                        remove button off the card entirely. */}
+                    <p className="truncate text-sm font-medium text-slate-700" title={attachment.name}>
+                      {attachment.name}
+                    </p>
+                    <p className="text-xs text-slate-500">{formatBytes(attachment.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearAttachment}
+                    disabled={sendMut.isPending}
+                    className="tap-target shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-40"
+                    aria-label={`Remove attachment ${attachment.name}`}
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sendMut.isPending}
+                  className="tap-target flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500 hover:border-primary-400 hover:bg-primary-50/40 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:opacity-50"
+                >
+                  <Paperclip className="h-4 w-4" aria-hidden="true" />
+                  Attach a file
+                </button>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="sr-only"
+                accept={ATTACHMENT_ACCEPT}
+                onChange={onPickFile}
+                aria-label="Choose a file to attach"
+              />
+
+              {attachmentIssue ? (
+                <p role="alert" className="mt-1.5 text-xs text-error-600">
+                  {attachmentIssue}
+                </p>
+              ) : (
+                <p className="mt-1.5 text-xs text-slate-400">
+                  One file, up to {formatBytes(ATTACHMENT_MAX_BYTES)}. PDF, image, or document.
+                </p>
+              )}
+
+              {/* Only while an actual upload is in flight, and only for a file big
+                  enough that the wait is noticeable. */}
+              {sendMut.isPending && attachment && uploadPercent > 0 && uploadPercent < 100 && (
+                <div className="mt-2">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-primary-500 transition-all duration-200"
+                      style={{ width: `${uploadPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">Uploading… {uploadPercent}%</p>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between pt-1">
               <div className="text-sm text-slate-500">
                 {totalRecipients === 0 ? (
@@ -452,7 +565,23 @@ function LogsTable({
             items.map((row) => (
               <>
                 <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-700 max-w-xs truncate">{row.subject}</td>
+                  <td className="px-4 py-3 font-medium text-slate-700 max-w-xs">
+                    <span className="block truncate">{row.subject}</span>
+                    {/* What went out with it. Without this the history cannot answer
+                        "did that announcement include the price list?". */}
+                    {row.attachmentFilename && (
+                      <span
+                        className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-slate-400"
+                        title={row.attachmentFilename}
+                      >
+                        <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
+                        <span className="truncate">{row.attachmentFilename}</span>
+                        {typeof row.attachmentSize === "number" && (
+                          <span className="shrink-0">({formatBytes(row.attachmentSize)})</span>
+                        )}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
                     {row.recipientCount}
                     {/* Which of them were typed in by hand rather than selected, so the

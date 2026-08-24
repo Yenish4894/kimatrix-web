@@ -149,10 +149,31 @@ export const adminService = {
     companyIds: string[];
     /** Addresses typed in by hand, belonging to no registered company. */
     extraEmails?: string[];
+    /** Optional single attachment, 10 MB cap enforced on both sides. */
+    attachment?: File | null;
+    onUploadProgress?: (percent: number) => void;
   }) => {
+    // Always multipart, attachment or not, so there is one request shape rather than
+    // two paths that can drift apart. The arrays go as JSON strings because a form
+    // field cannot carry an array; the server parses them back.
+    const form = new FormData();
+    form.append("subject", payload.subject);
+    form.append("body", payload.body);
+    form.append("companyIds", JSON.stringify(payload.companyIds));
+    form.append("extraEmails", JSON.stringify(payload.extraEmails ?? []));
+    if (payload.attachment) form.append("file", payload.attachment);
+
     const { data } = await api.post<{ data: { recipientCount: number; logId: string }; message: string }>(
       "/admin/bulk-email",
-      payload,
+      form,
+      {
+        // Content-Type is deliberately unset: the browser has to add the multipart
+        // boundary itself, and setting it by hand produces a body the server cannot parse.
+        onUploadProgress: (e) => {
+          if (!payload.onUploadProgress || !e.total) return;
+          payload.onUploadProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      },
     );
     return data;
   },
