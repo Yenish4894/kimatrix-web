@@ -20,6 +20,17 @@ interface TableProps<T> {
   className?: string;
 }
 
+/**
+ * A column that holds controls rather than a value.
+ *
+ * Identified by having no header — the desktop table leaves that cell blank. On mobile
+ * these cannot go through the normal label/value row: that cell truncates, and
+ * `overflow: hidden` clips any dropdown opened inside it.
+ */
+function isActionColumn(col: { header?: React.ReactNode; render?: unknown }): boolean {
+  return !col.header && typeof col.render === "function";
+}
+
 export function Table<T>({
   columns,
   data,
@@ -125,7 +136,7 @@ export function Table<T>({
               key={keyExtractor(row)}
               className="bg-white border border-slate-200 rounded-lg p-4 space-y-2"
             >
-              {columns.map((col) => {
+              {columns.filter((col) => !isActionColumn(col)).map((col) => {
                 const raw = String((row as Record<string, unknown>)[col.key] ?? "");
                 return (
                   // `min-w-0` + `truncate` on the value and `shrink-0` on the label:
@@ -144,6 +155,18 @@ export function Table<T>({
                   </div>
                 );
               })}
+
+              {/* Actions sit on their own row, outside the truncating cell above.
+                  `truncate` sets overflow:hidden, which clipped the dropdown these
+                  buttons open to nothing — the menu appeared on screen as three dots
+                  that did nothing at all when tapped. */}
+              {columns.some(isActionColumn) && (
+                <div className="flex justify-end pt-1">
+                  {columns.filter(isActionColumn).map((col) => (
+                    <div key={col.key}>{col.render?.(row)}</div>
+                  ))}
+                </div>
+              )}
             </div>
           ))
         )}
