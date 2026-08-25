@@ -63,10 +63,17 @@ export default function LoginPage() {
 
       if (result.user.userType === "super_admin") {
         router.push("/admin/dashboard");
-      } else if (result.companyIsActive === false) {
-        // Pending company — has tokens, must subscribe before accessing data
-        router.push("/company/billing");
       } else {
+        // Always the dashboard; SubscriptionGate decides what actually renders.
+        //
+        // This used to send any company with `companyIsActive === false` to billing,
+        // on the pre-trial assumption that inactive meant "must subscribe". Since the
+        // free trial exists that is no longer true: a signup who has not yet confirmed
+        // their email is inactive too, and sending them to the plan grid showed a
+        // returning trial user a paywall demanding payment, with nothing anywhere on
+        // the page mentioning the trial they signed up for or the confirmation email
+        // waiting in their inbox. The gate renders the paywall that does explain it and
+        // offers a resend, so the decision belongs there rather than duplicated here.
         router.push("/company/dashboard");
       }
     } catch (err) {
