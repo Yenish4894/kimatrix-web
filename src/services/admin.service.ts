@@ -32,8 +32,12 @@ export const adminService = {
   },
 
   // PATCH /api/admin/companies/:id/deactivate
-  deactivateCompany: async (companyId: string) => {
-    await api.patch(`/admin/companies/${companyId}/deactivate`);
+  // The reason is required by the API, stored on the company, and written to the
+  // admin audit log. A ban used to record nothing but a timestamp and an actor id -
+  // and lifting it erased the actor id too - so establishing why one had happened
+  // meant reading three days of server logs.
+  deactivateCompany: async (companyId: string, reason: string) => {
+    await api.patch(`/admin/companies/${companyId}/deactivate`, { reason });
   },
 
   // PATCH /api/admin/companies/:id/activate

@@ -33,6 +33,8 @@ export default function AdminCompanyDetailPage({
   const { id } = use(params);
   const qc = useQueryClient();
   const [confirmModal, setConfirmModal] = useState<"activate" | "deactivate" | null>(null);
+  // Required before a ban can be submitted — see the note on the textarea below.
+  const [banReason, setBanReason] = useState("");
 
   const companyQ = useQuery({
     queryKey: ["admin", "companies", id],
@@ -43,7 +45,7 @@ export default function AdminCompanyDetailPage({
   const toggleMut = useMutation({
     mutationFn: async (action: "activate" | "deactivate") => {
       if (action === "deactivate") {
-        await adminService.deactivateCompany(id);
+        await adminService.deactivateCompany(id, banReason.trim());
       } else {
         await adminService.activateCompany(id);
       }
@@ -58,6 +60,7 @@ export default function AdminCompanyDetailPage({
       qc.invalidateQueries({ queryKey: ["admin", "companies"] });
       qc.invalidateQueries({ queryKey: ["admin", "stats"] });
       setConfirmModal(null);
+      setBanReason("");
     },
     onError: (err) => {
       toast.error(errorMessageWithId(parseApiError(err)));
@@ -237,10 +240,11 @@ export default function AdminCompanyDetailPage({
           title={`${TOGGLE_LABEL[confirmModal]} — ${company.name}`}
           footer={
             <>
-              <Button variant="ghost" onClick={() => setConfirmModal(null)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => { setConfirmModal(null); setBanReason(""); }}>Cancel</Button>
               <Button
                 variant={confirmModal === "activate" ? "primary" : "danger"}
                 isLoading={toggleMut.isPending}
+                disabled={confirmModal === "deactivate" && banReason.trim().length < 3}
                 onClick={() => toggleMut.mutate(confirmModal)}
               >
                 {TOGGLE_LABEL[confirmModal]}
@@ -254,9 +258,29 @@ export default function AdminCompanyDetailPage({
               : "This blocks the owner from logging in at all and signs them out everywhere. It does not cancel any subscription — it overrides it."}
           </p>
           {confirmModal === "deactivate" && (
-            <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">
-              <span aria-hidden="true">⚠</span>{" "}The owner is signed out of every device immediately and cannot log in again until the ban is lifted.
-            </p>
+            <>
+              <p className="text-sm text-error-600 mt-3 bg-error-50 border border-error-100 rounded-lg p-3">
+                <span aria-hidden="true">⚠</span>{" "}The owner is signed out of every device immediately and cannot log in again until the ban is lifted. They also cannot export their data while banned.
+              </p>
+              {/* Mandatory — see the matching note on the companies list. The reason is
+                  stored on the company and written to the audit log, so a ban can be
+                  explained later without reading server logs. */}
+              <label htmlFor="ban-reason" className="mt-4 block text-sm font-medium text-slate-700">
+                Why are you banning this company?
+              </label>
+              <textarea
+                id="ban-reason"
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                rows={3}
+                maxLength={255}
+                placeholder="e.g. Fraudulent purchase data reported by the owner's customers"
+                className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Stored against the company and written to the audit log. Minimum 3 characters.
+              </p>
+            </>
           )}
         </Modal>
       )}
