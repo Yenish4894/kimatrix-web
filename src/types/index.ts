@@ -82,6 +82,33 @@ export interface PlatformSettings {
   platformCurrency: string;
 }
 
+/** What the admin onboarding form submits. Mirrors public registration minus the
+ *  credential fields — the owner sets their own password from an emailed link. */
+export interface CreateCompanyPayload {
+  name: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode?: string | null;
+  registrationNumber: string;
+  contactEmail: string;
+  contactPhone: string;
+  whatsappNumber?: string | null;
+  businessType: "fuel_station" | "shop";
+  /** The owner's login email. The invite goes here. */
+  email: string;
+  /** ISO date, or null for complimentary access with no end date. */
+  compedUntil: string | null;
+  compReason: string;
+}
+
+export interface CreateCompanyResult {
+  companyId: string;
+  ownerEmail: string;
+  compedUntil: string | null;
+}
+
 export interface Company extends CompanyAddress {
   id: string;
   name: string;

@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, MoreVertical, Power, Eye, CalendarPlus } from "lucide-react";
+import { Search, MoreVertical, Power, Eye, CalendarPlus, Plus } from "lucide-react";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
+import { CreateCompanyModal } from "@/components/admin/create-company-modal";
 import { Table, Pagination, Input, Badge, Button, Modal, Select, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { PAGE_SIZE, formatPageRange } from "@/lib/pagination";
@@ -40,6 +41,7 @@ export default function AdminCompaniesPage() {
   const [confirmModal, setConfirmModal] = useState<{ company: Company; action: "activate" | "deactivate" } | null>(null);
   // Required before a ban can be submitted — see the note on the textarea below.
   const [banReason, setBanReason] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
 
   useEffect(() => {
     if (!actionMenuId) return;
@@ -260,6 +262,10 @@ export default function AdminCompaniesPage() {
             many: "companies",
           }) ?? "No companies"}
         </span>
+        <Button onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Add company
+        </Button>
       </div>
 
       {companiesQ.isError ? (
@@ -294,6 +300,17 @@ export default function AdminCompaniesPage() {
         onClose={() => setTrialTarget(null)}
         onGranted={() => qc.invalidateQueries({ queryKey: ["admin", "companies"] })}
       />
+
+      {showCreate && (
+        <CreateCompanyModal
+          onClose={() => setShowCreate(false)}
+          onCreated={() => {
+            setShowCreate(false);
+            qc.invalidateQueries({ queryKey: ["admin", "companies"] });
+            qc.invalidateQueries({ queryKey: ["admin", "stats"] });
+          }}
+        />
+      )}
 
       {confirmModal && (
         <Modal

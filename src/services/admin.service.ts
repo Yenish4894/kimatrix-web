@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import type { AdminPlan, AdminStats, BulkEmailLog, Company, PaginatedResponse, PlatformSettings } from "@/types";
+import type { AdminPlan, AdminStats, BulkEmailLog, Company, CreateCompanyPayload, CreateCompanyResult, PaginatedResponse, PlatformSettings } from "@/types";
 
 interface AdminCompaniesParams {
   page?: number;
@@ -28,6 +28,13 @@ export const adminService = {
   // GET /api/admin/companies/:id
   getCompany: async (companyId: string) => {
     const { data } = await api.get<{ data: Company }>(`/admin/companies/${companyId}`);
+    return data.data;
+  },
+
+  // POST /api/admin/companies — onboard a company on someone's behalf.
+  // No password is sent: the owner sets their own from an emailed invite link.
+  createCompany: async (payload: CreateCompanyPayload) => {
+    const { data } = await api.post<{ data: CreateCompanyResult }>("/admin/companies", payload);
     return data.data;
   },
 
