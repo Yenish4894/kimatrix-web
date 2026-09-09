@@ -362,10 +362,32 @@ export default function QRSubmissionPage({
           <div className="mx-auto h-16 w-16 rounded-full bg-warning-100 flex items-center justify-center mb-4" aria-hidden="true">
             <AlertTriangle className="h-8 w-8 text-warning-500" />
           </div>
-          <h1 className="text-xl font-heading font-bold text-slate-800">Not Accepting Submissions</h1>
-          <p className="text-slate-500 mt-2 text-sm">
-            <strong>{company.companyName}</strong> is not currently accepting purchase submissions.
-          </p>
+          {/* Two reasons land here and they deserve different words. A business that
+              paused itself is temporary and safe to say out loud, so the customer
+              standing at the counter knows to come back rather than assuming the shop
+              has gone. A lapsed subscription is nobody's business but the merchant's,
+              and this page is public and unauthenticated, so it keeps the vague
+              wording. */}
+          {company.pausedByCompany ? (
+            <>
+              <h1 className="text-xl font-heading font-bold text-slate-800">
+                Not Accepting Entries Right Now
+              </h1>
+              <p className="text-slate-500 mt-2 text-sm">
+                <strong>{company.companyName}</strong> has paused submissions
+                temporarily. Please check back soon.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl font-heading font-bold text-slate-800">
+                Not Accepting Submissions
+              </h1>
+              <p className="text-slate-500 mt-2 text-sm">
+                <strong>{company.companyName}</strong> is not currently accepting purchase submissions.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );

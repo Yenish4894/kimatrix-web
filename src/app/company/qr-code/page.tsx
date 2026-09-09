@@ -2,13 +2,16 @@
 
 import {useRef, useState} from "react";
 import {QRCodeCanvas} from "qrcode.react";
-import {Download, Copy, Check, Loader2} from "lucide-react";
+import {Download, Copy, Check, Loader2, Pause, Play} from "lucide-react";
 import {toast} from "react-toastify";
 
 import {DashboardShell} from "@/components/layouts/dashboard-shell";
 import {Card, CardContent, Button} from "@/components/ui";
 
-import {useCompanyProfile} from "@/hooks/useCompanyProfile";
+import {useCompanyProfile, invalidateCompanyProfile} from "@/hooks/useCompanyProfile";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {companyService} from "@/services";
+import {parseApiError} from "@/lib/errors";
 import {formatAddress} from "@/lib/utils";
 import {QR_COLORS, qrLogoSettings} from "@/lib/qr";
 // generateQrPosterPdf is lazy-loaded on click — saves ~150KB on initial render.
@@ -26,6 +29,19 @@ export default function QRCodePage() {
   const profileQ = useCompanyProfile();
 
   const company = profileQ.data;
+  const isPaused = Boolean(company?.qrPausedAt);
+
+  const qc = useQueryClient();
+  const pauseM = useMutation({
+    // The desired end state, not a toggle: two tabs open on this page would otherwise
+    // flip each other's change, and a retried request would undo itself.
+    mutationFn: () => companyService.setQrPaused(!isPaused),
+    onSuccess: async (res) => {
+      toast.success(res.message);
+      await invalidateCompanyProfile(qc);
+    },
+    onError: (err) => toast.error(parseApiError(err).message),
+  });
 
   const copyUrl = () => {
     if (!company?.qrUrl) return;
@@ -112,6 +128,24 @@ export default function QRCodePage() {
               </div>
             )}
 
+            {/* Status first, then the control. A paused code looks identical to a live
+                one, so without this the only way to discover the state is to scan it. */}
+            {isPaused && (
+              <div
+                role="status"
+                className="mt-6 mx-auto max-w-md rounded-xl border border-warning-200 bg-warning-50 p-4 text-left"
+              >
+                <p className="text-sm font-semibold text-warning-800">
+                  Your QR code is paused
+                </p>
+                <p className="mt-1 text-sm text-warning-700">
+                  Customers who scan it are told you have paused entries for now. Your
+                  data, reports and downloads are unaffected — resume whenever you are
+                  ready.
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-8">
               <Button
                 variant="primary"
@@ -122,9 +156,27 @@ export default function QRCodePage() {
               >
                 <Download className="h-5 w-5" aria-hidden="true" /> Download Poster (PDF)
               </Button>
+              <Button
+                variant={isPaused ? "primary" : "secondary"}
+                size="lg"
+                onClick={() => pauseM.mutate()}
+                isLoading={pauseM.isPending}
+                disabled={!company || pauseM.isPending}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="h-5 w-5" aria-hidden="true" /> Resume QR code
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-5 w-5" aria-hidden="true" /> Pause QR code
+                  </>
+                )}
+              </Button>
             </div>
-            <p className="text-xs text-slate-500 mt-3 max-w-xs mx-auto">
+            <p className="text-xs text-slate-500 mt-3 max-w-sm mx-auto">
               A branded poster with your QR, company name, and address — ready to print.
+              {!isPaused && " Pausing stops new entries without changing your code, so printed posters keep working when you resume."}
             </p>
           </CardContent>
         </Card>

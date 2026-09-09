@@ -36,6 +36,17 @@ export const companyService = {
   },
 
   // GET /api/company/stats
+  // PATCH /api/company/qr/paused — the company's own on/off switch.
+  // Sends the desired end state rather than toggling, so two open tabs or a retried
+  // request cannot flip each other's change.
+  setQrPaused: async (paused: boolean) => {
+    const { data } = await api.patch<{ data: { qrPausedAt: string | null }; message: string }>(
+      "/company/qr/paused",
+      { paused },
+    );
+    return data;
+  },
+
   getStats: async () => {
     const { data } = await api.get<{ data: CompanyStats }>("/company/stats");
     return data.data;

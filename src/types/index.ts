@@ -123,6 +123,8 @@ export interface Company extends CompanyAddress {
   deactivatedAt?: string | null;
   qrToken: string;
   qrUrl: string;
+  /** Set when the company paused its own QR code. Null means live. */
+  qrPausedAt?: string | null;
   subscriptionExpiresAt: string | null;
   currentPlan: SubscriptionPlan | null;
   /**
@@ -234,6 +236,12 @@ export interface QRCompanyInfo {
   companyId: string;
   companyName: string;
   businessType: BusinessType;
+  /**
+   * True only when the business paused entries itself, so the scan page can say so
+   * plainly instead of using the deliberately vague wording reserved for billing.
+   * Optional for the deploy window against an older backend.
+   */
+  pausedByCompany?: boolean;
   /**
    * Replaces the old `isActive`, which ignored subscription expiry — the form
    * rendered normally and the customer only hit the wall on submit.
