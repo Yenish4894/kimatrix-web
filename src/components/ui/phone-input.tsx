@@ -3,6 +3,7 @@
 import { useMemo, useId } from "react";
 import { getCountryCallingCode, isValidPhoneNumber, type CountryCode } from "libphonenumber-js";
 import { cn } from "@/lib/utils";
+import { toE164 } from "@/lib/phone";
 import { getCountryCode } from "./country-state-select";
 
 interface PhoneInputProps {
@@ -56,10 +57,10 @@ export function PhoneInput({
   }, [value, dialCode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Digits only — strip anything else the user might paste
-    const local = e.target.value.replace(/\D/g, "");
-    const full = dialCode && local ? `+${dialCode}${local}` : "";
-    onChange(full);
+    // Handles a pasted "+27..." and a leading national trunk zero. See lib/phone.ts:
+    // doing this inline as "strip non-digits, then prepend the dial code" put
+    // undialable numbers into production.
+    onChange(toE164(e.target.value, dialCode));
   };
 
   const reactId = useId();

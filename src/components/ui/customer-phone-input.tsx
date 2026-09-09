@@ -4,6 +4,7 @@ import { useMemo, useState, useId } from "react";
 import { Country } from "country-state-city";
 import { getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import { cn } from "@/lib/utils";
+import { toE164 } from "@/lib/phone";
 
 interface CustomerPhoneInputProps {
   label?: string;
@@ -108,8 +109,9 @@ export function CustomerPhoneInput({
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const local = e.target.value.replace(/\D/g, "");
-    onChange(dialCode && local ? `+${dialCode}${local}` : "");
+    // Shared with the registration input. This is the form anonymous customers use,
+    // and three stored mobiles are unreachable because it kept the trunk zero.
+    onChange(toE164(e.target.value, dialCode));
   };
 
   const reactId = useId();
