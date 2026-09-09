@@ -37,6 +37,16 @@ export function GrantTrialModal({ company, onClose, onGranted }: Readonly<GrantT
     mutationFn: () => adminService.extendTrial(company!.id, Number(days)),
     onSuccess: async (result) => {
       toast.success(`Trial now runs until ${formatDate(result.trialEndsAt)}.`);
+      // Expiry notices deliberately skip owners who never confirmed their email —
+      // mailing unconfirmed addresses is what got the platform's mailbox suspended.
+      // So a trial granted here to an unverified owner lapses with no warning at all,
+      // and the admin is the only one in a position to know that.
+      if (result.ownerEmailVerified === false) {
+        toast.warn(
+          "This owner has not confirmed their email, so they will not receive any expiry reminders. Let them know directly.",
+          { autoClose: 9000 },
+        );
+      }
       await onGranted();
       onClose();
     },

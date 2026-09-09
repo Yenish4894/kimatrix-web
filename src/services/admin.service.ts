@@ -57,7 +57,9 @@ export const adminService = {
   // POST /api/admin/companies/:id/trial/extend
   // Stacks onto any remaining trial time rather than replacing it.
   extendTrial: async (companyId: string, days: number) => {
-    const { data } = await api.post<{ data: { trialEndsAt: string; status: string } }>(
+    const { data } = await api.post<{
+      data: { trialEndsAt: string; status: string; ownerEmailVerified?: boolean };
+    }>(
       `/admin/companies/${companyId}/trial/extend`,
       { days },
     );
