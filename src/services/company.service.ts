@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import type { LuckyDrawSpinResult, LuckyDrawStatus } from "@/types";
 import type {
   CompanyProfile,
   Customer,
@@ -43,6 +44,20 @@ export const companyService = {
     const { data } = await api.patch<{ data: { qrPausedAt: string | null }; message: string }>(
       "/company/qr/paused",
       { paused },
+    );
+    return data;
+  },
+
+  // GET /api/company/draws — spins, pool size and past winners for the current plan.
+  getDraws: async (): Promise<LuckyDrawStatus> => {
+    const { data } = await api.get<{ data: LuckyDrawStatus }>("/company/draws");
+    return data.data;
+  },
+
+  // POST /api/company/draws/spin — the server picks and records the winner.
+  spinDraw: async () => {
+    const { data } = await api.post<{ data: LuckyDrawSpinResult; message: string }>(
+      "/company/draws/spin",
     );
     return data;
   },

@@ -58,6 +58,8 @@ export interface SubscriptionPlan {
    * reading.
    */
   isRecurring?: boolean;
+  /** Lucky draw spins a buyer of this plan receives. 0 or absent = no draw. */
+  drawSpins?: number;
   /**
    * Drives the "Most Popular" badge. Replaces the old hardcoded `durationDays === 30`
    * check, which would have un-featured everything the moment an admin created plans.
@@ -101,6 +103,8 @@ export interface CreateCompanyPayload {
   /** ISO date, or null for complimentary access with no end date. */
   compedUntil: string | null;
   compReason: string;
+  /** Lucky draw spins granted alongside the free access. */
+  compDrawSpins?: number;
 }
 
 export interface CreateCompanyResult {
@@ -397,4 +401,55 @@ export interface BulkEmailLog {
   attachmentSize?: number | null;
   sentAt: string;
   createdAt: string;
+}
+
+// ─── Lucky draw ──────────────────────────────────────────────────────────────
+
+export interface LuckyDrawPeriod {
+  source: "payment" | "comp";
+  periodStart: string;
+  /** Null for a comp with no end date. */
+  periodEnd: string | null;
+  spins: number;
+  used: number;
+  remaining: number;
+  /** Purchases in the pool — one entry each. */
+  entries: number;
+  eligibleCustomers: number;
+}
+
+export interface LuckyDrawWinner {
+  purchaseId: string;
+  customerId?: string;
+  fullName: string;
+  mobile: string;
+  vehicleNumber: string | null;
+  invoiceNumber: string;
+  invoiceAmount: string;
+  submittedAt: string;
+}
+
+export interface LuckyDrawHistoryItem extends LuckyDrawWinner {
+  id: string;
+  source: "payment" | "comp";
+  periodStart: string;
+  periodEnd: string | null;
+  entriesCount: number;
+  eligibleCustomers: number;
+  drawnAt: string;
+}
+
+export interface LuckyDrawStatus {
+  periods: LuckyDrawPeriod[];
+  totalRemaining: number;
+  history: LuckyDrawHistoryItem[];
+}
+
+export interface LuckyDrawSpinResult {
+  drawId: string;
+  drawnAt: string;
+  winner: LuckyDrawWinner;
+  entriesCount: number;
+  eligibleCustomers: number;
+  remaining: number;
 }

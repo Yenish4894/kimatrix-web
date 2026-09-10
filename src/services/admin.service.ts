@@ -224,6 +224,7 @@ export interface PlanFormPayload {
   isPopular?: boolean;
   isActive?: boolean;
   sortOrder?: number;
+  drawSpins?: number;
 }
 
 /**

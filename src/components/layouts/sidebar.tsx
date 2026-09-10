@@ -19,6 +19,7 @@ import {
   Clock,
   CreditCard,
   Tag,
+  Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -46,6 +47,7 @@ const companyNav: NavSection[] = [
       { icon: Receipt, label: "Purchases", href: "/company/purchases" },
       { icon: QrCode, label: "QR Code", href: "/company/qr-code" },
       { icon: FileText, label: "Reports", href: "/company/reports" },
+      { icon: Gift, label: "Lucky Draw", href: "/company/lucky-draw" },
     ],
   },
   {

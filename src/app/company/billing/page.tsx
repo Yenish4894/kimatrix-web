@@ -75,6 +75,11 @@ function PlanCard({
         </div>
         <div className="text-right shrink-0">
           <p className="text-xl font-extrabold text-slate-900">{plan.currency} {formatPrice(plan.price)}</p>
+          {(plan.drawSpins ?? 0) > 0 && (
+            <p className="text-xs font-medium text-accent-700 mt-0.5">
+              Includes {plan.drawSpins} lucky draw {plan.drawSpins === 1 ? "spin" : "spins"}
+            </p>
+          )}
         </div>
       </div>
       {selected && (

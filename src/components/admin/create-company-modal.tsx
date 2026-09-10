@@ -46,6 +46,7 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
     email: "",
     compedUntil: defaultCompDate(),
     compReason: "",
+    compDrawSpins: "0",
   });
   const [neverExpires, setNeverExpires] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -75,6 +76,7 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
         // day early.
         compedUntil: neverExpires ? null : `${form.compedUntil}T23:59:59.000Z`,
         compReason: form.compReason.trim(),
+        compDrawSpins: Math.max(0, Number.parseInt(form.compDrawSpins || "0", 10) || 0),
       };
       return adminService.createCompany(payload);
     },
@@ -290,6 +292,17 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
             onChange={(e) => set("compReason")(e.target.value)}
             error={errors["compReason"]}
             helperText="Recorded against the company and written to the audit log."
+          />
+          <Input
+            label="Lucky draw spins"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={100}
+            value={form.compDrawSpins}
+            onChange={(e) => set("compDrawSpins")(e.target.value)}
+            error={errors["compDrawSpins"]}
+            helperText="Prize draws this company can run while its free access lasts. 0 = none."
           />
         </section>
       </div>
