@@ -338,12 +338,19 @@ export default function QRSubmissionPage({
     return (
       <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-sm text-center bg-white rounded-2xl border border-slate-200 p-8">
+          {/* The customer reading this is standing at a counter with nothing else to go
+              on — say whose page this is and what to do next. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/kimates-logo.png" alt="KIMates" width={120} height={26} className="h-6 w-auto mx-auto mb-6" />
           <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center mb-4" aria-hidden="true">
             <X className="h-8 w-8 text-error-500" />
           </div>
           <h1 className="text-xl font-heading font-bold text-slate-800">QR Code Not Recognized</h1>
           <p className="text-slate-600 mt-2 text-sm">
             This QR code is invalid or no longer active.
+          </p>
+          <p className="text-slate-500 mt-3 text-sm">
+            Please ask the staff for the business&apos;s current QR code.
           </p>
         </div>
       </div>

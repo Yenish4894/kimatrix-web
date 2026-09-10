@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Plus, Pencil, Star, Archive, Eye, EyeOff, Info } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Badge, Button, Card, CardContent, QueryErrorState } from "@/components/ui";
+import { Badge, Button, Card, CardContent, Modal, QueryErrorState } from "@/components/ui";
 import { adminService } from "@/services/admin.service";
 import { parseApiError } from "@/lib/errors";
 import { PlanFormModal } from "@/components/admin/plan-form-modal";
@@ -31,6 +31,9 @@ export default function AdminPlansPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<AdminPlan | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  // Hiding takes a plan off sale for every company, so it confirms first. Putting a
+  // plan back on sale doesn't need to.
+  const [hideTarget, setHideTarget] = useState<AdminPlan | null>(null);
 
   const plansQ = useQuery({
     queryKey: ["admin", "plans"],
@@ -41,6 +44,7 @@ export default function AdminPlansPage() {
     mutationFn: ({ planId, isActive }: { planId: string; isActive: boolean }) =>
       adminService.setPlanActive(planId, isActive),
     onSuccess: (res) => {
+      setHideTarget(null);
       toast.success(res.message);
       void queryClient.invalidateQueries({ queryKey: ["admin", "plans"] });
     },
@@ -163,7 +167,9 @@ export default function AdminPlansPage() {
                           : undefined
                       }
                       onClick={() =>
-                        availabilityM.mutate({ planId: plan.id, isActive: !plan.isActive })
+                        plan.isActive
+                          ? setHideTarget(plan)
+                          : availabilityM.mutate({ planId: plan.id, isActive: true })
                       }
                     >
                       {plan.isActive ? (
@@ -214,6 +220,36 @@ export default function AdminPlansPage() {
           </div>
         </section>
       )}
+
+      <Modal
+        open={hideTarget !== null}
+        onClose={() => setHideTarget(null)}
+        title="Hide this plan?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setHideTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() =>
+                hideTarget && availabilityM.mutate({ planId: hideTarget.id, isActive: false })
+              }
+              isLoading={availabilityM.isPending}
+              disabled={availabilityM.isPending}
+            >
+              Hide plan
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">
+          <strong className="text-slate-800">{hideTarget?.name}</strong> will no longer be
+          offered to companies. Anyone already on it keeps what they bought, and you can
+          put it back on sale at any time.
+        </p>
+      </Modal>
 
       {(isCreating || editing) && (
         <PlanFormModal

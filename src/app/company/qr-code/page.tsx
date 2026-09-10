@@ -6,7 +6,7 @@ import {Download, Copy, Check, Loader2, Pause, Play} from "lucide-react";
 import {toast} from "react-toastify";
 
 import {DashboardShell} from "@/components/layouts/dashboard-shell";
-import {Card, CardContent, Button} from "@/components/ui";
+import {Card, CardContent, Button, Modal} from "@/components/ui";
 
 import {useCompanyProfile, invalidateCompanyProfile} from "@/hooks/useCompanyProfile";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
@@ -19,6 +19,9 @@ import {QR_COLORS, qrLogoSettings} from "@/lib/qr";
 export default function QRCodePage() {
   const [copied, setCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  // Pausing stops every customer at the counter, so it asks first. Resuming doesn't:
+  // it only restores the normal state.
+  const [confirmPause, setConfirmPause] = useState(false);
   // Container ref — we grab the inner <canvas> at click time
   const qrContainerRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +40,7 @@ export default function QRCodePage() {
     // flip each other's change, and a retried request would undo itself.
     mutationFn: () => companyService.setQrPaused(!isPaused),
     onSuccess: async (res) => {
+      setConfirmPause(false);
       toast.success(res.message);
       await invalidateCompanyProfile(qc);
     },
@@ -159,8 +163,8 @@ export default function QRCodePage() {
               <Button
                 variant={isPaused ? "primary" : "secondary"}
                 size="lg"
-                onClick={() => pauseM.mutate()}
-                isLoading={pauseM.isPending}
+                onClick={() => (isPaused ? pauseM.mutate() : setConfirmPause(true))}
+                isLoading={pauseM.isPending && !confirmPause}
                 disabled={!company || pauseM.isPending}
               >
                 {isPaused ? (
@@ -181,6 +185,34 @@ export default function QRCodePage() {
           </CardContent>
         </Card>
       </div>
+
+      <Modal
+        open={confirmPause}
+        onClose={() => setConfirmPause(false)}
+        title="Pause your QR code?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmPause(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => pauseM.mutate()}
+              isLoading={pauseM.isPending}
+              disabled={pauseM.isPending}
+            >
+              Pause QR code
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">
+          Customers who scan it won&apos;t be able to record purchases until you resume.
+          They&apos;ll see a message that the business has paused entries. Your data and
+          printed posters are not affected.
+        </p>
+      </Modal>
     </DashboardShell>
   );
 }

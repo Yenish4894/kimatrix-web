@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
 import {
   QrCode,
   UserPlus,
@@ -12,8 +10,6 @@ import {
   Store,
   ArrowRight,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Smartphone,
   Shield,
   FileText,
@@ -52,90 +48,26 @@ const features = [
   {
     icon: Shield,
     title: "Flexible Plans",
-    description: "Choose 15-day or 30-day plans. No long-term commitments, no hidden fees. Pay only for what you need.",
+    description: "Plans from 7 to 30 days. No long-term commitments, no hidden fees. Pay only for what you need.",
     color: "bg-warning-100 text-warning-600",
   },
 ];
 
-/* ─── Feature Carousel ───────────────────────────── */
-function FeatureCarousel() {
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, align: "start", slidesToScroll: 1 },
-    [Autoplay({ delay: 4000, stopOnInteraction: true })]
-  );
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
-    emblaApi.on("select", onSelect);
-    onSelect();
-    return () => { emblaApi.off("select", onSelect); };
-  }, [emblaApi]);
-
+/* ─── Feature Grid ───────────────────────────────── */
+/* A static grid, not a carousel: at desktop width the carousel showed three of the
+   five cards, so "PDF Reports" and "Flexible Plans" sat behind arrows nobody clicks. */
+function FeatureGrid() {
   return (
-    <div className="relative">
-      <div ref={emblaRef} className="overflow-hidden">
-        <div className="flex">
-          {features.map((f) => (
-            <div key={f.title} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] px-3">
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 h-full hover:shadow-md hover:border-slate-300 transition-all">
-                <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", f.color)} aria-hidden="true">
-                  <f.icon className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold font-heading text-slate-800">{f.title}</h3>
-                <p className="text-sm text-slate-500 mt-2 leading-relaxed">{f.description}</p>
-              </div>
-            </div>
-          ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {features.map((f) => (
+        <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-6 h-full">
+          <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", f.color)} aria-hidden="true">
+            <f.icon className="h-6 w-6" />
+          </div>
+          <h3 className="text-lg font-semibold font-heading text-slate-800">{f.title}</h3>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">{f.description}</p>
         </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-4 mt-8">
-        <button
-          type="button"
-          onClick={scrollPrev}
-          className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-          aria-label="Previous"
-        >
-          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-        </button>
-
-        <div className="flex gap-1">
-          {features.map((f, i) => (
-            /* Button is 44px tall with horizontal padding so the tap area clears
-               WCAG 2.5.5 without the 8px dots visually growing or overlapping. */
-            <button
-              type="button"
-              key={f.title}
-              onClick={() => emblaApi?.scrollTo(i)}
-              className="h-11 px-1 flex items-center"
-              aria-label={`Go to slide ${i + 1}`}
-              aria-current={selectedIndex === i ? "true" : undefined}
-            >
-              <span
-                className={cn(
-                  "block h-2 rounded-full transition-all",
-                  selectedIndex === i ? "w-6 bg-primary-600" : "w-2 bg-slate-300"
-                )}
-              />
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={scrollNext}
-          className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-          aria-label="Next"
-        >
-          <ChevronRight className="h-5 w-5" aria-hidden="true" />
-        </button>
-      </div>
+      ))}
     </div>
   );
 }
@@ -179,8 +111,9 @@ export default function HomePage() {
             </div>
 
             <div className="lg:hidden flex items-center gap-2">
-              <Link href="/login"><Button variant="ghost" size="sm">Login</Button></Link>
-              <Link href="/register"><Button variant="primary" size="sm">Register</Button></Link>
+              {/* h-11: the small button is 32px, under the 44px touch minimum. */}
+              <Link href="/login"><Button variant="ghost" size="sm" className="h-11">Login</Button></Link>
+              <Link href="/register"><Button variant="primary" size="sm" className="h-11">Register</Button></Link>
             </div>
           </div>
         </div>
@@ -237,7 +170,8 @@ export default function HomePage() {
                 </div>
                 {/* Dashboard preview content */}
                 <div className="p-6 bg-slate-50">
-                  <div className="grid grid-cols-4 gap-3 mb-4">
+                  {/* 2×2 on phones: four columns in 300px cut the labels off mid-word. */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                     {[
                       { label: "Total Customers", value: "247", color: "border-l-primary-500" },
                       { label: "Total Spend", value: "R 2.4M", color: "border-l-accent-500" },
@@ -285,7 +219,7 @@ export default function HomePage() {
               Powerful tools designed for simplicity
             </p>
           </div>
-          <FeatureCarousel />
+          <FeatureGrid />
         </div>
       </section>
 
@@ -303,7 +237,7 @@ export default function HomePage() {
                 icon: UserPlus,
                 step: "01",
                 title: "Register & Subscribe",
-                description: "Create your account, choose 15 or 30-day plan, and you're ready to go.",
+                description: "Create your account, choose a plan, and you're ready to go.",
               },
               {
                 icon: QrCode,

@@ -3,7 +3,7 @@
 import { Building2, Shield, Fuel, Users, Receipt, Wallet, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { StatCard } from "@/components/ui";
+import { StatCard, QueryErrorState } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 import { adminService } from "@/services";
 
@@ -20,6 +20,12 @@ export default function AdminDashboardPage() {
 
   return (
     <DashboardShell title="Admin Dashboard" requiredRole="super_admin">
+      {/* Without this a failed request rendered every card as 0, which reads as a real
+          (and alarming) platform state rather than an error. */}
+      {statsQ.isError ? (
+        <QueryErrorState error={statsQ.error} onRetry={() => statsQ.refetch()} resource="platform stats" />
+      ) : (
+      <>
       <div className="mb-6">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           Platform Overview
@@ -71,6 +77,8 @@ export default function AdminDashboardPage() {
           />
         </div>
       </div>
+      </>
+      )}
     </DashboardShell>
   );
 }

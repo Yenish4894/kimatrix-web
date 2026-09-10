@@ -18,7 +18,7 @@ const features = [
   { icon: Zap,       text: "QR code ready in under 2 minutes" },
   { icon: QrCode,    text: "Customers scan — no app needed"    },
   { icon: BarChart3, text: "Live dashboard + PDF exports"      },
-  { icon: Shield,    text: "Flexible 15 or 30-day plans"       },
+  { icon: Shield,    text: "Plans from 7 to 30 days"           },
 ];
 
 const recentPurchases = [

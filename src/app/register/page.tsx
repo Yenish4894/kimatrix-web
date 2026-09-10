@@ -286,7 +286,9 @@ export default function RegisterPage() {
         <div>
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Address</h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Full width: side by side, the selects clipped "South Africa" and the
+                state placeholder mid-word. */}
+            <div className="grid grid-cols-1 gap-4">
               <CountrySelect
                 value={form.country}
                 onChange={(e) => {
@@ -341,7 +343,7 @@ export default function RegisterPage() {
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Contact Information</h2>
           <div className="space-y-4">
             <Input label="Contact Email" name="contactEmail" type="email" placeholder="contact@company.com" value={form.contactEmail} onChange={handleChange} onBlur={handleBlur} error={errors.contactEmail} helperText="Public contact email" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <PhoneInput
                 label="Contact Phone"
                 name="contactPhone"
@@ -378,8 +380,10 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <Input label="Login Email" name="email" type="email" placeholder="admin@company.com" value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} helperText="Private email for logging in" />
             <Input label="Username" name="username" placeholder="Choose a unique username" value={form.username} onChange={handleChange} onBlur={handleBlur} error={errors.username} helperText="Letters, numbers, dots, dashes, underscores only" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="Password" name="password" type="password" placeholder="8–18 chars, upper, lower, number, special" value={form.password} onChange={handleChange} onBlur={handleBlur} error={errors.password} />
+            {/* The rules live in helper text, not the placeholder: a placeholder was cut
+                off at this width and disappears as soon as the user starts typing. */}
+            <div className="grid grid-cols-1 gap-4">
+              <Input label="Password" name="password" type="password" placeholder="Create a password" value={form.password} onChange={handleChange} onBlur={handleBlur} error={errors.password} helperText="8–18 characters, with upper and lower case, a number and a symbol" />
               <Input label="Confirm Password" name="confirmPassword" type="password" placeholder="Re-enter password" value={form.confirmPassword} onChange={handleChange} onBlur={handleBlur} error={errors.confirmPassword} />
             </div>
           </div>

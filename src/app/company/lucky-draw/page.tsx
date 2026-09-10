@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { Gift, Trophy, Users, Ticket, CalendarRange } from "lucide-react";
 
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Button, Card, CardContent } from "@/components/ui";
+import { Button, Card, CardContent, QueryErrorState } from "@/components/ui";
 import { PageLoader } from "@/components/ui/loader";
 import { companyService } from "@/services";
 import { parseApiError } from "@/lib/errors";
@@ -66,6 +66,15 @@ export default function LuckyDrawPage() {
   });
 
   if (drawsQ.isLoading) return <PageLoader />;
+  // Without this a failed request fell through to "no spins available", which tells
+  // the owner they have nothing when the truth is we couldn't check.
+  if (drawsQ.isError) {
+    return (
+      <DashboardShell title="Lucky Draw" requiredRole="company">
+        <QueryErrorState error={drawsQ.error} onRetry={() => drawsQ.refetch()} resource="your lucky draw" />
+      </DashboardShell>
+    );
+  }
   const status = drawsQ.data;
   const current = status?.periods.find((p) => p.remaining > 0) ?? status?.periods[0];
   const canSpin = Boolean(current && current.remaining > 0 && current.entries > 0) && !spinning;
