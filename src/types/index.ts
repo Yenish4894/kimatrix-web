@@ -146,6 +146,8 @@ export interface Company extends CompanyAddress {
   isComped?: boolean;
   compedUntil?: string | null;
   compReason?: string | null;
+  /** Lucky draw spins granted with the comp. */
+  compDrawSpins?: number;
   createdAt?: string;
   updatedAt?: string;
   owner?: {

@@ -71,7 +71,7 @@ export const adminService = {
   // `compedUntil: null` means perpetual.
   setComp: async (
     companyId: string,
-    payload: { isComped: boolean; reason?: string; compedUntil?: string | null },
+    payload: { isComped: boolean; reason?: string; compedUntil?: string | null; drawSpins?: number },
   ) => {
     const { data } = await api.patch<{ data: { status: string; hasAccess: boolean } }>(
       `/admin/companies/${companyId}/comp`,

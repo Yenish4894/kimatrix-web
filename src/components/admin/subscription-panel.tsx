@@ -22,9 +22,10 @@ interface SubscriptionPanelProps {
 
 export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>) {
   const queryClient = useQueryClient();
-  const [modal, setModal] = useState<"trial" | "comp" | "release" | null>(null);
+  const [modal, setModal] = useState<"trial" | "comp" | "uncomp" | "release" | null>(null);
   const [compReason, setCompReason] = useState("");
   const [compUntil, setCompUntil] = useState("");
+  const [compSpins, setCompSpins] = useState("0");
   const [releaseTarget, setReleaseTarget] = useState<AdminTrialIdentity | null>(null);
   const [releaseReason, setReleaseReason] = useState("");
 
@@ -50,6 +51,18 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
     setReleaseReason("");
   };
 
+  /**
+   * Opens the comp form. Editing starts from what is there now, so changing one field
+   * cannot quietly reset the others — a blank date would otherwise turn a dated comp
+   * into a permanent one on save.
+   */
+  const openComp = (): void => {
+    setCompReason(isComped ? (company.compReason ?? "") : "");
+    setCompUntil(isComped && company.compedUntil ? company.compedUntil.slice(0, 10) : "");
+    setCompSpins(String(isComped ? (company.compDrawSpins ?? 0) : 0));
+    setModal("comp");
+  };
+
   const onError = (err: unknown): void => {
     const parsed = parseApiError(err);
     toast.error(errorMessageWithId(parsed));
@@ -65,12 +78,21 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
               reason: compReason,
               // Empty means perpetual. Sent explicitly as null rather than omitted so
               // the intent is unambiguous on the wire.
-              compedUntil: compUntil ? new Date(compUntil).toISOString() : null,
+              // End of the chosen day, not its first second: a date input gives midnight,
+              // which ended free access a full day before the date the admin picked.
+              compedUntil: compUntil ? `${compUntil}T23:59:59.000Z` : null,
+              drawSpins: Math.max(0, Number.parseInt(compSpins || "0", 10) || 0),
             }
           : { isComped: false },
       ),
     onSuccess: async (_r, grant) => {
-      toast.success(grant ? "Complimentary access granted." : "Complimentary access removed.");
+      toast.success(
+        !grant
+          ? "Complimentary access removed."
+          : isComped
+            ? "Complimentary access updated."
+            : "Complimentary access granted.",
+      );
       await refresh();
       close();
     },
@@ -122,6 +144,9 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
             {isComped && company.compReason && (
               <Row label="Reason" value={company.compReason} />
             )}
+            {isComped && (
+              <Row label="Lucky draw spins" value={String(company.compDrawSpins ?? 0)} />
+            )}
           </dl>
 
           <div className="flex flex-wrap gap-2 pt-1">
@@ -130,17 +155,20 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
               {company.trialEndsAt ? "Extend trial" : "Grant trial"}
             </Button>
             {isComped ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => compMut.mutate(false)}
-                disabled={compMut.isPending}
-              >
-                <Undo2 className="h-4 w-4" aria-hidden="true" />
-                Remove complimentary access
-              </Button>
+              <>
+                <Button variant="secondary" size="sm" onClick={openComp}>
+                  <Gift className="h-4 w-4" aria-hidden="true" />
+                  Edit complimentary access
+                </Button>
+                {/* Confirmed, not immediate: removing it can cut a company off on the
+                    spot, and this used to happen on a single click. */}
+                <Button variant="ghost" size="sm" onClick={() => setModal("uncomp")}>
+                  <Undo2 className="h-4 w-4" aria-hidden="true" />
+                  Remove complimentary access
+                </Button>
+              </>
             ) : (
-              <Button variant="secondary" size="sm" onClick={() => setModal("comp")}>
+              <Button variant="secondary" size="sm" onClick={openComp}>
                 <Gift className="h-4 w-4" aria-hidden="true" />
                 Grant complimentary access
               </Button>
@@ -218,7 +246,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
       <Modal
         open={modal === "comp"}
         onClose={close}
-        title="Grant complimentary access"
+        title={isComped ? "Edit complimentary access" : "Grant complimentary access"}
         size="sm"
         footer={
           <>
@@ -229,7 +257,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
               onClick={() => compMut.mutate(true)}
               disabled={compMut.isPending || compReason.trim().length === 0}
             >
-              {compMut.isPending ? "Saving…" : "Grant"}
+              {compMut.isPending ? "Saving…" : isComped ? "Save" : "Grant"}
             </Button>
           </>
         }
@@ -254,7 +282,49 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
             onChange={(e) => setCompUntil(e.target.value)}
             helperText="Leave empty for permanent complimentary access."
           />
+          <Input
+            label="Lucky draw spins"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={100}
+            value={compSpins}
+            onChange={(e) => setCompSpins(e.target.value)}
+            helperText={
+              isComped
+                ? "Prize draws this company can run while free access lasts. Changing the number keeps past winners excluded."
+                : "Prize draws this company can run while free access lasts. 0 = none."
+            }
+          />
         </div>
+      </Modal>
+
+      {/* ── Remove complimentary access ── */}
+      <Modal
+        open={modal === "uncomp"}
+        onClose={close}
+        title="Remove complimentary access"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={close}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => compMut.mutate(false)}
+              disabled={compMut.isPending}
+            >
+              {compMut.isPending ? "Saving…" : "Remove"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">
+          <strong className="text-slate-800">{company.name}</strong> loses free access
+          immediately. Unless it has a live trial or a paid plan, the owner will be taken to
+          the paywall, and any unused lucky draw spins from this access are removed.
+        </p>
       </Modal>
 
       {/* ── Release a burned identifier ── */}
