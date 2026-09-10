@@ -8,6 +8,7 @@ import { Badge, Button, Card, CardContent, CardHeader, Input, Modal } from "@/co
 import { adminService, type AdminTrialIdentity } from "@/services/admin.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
+import { endOfLocalDayIso, toLocalDateInput } from "@/lib/dates";
 import type { Company } from "@/types";
 import { GrantTrialModal } from "@/components/admin/grant-trial-modal";
 import {
@@ -58,7 +59,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
    */
   const openComp = (): void => {
     setCompReason(isComped ? (company.compReason ?? "") : "");
-    setCompUntil(isComped && company.compedUntil ? company.compedUntil.slice(0, 10) : "");
+    setCompUntil(isComped && company.compedUntil ? toLocalDateInput(company.compedUntil) : "");
     setCompSpins(String(isComped ? (company.compDrawSpins ?? 0) : 0));
     setModal("comp");
   };
@@ -78,9 +79,9 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
               reason: compReason,
               // Empty means perpetual. Sent explicitly as null rather than omitted so
               // the intent is unambiguous on the wire.
-              // End of the chosen day, not its first second: a date input gives midnight,
-              // which ended free access a full day before the date the admin picked.
-              compedUntil: compUntil ? `${compUntil}T23:59:59.000Z` : null,
+              // The end of the chosen day in the admin's own timezone, not midnight (a day
+              // short) and not 23:59 UTC (shown a day late east of UTC). See lib/dates.ts.
+              compedUntil: compUntil ? endOfLocalDayIso(compUntil) : null,
               drawSpins: Math.max(0, Number.parseInt(compSpins || "0", 10) || 0),
             }
           : { isComped: false },

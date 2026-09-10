@@ -8,6 +8,7 @@ import { Button, Input, Modal, Select } from "@/components/ui";
 import { adminService } from "@/services/admin.service";
 import { parseApiError, fieldErrorsFromDetails } from "@/lib/errors";
 import type { CreateCompanyPayload } from "@/types";
+import { endOfLocalDayIso, toLocalDateInput } from "@/lib/dates";
 
 interface CreateCompanyModalProps {
   onClose: () => void;
@@ -18,7 +19,7 @@ interface CreateCompanyModalProps {
 function defaultCompDate(): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() + 1);
-  return d.toISOString().slice(0, 10);
+  return toLocalDateInput(d);
 }
 
 /**
@@ -71,10 +72,9 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
         contactPhone: form.contactPhone.trim(),
         whatsappNumber: form.whatsappNumber.trim() || null,
         email: form.email.trim(),
-        // Sent as the end of the chosen day rather than midnight, so "free until the
-        // 8th" includes the 8th — a date input gives 00:00 and would cut them off a
-        // day early.
-        compedUntil: neverExpires ? null : `${form.compedUntil}T23:59:59.000Z`,
+        // The end of the chosen day in the admin's own timezone — see lib/dates.ts for
+        // why UTC showed every date a day late.
+        compedUntil: neverExpires ? null : endOfLocalDayIso(form.compedUntil),
         compReason: form.compReason.trim(),
         compDrawSpins: Math.max(0, Number.parseInt(form.compDrawSpins || "0", 10) || 0),
       };
