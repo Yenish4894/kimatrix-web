@@ -1,6 +1,44 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { formatCurrency, getCurrencySymbol, formatDate } from "./utils";
+import { formatCurrency, getCurrencySymbol, formatDate, formatSpendByCurrency } from "./utils";
+
+describe("formatSpendByCurrency", () => {
+  it("shows one total per currency, largest first", () => {
+    assert.equal(
+      formatSpendByCurrency([
+        { country: "India", total: "4239" },
+        { country: "South Africa", total: "18200" },
+      ]),
+      "R 18,200.00 · ₹ 4,239.00"
+    );
+  });
+
+  it("merges countries that share a currency", () => {
+    assert.equal(
+      formatSpendByCurrency([
+        { country: "Germany", total: "10" },
+        { country: "France", total: "5.5" },
+      ]),
+      "€ 15.50"
+    );
+  });
+
+  it("skips zero rows but still shows a currency when everything is zero", () => {
+    assert.equal(
+      formatSpendByCurrency([
+        { country: "South Africa", total: "0" },
+        { country: "India", total: "120" },
+      ]),
+      "₹ 120.00"
+    );
+    assert.equal(formatSpendByCurrency([{ country: "South Africa", total: "0" }]), "R 0.00");
+  });
+
+  it("falls back to the single figure when there is no breakdown", () => {
+    assert.equal(formatSpendByCurrency(undefined, "22439"), "$ 22,439.00");
+    assert.equal(formatSpendByCurrency([], 0), "$ 0.00");
+  });
+});
 
 describe("formatCurrency", () => {
   it("formats a string amount without losing precision", () => {

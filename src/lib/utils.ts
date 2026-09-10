@@ -65,6 +65,35 @@ export function formatCurrency(
   })}`;
 }
 
+/**
+ * Platform-wide spend, one total per currency: "R 18,200.00 · ₹ 4,239.00".
+ *
+ * Purchase amounts are recorded in each company's own currency, so a single sum adds
+ * rand to rupees and means nothing. Countries that share a symbol (the euro zone) are
+ * merged; the largest total comes first. With no breakdown (a backend deployed before
+ * `spendByCountry` existed) it falls back to the old single figure.
+ */
+export function formatSpendByCurrency(
+  rows: { country: string; total: string | number }[] | undefined,
+  fallback: string | number = 0
+): string {
+  if (!rows || rows.length === 0) return formatCurrency(fallback);
+  const bySymbol = new Map<string, { country: string; sum: number }>();
+  for (const r of rows) {
+    const n = typeof r.total === "string" ? Number.parseFloat(r.total) : r.total;
+    if (!Number.isFinite(n) || n === 0) continue;
+    const symbol = getCurrencySymbol(r.country);
+    const entry = bySymbol.get(symbol);
+    if (entry) entry.sum += n;
+    else bySymbol.set(symbol, { country: r.country, sum: n });
+  }
+  if (bySymbol.size === 0) return formatCurrency(0, rows[0]!.country);
+  return [...bySymbol.values()]
+    .sort((a, b) => b.sum - a.sum)
+    .map((e) => formatCurrency(e.sum, e.country))
+    .join(" · ");
+}
+
 // Format date consistently (SSR-safe, locked locale to avoid hydration mismatch)
 export function formatDate(iso: string): string {
   const d = new Date(iso);

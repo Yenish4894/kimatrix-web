@@ -305,7 +305,11 @@ export interface AdminStats {
   totalShops: number;
   totalCustomers: number;
   totalPurchases: number;
+  /** Sum across all currencies — only meaningful as a fallback. */
   totalSpend: string;
+  /** Spend per company country, in that country's currency. Optional so the page
+   *  still renders against a backend deployed before this field existed. */
+  spendByCountry?: { country: string; total: string }[];
 }
 
 // ─── API envelope ──────────────────────────────────────────

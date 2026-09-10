@@ -4,7 +4,7 @@ import { Building2, Shield, Fuel, Users, Receipt, Wallet, AlertCircle } from "lu
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, QueryErrorState } from "@/components/ui";
-import { formatCurrency } from "@/lib/utils";
+import { formatSpendByCurrency } from "@/lib/utils";
 import { adminService } from "@/services";
 
 export default function AdminDashboardPage() {
@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
           />
           <StatCard
             title="Total Spend"
-            value={isLoading ? "—" : formatCurrency(stats?.totalSpend ?? 0)}
+            value={isLoading ? "—" : formatSpendByCurrency(stats?.spendByCountry, stats?.totalSpend ?? 0)}
             icon={Wallet}
           />
         </div>
