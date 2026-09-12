@@ -82,6 +82,7 @@ export interface AdminPlan extends SubscriptionPlan {
 export interface PlatformSettings {
   trialDurationDays: number;
   platformCurrency: string;
+  spinAddonPriceUsd: number;
 }
 
 /** What the admin onboarding form submits. Mirrors public registration minus the

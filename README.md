@@ -1,8 +1,8 @@
 # KIMates Web - Frontend
 
-> B2B SaaS QR-based customer purchase tracking platform for fuel stations and shops in Niger, West Africa
+> B2B SaaS QR-based customer purchase tracking platform for fuel stations and shops, focused on South Africa and India
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.2-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.3-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38bdf8)](https://tailwindcss.com/)
@@ -10,7 +10,7 @@
 
 ## 📋 Overview
 
-KIMates Web is the frontend application for the KIMates QR platform. Built with Next.js 15 (App Router), it provides a modern, responsive interface for managing fuel station purchases, tracking customer loyalty, and administering company operations across Niger, West Africa.
+KIMates Web is the frontend application for the KIMates QR platform. Built with Next.js 15 (App Router), it provides a modern, responsive interface for managing fuel station and shop purchases, tracking customer loyalty, and administering company operations across South Africa and India. Customer amounts are formatted in the company country’s local currency; subscription payments are in USD.
 
 ## ✨ Features
 

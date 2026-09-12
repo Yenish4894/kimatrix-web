@@ -26,7 +26,6 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
     price: plan?.price ?? "",
     sortOrder: plan?.sortOrder !== undefined ? String(plan.sortOrder) : "",
     isPopular: plan?.isPopular ?? false,
-    drawSpins: plan ? String(plan.drawSpins ?? 0) : "0",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -52,7 +51,6 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
         durationDays: Number.parseInt(form.durationDays, 10),
         price: form.price.trim(),
         isPopular: form.isPopular,
-        drawSpins: Math.max(0, Number.parseInt(form.drawSpins || "0", 10) || 0),
         // Omitted when blank so the server keeps its own default (the plan duration),
         // rather than being pinned to 0 and dragging the plan to the front.
         ...(Number.isFinite(sortOrder) ? { sortOrder } : {}),
@@ -144,18 +142,8 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
           helperText="Lower numbers appear first on the billing page."
         />
 
-        <Input
-          label="Lucky draw spins"
-          name="drawSpins"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={100}
-          value={form.drawSpins}
-          onChange={handleChange}
-          error={errors["drawSpins"]}
-          helperText="How many prize draws a buyer of this plan can run during it. 0 = no lucky draw. To sell the draw as an extra, create a copy of a plan with spins at a higher price."
-        />
+        {/* No spins field: plans no longer include lucky draw spins. Companies buy them
+            as paid add-ons, priced in Settings, and the server ignores a plan's value. */}
 
         <div>
           <Checkbox

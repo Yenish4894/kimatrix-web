@@ -33,6 +33,7 @@ function CaptureHandler() {
 
   const [state, setState] = useState<CaptureState>("loading");
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [isSpinAddon, setIsSpinAddon] = useState(false);
   const capturedRef = useRef(false);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ function CaptureHandler() {
       .captureOrder(paypalOrderId!)
       .then((result) => {
         setExpiresAt(result.subscriptionEndsAt);
+        setIsSpinAddon(result.kind === "spin_addon");
         dispatch(setCompanyIsActive(true));
         // Invalidate the shared profile query so the gate, sidebar and every page see
         // the new subscription immediately. Previously this dispatched a Redux refetch
@@ -121,16 +123,27 @@ function CaptureHandler() {
         <CheckCircle2 className="h-8 w-8 text-success-500" />
       </div>
       <div>
-        <h2 className="text-xl font-bold text-slate-800">Subscription Activated!</h2>
-        <p className="text-slate-500 text-sm mt-2">
-          Your account is now active.
-          {formattedDate && (
-            <> Your subscription runs until <strong className="text-slate-700">{formattedDate}</strong>.</>
-          )}
-        </p>
+        {isSpinAddon ? (
+          <>
+            <h2 className="text-xl font-bold text-slate-800">Spins Added!</h2>
+            <p className="text-slate-500 text-sm mt-2">
+              Your Lucky Draw spins have been added and are ready to use.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-bold text-slate-800">Subscription Activated!</h2>
+            <p className="text-slate-500 text-sm mt-2">
+              Your account is now active.
+              {formattedDate && (
+                <> Your subscription runs until <strong className="text-slate-700">{formattedDate}</strong>.</>
+              )}
+            </p>
+          </>
+        )}
       </div>
-      <Button onClick={() => router.push("/company/dashboard")}>
-        Go to Dashboard
+      <Button onClick={() => router.push(isSpinAddon ? "/company/lucky-draw" : "/company/dashboard")}>
+        {isSpinAddon ? "Go to Lucky Draw" : "Go to Dashboard"}
       </Button>
     </div>
   );

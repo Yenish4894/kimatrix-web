@@ -96,14 +96,15 @@ export default function LuckyDrawPage() {
               <Gift className="h-7 w-7 text-primary-600" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-semibold text-slate-800">
-              Your current plan doesn&apos;t include lucky draw spins
+              No lucky draw spins available
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              Plans with Lucky Draw let you pick a random winner from the customers who
-              bought from you during your plan. Every purchase is one entry.
+              While a paid plan is active, you can buy spins from the billing page. Each
+              spin picks a random winner from the customers who bought from you during
+              your current plan period.
             </p>
             <Link href="/company/billing" className="mt-5 inline-block">
-              <Button>See plans</Button>
+              <Button>Buy spins</Button>
             </Link>
           </CardContent>
         </Card>

@@ -12,6 +12,7 @@ import { paymentService } from "@/services/payment.service";
  * a minute, and every cold page load fetched the profile twice.
  *
  * The profile now lives solely in `useCompanyProfile()`. Do not reintroduce it here.
+ * (The spin add-on price is not here either — the billing page queries it directly.)
  */
 interface CompanyState {
   plans: SubscriptionPlan[];

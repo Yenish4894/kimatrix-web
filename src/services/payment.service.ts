@@ -9,6 +9,7 @@ interface CreateOrderResponse {
 
 interface CaptureOrderResponse {
   paymentId: string;
+  kind: "order" | "spin_addon";
   subscriptionStartsAt: string;
   subscriptionEndsAt: string;
 }
@@ -20,12 +21,27 @@ export const paymentService = {
     return data.data;
   },
 
+  // GET /api/payments/spin-addon — public. Price of one lucky draw spin, in USD.
+  getSpinAddonPrice: async (): Promise<{ priceUsd: number }> => {
+    const { data } = await api.get<{ data: { priceUsd: number } }>("/payments/spin-addon");
+    return data.data;
+  },
+
   // POST /api/payments/paypal/create-order — requires company auth
   // After receiving approvalUrl, caller must do: window.location.href = approvalUrl
-  createOrder: async (planId: string): Promise<CreateOrderResponse> => {
+  createOrder: async (planId: string, spinQuantity = 0): Promise<CreateOrderResponse> => {
     const { data } = await api.post<{ data: CreateOrderResponse }>(
       "/payments/paypal/create-order",
-      { planId }
+      { planId, spinQuantity }
+    );
+    return data.data;
+  },
+
+  // POST /api/payments/paypal/create-spin-order — requires company auth, active paid plan
+  createSpinOrder: async (spinQuantity: number): Promise<CreateOrderResponse> => {
+    const { data } = await api.post<{ data: CreateOrderResponse }>(
+      "/payments/paypal/create-spin-order",
+      { spinQuantity }
     );
     return data.data;
   },

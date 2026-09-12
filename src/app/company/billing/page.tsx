@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { AlertCircle, Check, CreditCard, Loader2, RefreshCw, Zap } from "lucide-react";
+import { AlertCircle, Check, CreditCard, Loader2, RefreshCw, Zap, Sparkles } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { SubscriptionCard } from "@/components/billing/subscription-card";
 import { useQuery } from "@tanstack/react-query";
+import { parseApiError } from "@/lib/errors";
 import { hasLiveSubscription } from "@/lib/billing";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
@@ -75,11 +76,6 @@ function PlanCard({
         </div>
         <div className="text-right shrink-0">
           <p className="text-xl font-extrabold text-slate-900">{plan.currency} {formatPrice(plan.price)}</p>
-          {(plan.drawSpins ?? 0) > 0 && (
-            <p className="text-xs font-medium text-accent-700 mt-0.5">
-              Includes {plan.drawSpins} lucky draw {plan.drawSpins === 1 ? "spin" : "spins"}
-            </p>
-          )}
         </div>
       </div>
       {selected && (
@@ -94,6 +90,11 @@ function PlanCard({
 export default function BillingPage() {
   const dispatch = useAppDispatch();
   const { plans, isLoadingPlans, plansFetchFailed } = useAppSelector((state) => state.company);
+  const { data: spinAddon } = useQuery({
+    queryKey: ["payments", "spin-addon"],
+    queryFn: paymentService.getSpinAddonPrice,
+  });
+  const spinPrice = spinAddon?.priceUsd;
 
   /**
    * Same key as SubscriptionCard, so this shares one request rather than adding a
@@ -119,6 +120,8 @@ export default function BillingPage() {
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [spinQty, setSpinQty] = useState(1);
+  const [isBuyingSpins, setIsBuyingSpins] = useState(false);
 
   useEffect(() => {
     if (plans.length === 0 && !plansFetchFailed) {
@@ -136,6 +139,20 @@ export default function BillingPage() {
       setSelectedPlanId(popular.id);
     }
   }, [plans, selectedPlanId]);
+
+  const handleBuySpins = async () => {
+    if (isBuyingSpins) return;
+    setIsBuyingSpins(true);
+    try {
+      const { approvalUrl } = await paymentService.createSpinOrder(spinQty);
+      globalThis.location.href = approvalUrl;
+    } catch (err) {
+      // The server's reason is the useful part ("only while a paid plan is active",
+      // "requires a USD plan") — a generic retry message sent people round in circles.
+      toast.error(parseApiError(err).message);
+      setIsBuyingSpins(false);
+    }
+  };
 
   const handleSubscribe = async () => {
     if (!selectedPlanId || isRedirecting) return;
@@ -166,6 +183,16 @@ export default function BillingPage() {
   const isExpired =
     !!profile?.subscriptionExpiresAt &&
     new Date(profile.subscriptionExpiresAt).getTime() < Date.now();
+
+  // Mirrors the server rule in initiateSpinPurchase: a paid plan period running now.
+  // This used to require a live PayPal *subscription*, which hid the card from every
+  // company that paid through the one-time checkout — the main way people pay.
+  const hasPaidPlanNow =
+    !!profile?.currentPlan &&
+    profile.hasAccess !== false &&
+    !profile.isTrial &&
+    !!profile.subscriptionExpiresAt &&
+    new Date(profile.subscriptionExpiresAt).getTime() > Date.now();
 
   let bannerMessage: string;
   if (isPending) {
@@ -255,6 +282,58 @@ export default function BillingPage() {
             </div>
           </CardContent>
         </Card>
+        )}
+
+        {/* Spin add-on — for any company inside a paid plan period, however it paid. */}
+        {hasPaidPlanNow && profile && spinPrice !== undefined && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="h-4 w-4 text-accent-500" aria-hidden="true" />
+                <h2 className="text-base font-semibold text-slate-800">Buy Lucky Draw Spins</h2>
+              </div>
+              {profile.currentPlan?.currency !== "USD" ? (
+                <p className="text-xs text-slate-500">
+                  Lucky Draw spins are priced in USD and are only available on USD plans.
+                  Your current plan uses {profile.currentPlan?.currency ?? "a non-USD currency"}.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 mb-4">
+                    Add spins to your current plan period. Each spin is USD {spinPrice.toFixed(2)}.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <label htmlFor="spin-qty" className="text-sm text-slate-600 shrink-0">
+                      Spins
+                    </label>
+                    <input
+                      id="spin-qty"
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={spinQty}
+                      onChange={(e) => setSpinQty(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+                      className="w-20 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      = USD {(spinQty * spinPrice).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <Button
+                      fullWidth
+                      onClick={handleBuySpins}
+                      disabled={isBuyingSpins}
+                      isLoading={isBuyingSpins}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {isBuyingSpins ? "Redirecting to PayPal…" : "Buy Spins with PayPal"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Current subscription info (if any) */}
