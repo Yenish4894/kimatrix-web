@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Download, FileText, Trophy, Users, Receipt } from "lucide-react";
 import { Button, Card, CardContent, CardHeader } from "@/components/ui";
-import api from "@/lib/api";
-import { parseApiError } from "@/lib/errors";
+import { downloadFile, messageFromBlobError } from "@/lib/download";
 
 type Report = "top10" | "customers" | "transactions";
 
@@ -40,55 +39,11 @@ const REPORTS: { key: Report; label: string; description: string; icon: typeof T
 ];
 
 /**
- * Downloads a report.
- *
- * Cannot be a plain `<a href>`: these endpoints are JWT-authenticated and a browser
- * navigation carries no Authorization header, so the link would 401. Fetching as a
- * blob keeps the request on the same axios instance as everything else, which also
- * means it inherits the refresh-token interceptor — a download that starts on a
- * just-expired access token still succeeds.
- *
- * It also means no URL granting access to customer names and phone numbers ever
- * exists to be copied, logged or forwarded.
+ * Downloads a report. The authenticated blob approach, and why a plain link cannot
+ * work, is documented on `downloadFile`; invoices use the same helper.
  */
-async function downloadReport(report: Report): Promise<void> {
-  const response = await api.get(`/company/reports/${report}.pdf`, { responseType: "blob" });
-
-  // Prefer the server's filename; it carries the company and the date, so repeat
-  // downloads do not collide in the downloads folder.
-  const disposition = String(response.headers["content-disposition"] ?? "");
-  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `kimates-${report}.pdf`;
-
-  const url = URL.createObjectURL(response.data as Blob);
-  try {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } finally {
-    // Without this the whole file stays pinned in memory for the life of the tab.
-    URL.revokeObjectURL(url);
-  }
-}
-
-/**
- * An error response arrives as a Blob because the request asked for one, so the usual
- * JSON parsing finds nothing. Read it back as text to recover the real message —
- * otherwise a 5,000-row cap or an expired session both read as "download failed".
- */
-async function messageFromBlobError(err: unknown): Promise<string> {
-  const data = (err as { response?: { data?: unknown } })?.response?.data;
-  if (data instanceof Blob) {
-    try {
-      const parsed = JSON.parse(await data.text()) as { message?: string };
-      if (parsed.message) return parsed.message;
-    } catch {
-      // Not JSON — fall through to the generic message below.
-    }
-  }
-  return parseApiError(err).message || "That download didn't work. Please try again.";
+function downloadReport(report: Report): Promise<void> {
+  return downloadFile(`/company/reports/${report}.pdf`, `kimates-${report}.pdf`);
 }
 
 export function ExportDataCard() {

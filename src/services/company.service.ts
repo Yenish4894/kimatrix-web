@@ -1,6 +1,8 @@
 import api from "@/lib/api";
+import { downloadFile } from "@/lib/download";
 import type { LuckyDrawSpinResult, LuckyDrawStatus } from "@/types";
 import type {
+  CompanyPayment,
   CompanyProfile,
   Customer,
   Purchase,
@@ -24,6 +26,23 @@ interface PurchaseListParams extends ListParams {
 }
 
 export const companyService = {
+  // GET /api/company/payments — the company's own settled payments, newest first.
+  // Reachable after access lapses: a customer whose plan ended still needs receipts.
+  getPayments: async (params: { page?: number; limit?: number } = {}) => {
+    const { data } = await api.get<{ data: PaginatedResponse<CompanyPayment> }>(
+      "/company/payments",
+      { params },
+    );
+    return data.data;
+  },
+
+  // GET /api/company/payments/:id/invoice.pdf
+  downloadInvoice: (paymentId: string, invoiceNumber: string) =>
+    downloadFile(
+      `/company/payments/${encodeURIComponent(paymentId)}/invoice.pdf`,
+      `kimates-invoice-${invoiceNumber}.pdf`,
+    ),
+
   // GET /api/company/profile
   getProfile: async () => {
     const { data } = await api.get<{ data: CompanyProfile }>("/company/profile");

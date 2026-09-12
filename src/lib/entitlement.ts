@@ -120,13 +120,29 @@ export type GateDecision = "children" | "deactivated-notice" | "paywall";
  */
 const BILLING_ROUTE = "/company/billing";
 const EXPORT_ROUTE = "/company/export";
+/**
+ * Payment history and invoices. Treated exactly like billing: a lapsed customer is
+ * the one most likely to need a receipt, either for their accountant or to dispute a
+ * charge. The page only reads records of money already paid, so there is nothing
+ * behind it for the paywall to protect.
+ */
+const PAYMENTS_ROUTE = "/company/payments";
 
 function isRoute(pathname: string, route: string): boolean {
   return pathname === route || pathname.startsWith(`${route}/`);
 }
 
+/**
+ * Routes that render whatever the subscription state, and even when the profile
+ * request itself failed with a 401/402/403 (see company/layout.tsx). Export is not
+ * one of these: it depends on `canExport`, which needs a loaded profile.
+ */
+export function isLapsedReachableRoute(pathname: string): boolean {
+  return isRoute(pathname, BILLING_ROUTE) || isRoute(pathname, PAYMENTS_ROUTE);
+}
+
 export function decideGate(entitlement: Entitlement, pathname: string): GateDecision {
-  if (isRoute(pathname, BILLING_ROUTE)) return "children";
+  if (isLapsedReachableRoute(pathname)) return "children";
   // Checked before hasAccess: a deactivated account gets a notice, never a "choose a
   // plan" CTA — taking money from someone we just banned would change nothing.
   if (entitlement.status === "deactivated") return "deactivated-notice";

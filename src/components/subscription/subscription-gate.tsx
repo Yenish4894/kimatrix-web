@@ -4,13 +4,16 @@ import { usePathname } from "next/navigation";
 import { LockedShell } from "@/components/subscription/locked-shell";
 import { PaywallModal } from "@/components/subscription/paywall-modal";
 import { DeactivatedNotice } from "@/components/subscription/deactivated-notice";
-import { decideGate } from "@/lib/entitlement";
+import { decideGate, isLapsedReachableRoute } from "@/lib/entitlement";
 import type { Entitlement } from "@/lib/entitlement";
 
-const BILLING_PREFIX = "/company/billing";
-
+/**
+ * Billing, and payment history alongside it. The route list lives in one place,
+ * `isLapsedReachableRoute`, so the layout's pass-through and the gate cannot disagree
+ * about which pages a lapsed customer can open.
+ */
 export function isBillingRoute(pathname: string): boolean {
-  return pathname === BILLING_PREFIX || pathname.startsWith(`${BILLING_PREFIX}/`);
+  return isLapsedReachableRoute(pathname);
 }
 
 interface SubscriptionGateProps {

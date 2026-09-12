@@ -20,6 +20,7 @@ import {
   CreditCard,
   Tag,
   Gift,
+  ReceiptText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
@@ -54,6 +55,7 @@ const companyNav: NavSection[] = [
     title: "Account",
     items: [
       { icon: CreditCard, label: "Billing", href: "/company/billing" },
+      { icon: ReceiptText, label: "Payments & invoices", href: "/company/payments" },
       { icon: Settings, label: "Settings", href: "/company/settings" },
     ],
   },
@@ -66,6 +68,7 @@ const adminNav: NavSection[] = [
       { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
       { icon: Building2, label: "Companies", href: "/admin/companies" },
       { icon: Tag, label: "Plans & Trial", href: "/admin/plans" },
+      { icon: ReceiptText, label: "Payments", href: "/admin/payments" },
       { icon: Mail, label: "Bulk Email", href: "/admin/email" },
     ],
   },

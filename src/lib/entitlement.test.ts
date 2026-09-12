@@ -110,6 +110,16 @@ describe("decideGate — billing route matching", () => {
   it("a path that merely starts with the same text does NOT pass", () => {
     assert.equal(decideGate(expired, "/company/billing-history"), "paywall");
   });
+
+  it("payment history passes through too — a lapsed customer still needs receipts", () => {
+    assert.equal(decideGate(expired, "/company/payments"), "children");
+    const trialOver = toEntitlement(
+      profile({ subscriptionStatus: "trial_expired", hasAccess: false }),
+      NOW,
+    );
+    assert.equal(decideGate(trialOver, "/company/payments"), "children");
+    assert.equal(decideGate(expired, "/company/payments-old"), "paywall");
+  });
 });
 
 describe("decideGate — deactivated outranks everything", () => {

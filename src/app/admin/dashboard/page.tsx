@@ -4,6 +4,7 @@ import { Building2, Shield, Fuel, Users, Receipt, Wallet, AlertCircle } from "lu
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, QueryErrorState } from "@/components/ui";
+import { ServiceOutageBanner, ServiceStatusPanel, useSystemStatus } from "@/components/admin/service-status";
 import { formatSpendByCurrency } from "@/lib/utils";
 import { adminService } from "@/services";
 
@@ -12,6 +13,7 @@ export default function AdminDashboardPage() {
     queryKey: ["admin", "stats"],
     queryFn: adminService.getStats,
   });
+  const systemQ = useSystemStatus();
   const stats = statsQ.data;
   const isLoading = statsQ.isLoading;
   const activePct = stats && stats.totalCompanies > 0
@@ -20,6 +22,9 @@ export default function AdminDashboardPage() {
 
   return (
     <DashboardShell title="Admin Dashboard" requiredRole="super_admin">
+      {/* First thing on the page, and independent of the stats request: an outage is
+          the most urgent thing an admin can learn here. */}
+      <ServiceOutageBanner status={systemQ.data} />
       {/* Without this a failed request rendered every card as 0, which reads as a real
           (and alarming) platform state rather than an error. */}
       {statsQ.isError ? (
@@ -79,6 +84,8 @@ export default function AdminDashboardPage() {
       </div>
       </>
       )}
+      {/* Outside the stats error branch, so a failed stats call still shows health. */}
+      <ServiceStatusPanel query={systemQ} />
     </DashboardShell>
   );
 }

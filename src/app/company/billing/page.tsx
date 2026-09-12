@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { toast } from "react-toastify";
-import { AlertCircle, Check, CreditCard, Loader2, RefreshCw, Zap, Sparkles } from "lucide-react";
+import { AlertCircle, Check, CreditCard, Loader2, ReceiptText, RefreshCw, Zap, Sparkles } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { SubscriptionCard } from "@/components/billing/subscription-card";
 import { useQuery } from "@tanstack/react-query";
@@ -252,6 +253,18 @@ export default function BillingPage() {
         )}>
           <Zap className={cn("h-5 w-5 mt-0.5 shrink-0", isPending || isExpired ? "text-accent-500" : "text-primary-500")} aria-hidden="true" />
           <p className="text-sm text-slate-700">{bannerMessage}</p>
+        </div>
+
+        {/* Receipts are a separate page so this one stays focused on choosing and
+            managing a plan. Linked here because billing is where people look for them. */}
+        <div className="-mt-3 flex justify-end">
+          <Link
+            href="/company/payments"
+            className="inline-flex items-center gap-1.5 min-h-11 text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
+          >
+            <ReceiptText className="h-4 w-4" aria-hidden="true" />
+            View payment history
+          </Link>
         </div>
 
         {/* Manage an existing recurring subscription. Renders nothing for a customer

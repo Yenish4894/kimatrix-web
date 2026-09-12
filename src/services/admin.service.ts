@@ -1,5 +1,18 @@
 import api from "@/lib/api";
-import type { AdminPlan, AdminStats, BulkEmailLog, Company, CreateCompanyPayload, CreateCompanyResult, PaginatedResponse, PlatformSettings } from "@/types";
+import { downloadFile } from "@/lib/download";
+import type { AdminPayment, AdminPlan, AdminStats, BulkEmailLog, Company, CreateCompanyPayload, CreateCompanyResult, PaginatedResponse, PaymentKind, PaymentStatus, PlatformSettings, SystemStatus } from "@/types";
+
+export interface AdminPaymentsParams {
+  page?: number;
+  limit?: number;
+  status?: PaymentStatus;
+  kind?: PaymentKind;
+  /** Company name. */
+  search?: string;
+  /** ISO instants — the caller converts the picked local days (see lib/dates). */
+  from?: string;
+  to?: string;
+}
 
 interface AdminCompaniesParams {
   page?: number;
@@ -15,6 +28,33 @@ export const adminService = {
     const { data } = await api.get<{ data: AdminStats }>("/admin/stats");
     return data.data;
   },
+
+  // GET /api/admin/system-status
+  // `refresh` forces the backend to re-run every probe instead of answering from its
+  // cached result. Only the "Re-check" button sets it: each probe opens a real SMTP and
+  // PayPal connection, and the dashboard should not do that on every page load.
+  getSystemStatus: async (refresh = false) => {
+    const { data } = await api.get<{ data: SystemStatus }>("/admin/system-status", {
+      params: refresh ? { refresh: 1 } : undefined,
+    });
+    return data.data;
+  },
+
+  // GET /api/admin/payments — every payment attempt on the platform, any status.
+  getPayments: async (params: AdminPaymentsParams = {}) => {
+    const { data } = await api.get<{ data: PaginatedResponse<AdminPayment> }>(
+      "/admin/payments",
+      { params },
+    );
+    return data.data;
+  },
+
+  // GET /api/admin/payments/:id/invoice.pdf — captured/refunded only.
+  downloadPaymentInvoice: (paymentId: string, invoiceNumber: string) =>
+    downloadFile(
+      `/admin/payments/${encodeURIComponent(paymentId)}/invoice.pdf`,
+      `kimates-invoice-${invoiceNumber}.pdf`,
+    ),
 
   // GET /api/admin/companies
   getCompanies: async (params: AdminCompaniesParams = {}) => {

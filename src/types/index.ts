@@ -461,3 +461,57 @@ export interface LuckyDrawSpinResult {
   eligibleCustomers: number;
   remaining: number;
 }
+
+// ─── Payments & invoices ─────────────────────────────────────
+
+export type PaymentKind = "order" | "subscription_cycle" | "spin_addon";
+
+/**
+ * Every status the admin list can show. A company only ever sees the two settled
+ * states — the backend filters out attempts that never took money.
+ */
+export type PaymentStatus = "captured" | "refunded" | "pending" | "capturing" | "failed";
+
+interface PaymentRecordBase {
+  id: string;
+  invoiceNumber: string;
+  kind: PaymentKind;
+  description: string;
+  planName: string | null;
+  periodStart: string | null;
+  periodEnd: string | null;
+  /** Decimal as a string — the backend preserves precision. */
+  amount: string;
+  currency: string;
+  paidAt: string | null;
+  drawSpins: number;
+  paypalReference: string | null;
+}
+
+export interface CompanyPayment extends PaymentRecordBase {
+  status: "captured" | "refunded";
+}
+
+export interface AdminPayment extends PaymentRecordBase {
+  status: PaymentStatus;
+  company: { id: string; name: string };
+}
+
+// ─── System status (admin dashboard) ─────────────────────────
+
+export type ServiceKey = "database" | "redis" | "smtp" | "paypal" | "email_queue";
+export type ServiceHealth = "ok" | "degraded" | "down";
+
+export interface ServiceCheck {
+  key: ServiceKey;
+  name: string;
+  status: ServiceHealth;
+  latencyMs: number | null;
+  detail: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface SystemStatus {
+  checkedAt: string;
+  services: ServiceCheck[];
+}
