@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
-import { Search, Eye, Calendar } from "lucide-react";
+import { Search, Eye, Calendar, Ban } from "lucide-react";
+import { VoidPurchaseModal } from "@/components/purchases/void-purchase-modal";
+import { VoidedAmount } from "@/components/purchases/voided-amount";
+import { isVoided } from "@/lib/void";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDateTime } from "@/lib/utils";
@@ -25,6 +28,7 @@ export default function PurchasesPage() {
   const [sortDir, setSortDir] = useState<"ASC" | "DESC">("DESC");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [voidTarget, setVoidTarget] = useState<Purchase | null>(null);
 
   // Shared hook, not an inline useQuery on the same key: the hook sets
   // `retry: 1` because the access gate depends on this query, and an inline copy
@@ -100,7 +104,7 @@ export default function PurchasesPage() {
       header: "Amount",
       sortable: true,
       render: (row: Purchase) => (
-        <span className="font-semibold">{fmtCurrency(row.invoiceAmount)}</span>
+        <VoidedAmount formatted={fmtCurrency(row.invoiceAmount)} purchase={row} />
       ),
     },
     {
@@ -114,15 +118,28 @@ export default function PurchasesPage() {
     {
       key: "actions",
       header: "",
-      className: "w-12",
+      className: "w-24",
       render: (row: Purchase) => (
-        <Link
-          href={`/company/purchases/${row.id}`}
-          aria-label={`View invoice ${row.invoiceNumber}`}
-          className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
-        >
-          <Eye className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            href={`/company/purchases/${row.id}`}
+            aria-label={`View invoice ${row.invoiceNumber}`}
+            className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
+          >
+            <Eye className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          {!isVoided(row) && (
+            <button
+              type="button"
+              onClick={() => setVoidTarget(row)}
+              aria-label={`Void invoice ${row.invoiceNumber}`}
+              title="Void purchase"
+              className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-error-50 hover:text-error-600 transition-colors"
+            >
+              <Ban className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
       ),
     },
   ];
@@ -201,6 +218,8 @@ export default function PurchasesPage() {
           )}
         </>
       )}
+
+      <VoidPurchaseModal purchase={voidTarget} onClose={() => setVoidTarget(null)} />
     </DashboardShell>
   );
 }

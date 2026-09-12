@@ -12,6 +12,7 @@ import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
+import { VoidedAmount } from "@/components/purchases/voided-amount";
 
 export default function CustomerDetailPage({
   params,
@@ -71,7 +72,7 @@ export default function CustomerDetailPage({
       key: "invoiceAmount",
       header: "Amount",
       render: (row: Purchase) => (
-        <span className="font-semibold">{fmtCurrency(row.invoiceAmount)}</span>
+        <VoidedAmount formatted={fmtCurrency(row.invoiceAmount)} purchase={row} />
       ),
     },
     {

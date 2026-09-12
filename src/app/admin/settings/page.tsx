@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, CardHeader, Button, Input, QueryErrorState } from "@/components/ui";
 import { PasswordChangeCard } from "@/components/settings/password-change-card";
+import { LoginEmailCard } from "@/components/settings/login-email-card";
 import { useAppSelector } from "@/store/hooks";
 import { adminService } from "@/services/admin.service";
 import { parseApiError } from "@/lib/errors";
@@ -79,10 +80,6 @@ export default function AdminSettingsPage() {
               <span className="text-sm text-slate-500">Username</span>
               <span className="text-sm font-medium text-slate-800 font-mono">{user?.username ?? "—"}</span>
             </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Email</span>
-              <span className="text-sm font-medium text-slate-800">{user?.email ?? "—"}</span>
-            </div>
             <div className="flex justify-between items-center py-1.5">
               <span className="text-sm text-slate-500">Role</span>
               <span className="text-sm font-medium text-slate-800">
@@ -91,6 +88,8 @@ export default function AdminSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <LoginEmailCard />
 
         <Card>
           <CardHeader>

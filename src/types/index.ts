@@ -238,6 +238,13 @@ export interface Purchase {
   longitude: string | null;
   locationAccuracy: string | null;
   customer?: Customer;
+  /**
+   * Set when the company voided the purchase. A voided purchase stays in the list (so
+   * the record of what was submitted is never lost) but is excluded from totals,
+   * reports and the lucky draw. Optional for the deploy window against an older backend.
+   */
+  voidedAt?: string | null;
+  voidReason?: string | null;
 }
 
 // ─── QR submission ─────────────────────────────────────────
@@ -312,6 +319,31 @@ export interface AdminStats {
   /** Spend per company country, in that country's currency. Optional so the page
    *  still renders against a backend deployed before this field existed. */
   spendByCountry?: { country: string; total: string }[];
+}
+
+/** Landing-page visits, counted once per browser session. */
+export interface VisitorMetrics {
+  today: number;
+  last7Days: number;
+  last30Days: number;
+  total: number;
+}
+
+// ─── Admin audit log ───────────────────────────────────────
+
+export interface AuditLogEntry {
+  id: string;
+  createdAt: string;
+  actorEmail: string | null;
+  /** Machine name, e.g. "company.deactivated" — humanised for display in lib/audit. */
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  note: string | null;
+  /** Snapshots of the changed record. Either may be null (creation, deletion, or an
+   *  action that changed nothing structured). */
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
 }
 
 // ─── API envelope ──────────────────────────────────────────

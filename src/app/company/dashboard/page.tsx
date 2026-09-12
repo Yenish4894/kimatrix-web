@@ -12,6 +12,7 @@ import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { EmailVerificationBanner } from "@/components/billing/email-verification-banner";
 import { TrialBanner } from "@/components/subscription/trial-banner";
+import { VoidedAmount } from "@/components/purchases/voided-amount";
 import { companyService } from "@/services";
 import type { Purchase } from "@/types";
 
@@ -65,7 +66,7 @@ export default function CompanyDashboardPage() {
       key: "invoiceAmount",
       header: "Amount",
       render: (row: Purchase) => (
-        <span className="font-semibold">{fmtCurrency(row.invoiceAmount)}</span>
+        <VoidedAmount formatted={fmtCurrency(row.invoiceAmount)} purchase={row} showReason={false} />
       ),
     },
     {

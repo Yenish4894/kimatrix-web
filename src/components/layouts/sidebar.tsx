@@ -21,7 +21,14 @@ import {
   Tag,
   Gift,
   ReceiptText,
+  ScrollText,
+  LifeBuoy,
+  ExternalLink,
 } from "lucide-react";
+
+// Opens the visitor's mail app rather than a page, so it is rendered apart from the
+// navigation below — a Help item styled like "Settings" would promise a help page.
+const HELP_MAILTO = "mailto:info@kimates.com?subject=KIMates%20support";
 import { cn } from "@/lib/utils";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -70,6 +77,7 @@ const adminNav: NavSection[] = [
       { icon: Tag, label: "Plans & Trial", href: "/admin/plans" },
       { icon: ReceiptText, label: "Payments", href: "/admin/payments" },
       { icon: Mail, label: "Bulk Email", href: "/admin/email" },
+      { icon: ScrollText, label: "Audit log", href: "/admin/audit-log" },
     ],
   },
   {
@@ -216,6 +224,28 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
             </ul>
           </div>
         ))}
+
+        {/* Help — an external mail link, visibly not a page: dashed outline and a
+            trailing external icon, and the accessible name says where it goes. */}
+        <a
+          href={HELP_MAILTO}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "flex items-center gap-3 h-11 rounded-lg border border-dashed border-slate-200 text-slate-500 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-colors",
+            collapsed ? "justify-center px-0" : "px-3",
+          )}
+          title={collapsed ? "Help — email support" : "Email info@kimates.com"}
+          aria-label="Help — email KIMates support (opens your email app)"
+        >
+          <LifeBuoy className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+          {!collapsed && (
+            <>
+              <span className="text-[13px] flex-1">Help</span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            </>
+          )}
+        </a>
       </nav>
 
       {/* Plan status (company only) */}

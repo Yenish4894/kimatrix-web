@@ -12,6 +12,8 @@ interface StatCardProps {
   };
   variant?: "primary" | "accent" | "success";
   className?: string;
+  /** Extra detail under the value — e.g. the visitors card's 7/30-day breakdown. */
+  children?: React.ReactNode;
 }
 
 const orbStyles: Record<NonNullable<StatCardProps["variant"]>, string> = {
@@ -30,6 +32,7 @@ export function StatCard({
   trend,
   variant = "primary",
   className,
+  children,
 }: Readonly<StatCardProps>) {
   return (
     <div
@@ -86,6 +89,7 @@ export function StatCard({
       <p className="relative text-[26px] font-bold text-slate-900 font-heading mt-1 tracking-tight leading-tight">
         {value}
       </p>
+      {children && <div className="relative mt-3">{children}</div>}
     </div>
   );
 }

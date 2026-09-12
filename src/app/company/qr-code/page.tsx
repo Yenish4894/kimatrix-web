@@ -2,7 +2,8 @@
 
 import {useRef, useState} from "react";
 import {QRCodeCanvas} from "qrcode.react";
-import {Download, Copy, Check, Loader2, Pause, Play} from "lucide-react";
+import {Download, Copy, Check, Loader2, Pause, Play, RefreshCw, TriangleAlert} from "lucide-react";
+import {Checkbox} from "@/components/ui";
 import {toast} from "react-toastify";
 
 import {DashboardShell} from "@/components/layouts/dashboard-shell";
@@ -42,6 +43,24 @@ export default function QRCodePage() {
     onSuccess: async (res) => {
       setConfirmPause(false);
       toast.success(res.message);
+      await invalidateCompanyProfile(qc);
+    },
+    onError: (err) => toast.error(parseApiError(err).message),
+  });
+
+  // Regenerating kills every printed poster at once, so it takes two deliberate steps:
+  // open the dialog, then tick that you understand, before the button enables.
+  const [confirmRegen, setConfirmRegen] = useState(false);
+  const [regenUnderstood, setRegenUnderstood] = useState(false);
+  const closeRegen = () => {
+    setConfirmRegen(false);
+    setRegenUnderstood(false);
+  };
+  const regenM = useMutation({
+    mutationFn: () => companyService.regenerateQr(),
+    onSuccess: async () => {
+      closeRegen();
+      toast.success("New QR code created. Download and print your new poster now — the old one no longer works.");
       await invalidateCompanyProfile(qc);
     },
     onError: (err) => toast.error(parseApiError(err).message),
@@ -184,7 +203,83 @@ export default function QRCodePage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Kept apart from the everyday controls above: this is the one action on the
+            page that cannot be taken back. */}
+        <Card className="mt-6 border-error-100">
+          <CardContent className="py-5">
+            <h3 className="text-sm font-semibold text-slate-800">Regenerate QR code</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Only if your code has been misused — for example, shared somewhere it
+              shouldn&apos;t be. Your current code and every printed poster stop working
+              immediately.
+            </p>
+            <Button
+              variant="danger"
+              className="mt-4 w-full sm:w-auto"
+              onClick={() => setConfirmRegen(true)}
+              disabled={!company}
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" /> Regenerate QR code
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+
+      <Modal
+        open={confirmRegen}
+        onClose={closeRegen}
+        title="Regenerate your QR code?"
+        role="alertdialog"
+        footer={
+          <>
+            <Button variant="ghost" onClick={closeRegen} disabled={regenM.isPending}>
+              Keep my current code
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => regenM.mutate()}
+              isLoading={regenM.isPending}
+              disabled={!regenUnderstood || regenM.isPending}
+            >
+              Regenerate now
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4 text-sm">
+          <div className="rounded-lg border border-error-200 bg-error-50 p-4 text-error-800">
+            <p className="flex items-center gap-2 font-semibold">
+              <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+              Your current QR code stops working immediately.
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>
+                <strong>Every printed poster</strong> at your counters stops working the
+                moment you confirm.
+              </li>
+              <li>
+                <strong>Every link you have shared</strong> — on WhatsApp, social media or
+                your website — stops working too.
+              </li>
+              <li>Customers who scan an old poster cannot record purchases.</li>
+            </ul>
+          </div>
+          <p className="text-slate-700">
+            Afterwards you must <strong>download the new poster and print it</strong>, then
+            replace every old poster. This cannot be undone.
+          </p>
+          <p className="text-slate-500">
+            Your customers, purchases and reports are not affected.
+          </p>
+          <Checkbox
+            name="regenUnderstood"
+            checked={regenUnderstood}
+            onChange={(e) => setRegenUnderstood(e.target.checked)}
+            label="I understand my current posters and links will stop working, and I will print the new poster."
+          />
+        </div>
+      </Modal>
 
       <Modal
         open={confirmPause}

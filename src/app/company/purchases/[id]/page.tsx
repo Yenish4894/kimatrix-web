@@ -1,10 +1,10 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft, Receipt, Calendar, Wallet, User, Phone, Car, MapPin, Smartphone, Globe,
+  ArrowLeft, Receipt, Calendar, Wallet, User, Phone, Car, MapPin, Smartphone, Globe, Ban,
 } from "lucide-react";
 
 function parseUserAgent(ua: string): string {
@@ -25,8 +25,10 @@ function parseUserAgent(ua: string): string {
   return "Unknown Device";
 }
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Card, CardContent, CardHeader, Button } from "@/components/ui";
+import { Card, CardContent, CardHeader, Button, Badge } from "@/components/ui";
+import { VoidPurchaseModal } from "@/components/purchases/void-purchase-modal";
 import { formatDateTime } from "@/lib/utils";
+import { isVoided } from "@/lib/void";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { companyService } from "@/services";
@@ -38,6 +40,7 @@ export default function PurchaseDetailPage({
 }>) {
   const { id } = use(params);
   const fmtCurrency = useCurrencyFormatter();
+  const [voiding, setVoiding] = useState(false);
 
   const purchaseQ = useQuery({
     queryKey: ["company", "purchases", id],
@@ -80,6 +83,8 @@ export default function PurchaseDetailPage({
     );
   }
 
+  const voided = isVoided(purchase);
+
   return (
     <DashboardShell title="Purchase Detail" requiredRole="company">
       <div className="max-w-3xl mx-auto">
@@ -94,12 +99,32 @@ export default function PurchaseDetailPage({
             </div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Invoice #</p>
             <p className="text-lg font-mono font-bold text-slate-800 mt-1">{purchase.invoiceNumber}</p>
-            <p className="text-4xl sm:text-5xl font-bold font-heading text-primary-700 mt-4">
+            <p
+              className={
+                voided
+                  ? "text-4xl sm:text-5xl font-bold font-heading text-slate-400 line-through mt-4"
+                  : "text-4xl sm:text-5xl font-bold font-heading text-primary-700 mt-4"
+              }
+            >
               {fmtCurrency(purchase.invoiceAmount)}
+              {voided && <span className="sr-only"> (voided)</span>}
             </p>
+            {voided && <Badge variant="error" className="mt-3">Voided</Badge>}
             <p className="text-sm text-slate-500 mt-2">{formatDateTime(purchase.submittedAt)}</p>
           </CardContent>
         </Card>
+
+        {voided && (
+          <div role="note" className="mb-6 rounded-xl border border-error-100 bg-error-50 p-4 text-sm text-error-800">
+            <p className="font-semibold">
+              Voided{purchase.voidedAt ? ` on ${formatDateTime(purchase.voidedAt)}` : ""}
+            </p>
+            {purchase.voidReason && <p className="mt-1 break-words">Reason: {purchase.voidReason}</p>}
+            <p className="mt-1 text-error-700">
+              Not counted in your totals, reports or the lucky draw.
+            </p>
+          </div>
+        )}
 
         <Card className="mb-6">
           <CardHeader>
@@ -145,7 +170,30 @@ export default function PurchaseDetailPage({
             )}
           </CardContent>
         </Card>
+
+        {/* Last, and set apart: an irreversible action should not sit next to the
+            everyday "View customer profile" link. */}
+        {!voided && (
+          <Card className="mt-6 border-error-100">
+            <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Void this purchase</p>
+                <p className="text-sm text-slate-500">
+                  For a duplicate or mistaken entry. It stays listed as Voided but stops counting.
+                </p>
+              </div>
+              <Button variant="danger" onClick={() => setVoiding(true)} className="shrink-0">
+                <Ban className="h-4 w-4" aria-hidden="true" /> Void purchase
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      <VoidPurchaseModal
+        purchase={voiding ? purchase : null}
+        onClose={() => setVoiding(false)}
+      />
     </DashboardShell>
   );
 }

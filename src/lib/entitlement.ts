@@ -101,6 +101,68 @@ export function formatCountdown(msRemaining: number): Countdown {
   };
 }
 
+// ─── Dashboard countdown banner ─────────────────────────────
+
+export type CountdownBannerKind = "trial" | "paid";
+
+/**
+ * Which countdown, if any, the dashboard banner shows.
+ *
+ * Trials always did. Paid plans now do too, so an owner is not surprised by the paywall
+ * the morning after their plan quietly ran out. Comped accounts get nothing: a comp with
+ * no end date has no deadline to count down to, and one with an end date was granted by
+ * us, so a "Renew" nudge at a customer who never paid would be wrong.
+ */
+export function countdownBannerKind(entitlement: Entitlement | null): CountdownBannerKind | null {
+  if (!entitlement?.accessUntil) return null;
+  if (entitlement.isTrial) return "trial";
+  if (entitlement.isComped || !entitlement.hasAccess) return null;
+  return "paid";
+}
+
+/**
+ * "30 Day Plan" stays as it is; "Starter" becomes "Starter plan"; nothing becomes "plan".
+ * Admins name plans freely, so "Your Starter ends in 3 days" has to be guarded against.
+ */
+export function planDisplayName(name: string | null | undefined): string {
+  const trimmed = name?.trim();
+  if (!trimmed) return "plan";
+  return /\bplan$/i.test(trimmed) ? trimmed : `${trimmed} plan`;
+}
+
+export interface CountdownCopy {
+  before: string;
+  /** The countdown label itself, rendered bold. */
+  emphasis: string;
+  after: string;
+  cta: string;
+  href: string;
+}
+
+/**
+ * The banner's wording.
+ *
+ * `renews` is true for a recurring subscription that is still active: it will charge
+ * again by itself, so "ends in 3 days — Renew" would invite the owner to pay twice.
+ */
+export function countdownCopy(
+  kind: CountdownBannerKind,
+  countdown: Countdown,
+  opts: { planName?: string | null; renews?: boolean } = {},
+): CountdownCopy {
+  const href = "/company/billing";
+  if (kind === "trial") {
+    return countdown.urgency === "urgent"
+      ? { before: "Your free trial ends in ", emphasis: countdown.label, after: ".", cta: "Choose a plan", href }
+      : { before: "Free trial — ", emphasis: countdown.label, after: " remaining.", cta: "Choose a plan", href };
+  }
+  const plan = planDisplayName(opts.planName);
+  if (opts.renews) {
+    return { before: `Your ${plan} renews in `, emphasis: countdown.label, after: ".", cta: "Manage billing", href };
+  }
+  return { before: `Your ${plan} ends in `, emphasis: countdown.label, after: ".", cta: "Renew", href };
+}
+
 /**
  * What the company layout should render. Extracted from the gate component so the
  * whole status matrix can be checked without a DOM.

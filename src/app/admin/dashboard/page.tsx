@@ -4,6 +4,7 @@ import { Building2, Shield, Fuel, Users, Receipt, Wallet, AlertCircle } from "lu
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, QueryErrorState } from "@/components/ui";
+import { VisitorsCard } from "@/components/admin/visitors-card";
 import { ServiceOutageBanner, ServiceStatusPanel, useSystemStatus } from "@/components/admin/service-status";
 import { formatSpendByCurrency } from "@/lib/utils";
 import { adminService } from "@/services";
@@ -84,6 +85,16 @@ export default function AdminDashboardPage() {
       </div>
       </>
       )}
+      {/* Outside the stats branch, with its own query and error state: a failing or
+          not-yet-deployed metrics endpoint must not take the rest of the page with it. */}
+      <div className="mt-6">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          Website Traffic
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+          <VisitorsCard />
+        </div>
+      </div>
       {/* Outside the stats error branch, so a failed stats call still shows health. */}
       <ServiceStatusPanel query={systemQ} />
     </DashboardShell>

@@ -67,6 +67,14 @@ export const companyService = {
     return data;
   },
 
+  // POST /api/company/qr/regenerate — issues a new token; the old one dies immediately.
+  regenerateQr: async () => {
+    const { data } = await api.post<{ data: { qrToken: string; qrUrl: string }; message?: string }>(
+      "/company/qr/regenerate",
+    );
+    return data;
+  },
+
   // GET /api/company/draws — spins, pool size and past winners for the current plan.
   getDraws: async (): Promise<LuckyDrawStatus> => {
     const { data } = await api.get<{ data: LuckyDrawStatus }>("/company/draws");
@@ -114,6 +122,16 @@ export const companyService = {
   getPurchase: async (purchaseId: string) => {
     const { data } = await api.get<{ data: Purchase }>(`/company/purchases/${purchaseId}`);
     return data.data;
+  },
+
+  // POST /api/company/purchases/:id/void — irreversible. The reason (3–500 chars) is
+  // stored on the purchase and shown wherever it is listed.
+  voidPurchase: async (purchaseId: string, reason: string) => {
+    const { data } = await api.post<{ data: { purchase: Purchase }; message?: string }>(
+      `/company/purchases/${purchaseId}/void`,
+      { reason },
+    );
+    return data;
   },
 
 

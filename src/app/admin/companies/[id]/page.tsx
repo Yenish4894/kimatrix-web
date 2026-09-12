@@ -6,8 +6,9 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Building2, Mail, Phone, MessageCircle, MapPin,
-  Calendar, User, Fuel, Store, Power,
+  Calendar, User, Fuel, Store, Power, Send,
 } from "lucide-react";
+import { CompanyRecordsTabs } from "@/components/admin/company-records-tabs";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Card, CardContent, CardHeader, Badge, Button, Modal } from "@/components/ui";
 import { formatDate, formatDateTime, formatAddress } from "@/lib/utils";
@@ -35,6 +36,26 @@ export default function AdminCompanyDetailPage({
   const [confirmModal, setConfirmModal] = useState<"activate" | "deactivate" | null>(null);
   // Required before a ban can be submitted — see the note on the textarea below.
   const [banReason, setBanReason] = useState("");
+
+  const [confirmResend, setConfirmResend] = useState(false);
+
+  const resendM = useMutation({
+    mutationFn: () => adminService.resendInvite(id),
+    onSuccess: (message) => {
+      toast.success(message);
+      setConfirmResend(false);
+    },
+    onError: (err) => {
+      const parsed = parseApiError(err);
+      // 409 = the owner verified since this page loaded. Say so in the server's words
+      // and refresh, so the button disappears instead of inviting a second try.
+      toast.error(parsed.status === 409 ? parsed.message : errorMessageWithId(parsed));
+      if (parsed.status === 409) {
+        setConfirmResend(false);
+        void qc.invalidateQueries({ queryKey: ["admin", "companies", id] });
+      }
+    },
+  });
 
   const companyQ = useQuery({
     queryKey: ["admin", "companies", id],
@@ -221,6 +242,11 @@ export default function AdminCompanyDetailPage({
                       address. You can start one for them with <strong>Grant trial</strong> above.
                     </p>
                   )}
+                  {!company.owner.emailVerifiedAt && (
+                    <Button variant="secondary" size="sm" onClick={() => setConfirmResend(true)}>
+                      <Send className="h-4 w-4" aria-hidden="true" /> Resend invite
+                    </Button>
+                  )}
                   {company.owner.lastLoginAt && (
                     <Detail icon={Calendar} label="Last Login" value={formatDateTime(company.owner.lastLoginAt)} />
                   )}
@@ -231,7 +257,32 @@ export default function AdminCompanyDetailPage({
             </CardContent>
           </Card>
         </div>
+
+        {/* Read-only customers, purchases, draws and audit trail — what support needs
+            to answer "what does this owner see?" without signing in as them. */}
+        <CompanyRecordsTabs company={company} />
       </div>
+
+      <Modal
+        open={confirmResend}
+        onClose={() => setConfirmResend(false)}
+        title="Resend invite?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmResend(false)}>Cancel</Button>
+            <Button onClick={() => resendM.mutate()} isLoading={resendM.isPending}>
+              <Send className="h-4 w-4" aria-hidden="true" /> Send invite
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">
+          We&apos;ll email a fresh invite to{" "}
+          <strong className="break-all text-slate-800">{company.owner?.email ?? "the owner"}</strong>{" "}
+          so they can confirm the address and sign in.
+        </p>
+      </Modal>
 
       {confirmModal && (
         <Modal

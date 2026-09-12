@@ -3,3 +3,4 @@ export { companyService } from "./company.service";
 export { adminService } from "./admin.service";
 export { qrService } from "./qr.service";
 export { paymentService } from "./payment.service";
+export { metricsService } from "./metrics.service";

@@ -10,6 +10,7 @@ import {Card, CardContent, CardHeader, Input, Button, Badge, Checkbox} from "@/c
 import {CountrySelect, StateSelect, CityInput} from "@/components/ui/country-state-select";
 import {PhoneInput, validatePhoneForCountry} from "@/components/ui/phone-input";
 import {PasswordChangeCard} from "@/components/settings/password-change-card";
+import {LoginEmailCard} from "@/components/settings/login-email-card";
 import { DeleteAccountCard } from "@/components/settings/delete-account-card";
 import {ExportDataCard} from "@/components/subscription/export-data-card";
 import {formatDate} from "@/lib/utils";
@@ -366,10 +367,6 @@ export default function CompanySettingsPage() {
               <span className="text-sm font-medium text-slate-800 font-mono">{user?.username ?? "—"}</span>
             </div>
             <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Login Email</span>
-              <span className="text-sm font-medium text-slate-800">{user?.email ?? "—"}</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
               <span className="text-sm text-slate-500">Status</span>
               {company && (
                 <Badge variant={company.isActive ? "success" : "error"}>
@@ -385,6 +382,9 @@ export default function CompanySettingsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* The login email lives in its own card now that it can be changed. */}
+        <LoginEmailCard />
 
         {/* Data export — reachable at ?export=1, which is where the paywall's
             "Download my data" button and both expiry emails point. */}

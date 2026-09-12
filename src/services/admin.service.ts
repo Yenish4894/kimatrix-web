@@ -1,6 +1,17 @@
 import api from "@/lib/api";
 import { downloadFile } from "@/lib/download";
-import type { AdminPayment, AdminPlan, AdminStats, BulkEmailLog, Company, CreateCompanyPayload, CreateCompanyResult, PaginatedResponse, PaymentKind, PaymentStatus, PlatformSettings, SystemStatus } from "@/types";
+import type { AdminPayment, AdminPlan, AdminStats, AuditLogEntry, BulkEmailLog, Company, CreateCompanyPayload, CreateCompanyResult, Customer, LuckyDrawHistoryItem, PaginatedResponse, PaymentKind, PaymentStatus, PlatformSettings, Purchase, SystemStatus, VisitorMetrics } from "@/types";
+
+export interface AuditLogParams {
+  page?: number;
+  limit?: number;
+  companyId?: string;
+  /** Free text matched against the action name. */
+  action?: string;
+  /** ISO instants — the caller converts picked local days (see lib/dates). */
+  from?: string;
+  to?: string;
+}
 
 export interface AdminPaymentsParams {
   page?: number;
@@ -27,6 +38,62 @@ export const adminService = {
   getStats: async () => {
     const { data } = await api.get<{ data: AdminStats }>("/admin/stats");
     return data.data;
+  },
+
+  // GET /api/metrics/visitors — landing-page visits.
+  getVisitorMetrics: async () => {
+    const { data } = await api.get<{ data: VisitorMetrics }>("/metrics/visitors");
+    return data.data;
+  },
+
+  // GET /api/admin/audit-log — every admin/company action that was recorded.
+  getAuditLog: async (params: AuditLogParams = {}) => {
+    const { data } = await api.get<{ data: PaginatedResponse<AuditLogEntry> }>(
+      "/admin/audit-log",
+      { params },
+    );
+    return data.data;
+  },
+
+  // ─── Read-only views of one company's records ────────────────
+  // Support needs to see what the owner sees without logging in as them.
+
+  getCompanyCustomers: async (
+    companyId: string,
+    params: { page?: number; limit?: number; search?: string } = {},
+  ) => {
+    const { data } = await api.get<{ data: PaginatedResponse<Customer> }>(
+      `/admin/companies/${companyId}/customers`,
+      { params },
+    );
+    return data.data;
+  },
+
+  getCompanyPurchases: async (
+    companyId: string,
+    params: { page?: number; limit?: number; from?: string; to?: string } = {},
+  ) => {
+    const { data } = await api.get<{ data: PaginatedResponse<Purchase> }>(
+      `/admin/companies/${companyId}/purchases`,
+      { params },
+    );
+    return data.data;
+  },
+
+  getCompanyDraws: async (companyId: string): Promise<LuckyDrawHistoryItem[]> => {
+    const { data } = await api.get<{ data: { history?: LuckyDrawHistoryItem[] } }>(
+      `/admin/companies/${companyId}/draws`,
+    );
+    // Defensive: a company that never drew may come back without the array at all.
+    return data.data?.history ?? [];
+  },
+
+  // POST /api/admin/companies/:id/resend-invite — 409 once the owner has verified.
+  resendInvite: async (companyId: string): Promise<string> => {
+    const { data } = await api.post<{ data?: { message?: string }; message?: string }>(
+      `/admin/companies/${companyId}/resend-invite`,
+    );
+    return data.data?.message ?? data.message ?? "Invite sent.";
   },
 
   // GET /api/admin/system-status

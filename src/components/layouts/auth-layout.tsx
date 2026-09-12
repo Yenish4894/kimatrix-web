@@ -12,6 +12,13 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle: string;
+  /**
+   * Whether a signed-in visitor is sent to their dashboard. True for login/register,
+   * where a session makes the page pointless. False for link-landing pages whose result
+   * a signed-in user must actually see — the email-change confirmation is opened by
+   * exactly the person who is signed in, and bouncing them hid the outcome.
+   */
+  redirectIfAuthenticated?: boolean;
 }
 
 const features = [
@@ -27,7 +34,12 @@ const recentPurchases = [
   { initials: "OH", name: "Omar Hassan",  amount: "8,500",  time: "1h ago"  },
 ];
 
-export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutProps>) {
+export function AuthLayout({
+  children,
+  title,
+  subtitle,
+  redirectIfAuthenticated = true,
+}: Readonly<AuthLayoutProps>) {
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -39,12 +51,12 @@ export function AuthLayout({ children, title, subtitle }: Readonly<AuthLayoutPro
   }, []);
 
   useEffect(() => {
-    if (!hasCheckedSession || !isAuthenticated || !user) return;
+    if (!redirectIfAuthenticated || !hasCheckedSession || !isAuthenticated || !user) return;
     const target = user.userType === "super_admin" ? "/admin/dashboard" : "/company/dashboard";
     router.replace(target);
-  }, [hasCheckedSession, isAuthenticated, user, router]);
+  }, [redirectIfAuthenticated, hasCheckedSession, isAuthenticated, user, router]);
 
-  if (!hasCheckedSession || isAuthenticated) {
+  if (!hasCheckedSession || (redirectIfAuthenticated && isAuthenticated)) {
     return <PageLoader />;
   }
 

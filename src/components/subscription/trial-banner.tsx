@@ -2,26 +2,49 @@
 
 import Link from "next/link";
 import { Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useCountdown, useEntitlement } from "@/hooks/useEntitlement";
+import { countdownBannerKind, countdownCopy } from "@/lib/entitlement";
+import { paymentService } from "@/services/payment.service";
 
 /**
- * The live trial countdown.
+ * The live access countdown on the dashboard — for a free trial, and for a paid plan.
  *
- * Renders nothing outside a trial, and nothing for a comped account — a comped company
- * has `accessUntil = null` (perpetual) and telling it about a deadline that does not
- * exist would be a lie.
+ * It used to cover trials only, so a paying owner met the paywall with no warning the
+ * morning their plan ran out. Still renders nothing for a comped account: a comp with
+ * no end date has no deadline, and a "Renew" nudge at a customer we gave free access to
+ * would be wrong. The decision and the wording live in lib/entitlement (tested there).
  *
  * The countdown switches from days to hours inside the last two days. A "1 day left"
  * label that sits unchanged for a full 24 hours tells the customer nothing about
- * whether to act now or tomorrow, and a 7-day trial spends its most important stretch
- * inside that window.
+ * whether to act now or tomorrow.
  */
 export function TrialBanner() {
-  const { entitlement } = useEntitlement();
-  const countdown = useCountdown(entitlement?.accessUntil ?? null);
+  const { entitlement, profile } = useEntitlement();
+  const kind = countdownBannerKind(entitlement);
+  const countdown = useCountdown(kind ? entitlement?.accessUntil ?? null : null);
 
-  if (!entitlement?.isTrial || !countdown || countdown.expired) return null;
+  // A recurring subscription renews itself; "ends in 3 days — Renew" would invite the
+  // owner to pay twice. Only asked when it can matter, and shares the billing page's
+  // cache entry.
+  const mayRenew = kind === "paid" && profile?.currentPlan?.isRecurring === true;
+  const subQ = useQuery({
+    queryKey: ["subscription", "status"],
+    queryFn: paymentService.getSubscriptionStatus,
+    enabled: mayRenew,
+    retry: false,
+  });
+
+  if (!kind || !countdown || countdown.expired) return null;
+  // Wait for the answer rather than flash "Renew" and then swap to "renews". A failed
+  // lookup falls through to the plain "ends in" wording, which is never harmful.
+  if (mayRenew && subQ.isPending) return null;
+
+  const copy = countdownCopy(kind, countdown, {
+    planName: profile?.currentPlan?.name,
+    renews: mayRenew && subQ.data?.status === "active",
+  });
 
   const tone = {
     calm: "bg-primary-50 border-primary-200 text-primary-900",
@@ -48,16 +71,16 @@ export function TrialBanner() {
       <div className="flex items-center gap-2.5">
         <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
         <p className="text-sm font-medium">
-          {countdown.urgency === "urgent" ? "Your free trial ends in " : "Free trial — "}
-          <span className="font-semibold">{countdown.label}</span>
-          {countdown.urgency === "urgent" ? "." : " remaining."}
+          {copy.before}
+          <span className="font-semibold">{copy.emphasis}</span>
+          {copy.after}
         </p>
       </div>
       <Link
-        href="/company/billing"
+        href={copy.href}
         className={cn("text-sm font-semibold underline underline-offset-2", linkTone)}
       >
-        Choose a plan
+        {copy.cta}
       </Link>
     </div>
   );

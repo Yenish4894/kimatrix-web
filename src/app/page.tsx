@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { paymentService } from "@/services/payment.service";
+import { recordLandingVisitOnce } from "@/services/metrics.service";
 import type { SubscriptionPlan } from "@/types";
 
 /* ─── Feature Carousel Data ──────────────────────── */
@@ -76,6 +77,12 @@ function FeatureGrid() {
 export default function HomePage() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
+
+  // Landing-page visitor count. Here and nowhere else: this page is the front door,
+  // and counting app routes would mostly count the same signed-in owners over and over.
+  useEffect(() => {
+    recordLandingVisitOnce();
+  }, []);
 
   useEffect(() => {
     paymentService.getPlans()

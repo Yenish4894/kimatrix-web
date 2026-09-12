@@ -101,6 +101,30 @@ export const authService = {
     await publicApi.post("/auth/email-verification/confirm", { token });
   },
 
+  // POST /api/auth/email-change/request — authenticated. Sends a confirmation link to
+  // the NEW address; nothing changes until that link is opened.
+  requestEmailChange: async (payload: { newEmail: string; currentPassword: string }) => {
+    const { data } = await api.post<{ data?: { message?: string }; message?: string }>(
+      "/auth/email-change/request",
+      payload,
+    );
+    return data.data?.message ?? data.message ?? "Check your new inbox to confirm.";
+  },
+
+  // POST /api/auth/email-change/confirm — public, via `publicApi` for the same reason
+  // as email verification above: the link may be opened in a browser with an expired
+  // session, and a refused token must read as "link invalid", not as a logout.
+  confirmEmailChange: async (token: string): Promise<{ message: string; email: string | null }> => {
+    const { data } = await publicApi.post<{
+      data?: { message?: string; email?: string };
+      message?: string;
+    }>("/auth/email-change/confirm", { token });
+    return {
+      message: data.data?.message ?? data.message ?? "Your login email has been changed.",
+      email: data.data?.email ?? null,
+    };
+  },
+
   // POST /api/auth/email-verification/resend — authenticated, so it takes no email
   // and cannot be used to probe which addresses exist. Rate limited server-side.
   resendEmailVerification: async () => {
