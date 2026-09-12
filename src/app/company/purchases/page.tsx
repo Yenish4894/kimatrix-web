@@ -8,6 +8,7 @@ import { Search, Eye, Calendar } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Table, Pagination, Input, QueryErrorState } from "@/components/ui";
 import { formatDateTime } from "@/lib/utils";
+import { endOfLocalDayIso, startOfLocalDayIso } from "@/lib/dates";
 import { PAGE_SIZE, formatPageRange } from "@/lib/pagination";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -43,8 +44,12 @@ export default function PurchasesPage() {
         page: currentPage,
         limit: PAGE_SIZE,
         search: debouncedSearch || undefined,
-        from: fromDate || undefined,
-        to: toDate || undefined,
+        // The inputs hold bare dates, which the server reads as UTC midnight and
+        // compares with `<=`: the whole end day was dropped (a single-day filter
+        // returned nothing) and the start began at 02:00 / 05:30 local. Send the
+        // user's local day boundaries as instants instead.
+        from: fromDate ? startOfLocalDayIso(fromDate) : undefined,
+        to: toDate ? endOfLocalDayIso(toDate) : undefined,
         sortBy: sortKey,
         sortOrder: sortDir,
       }),

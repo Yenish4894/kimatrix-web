@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Pagination, Input, Button, Card, CardContent, CardHeader, QueryErrorState } from "@/components/ui";
+import { Pagination, Input, Button, Card, CardContent, CardHeader, QueryErrorState, Modal } from "@/components/ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   ATTACHMENT_ACCEPT,
@@ -40,6 +40,8 @@ export default function AdminBulkEmailPage() {
   const [attachmentIssue, setAttachmentIssue] = useState<string | null>(null);
   const [uploadPercent, setUploadPercent] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [confirmSend, setConfirmSend] = useState(false);
 
   const [logsPage, setLogsPage] = useState(1);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export default function AdminBulkEmailPage() {
         extraEmails,
       }),
     onSuccess: (res) => {
+      setConfirmSend(false);
       toast.success(res.message ?? `Email queued for ${res.data.recipientCount} recipient(s).`);
       setSubject("");
       clearAttachment();
@@ -285,12 +288,13 @@ export default function AdminBulkEmailPage() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
-              <Input placeholder="Email subject..." value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={255} />
+              <label htmlFor="bulk-email-subject" className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+              <Input id="bulk-email-subject" placeholder="Email subject..." value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={255} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+              <label htmlFor="bulk-email-body" className="block text-sm font-medium text-slate-700 mb-1">Body</label>
               <textarea
+                id="bulk-email-body"
                 className="w-full min-h-[160px] rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
                 placeholder="Write your message here..."
                 value={body}
@@ -301,7 +305,7 @@ export default function AdminBulkEmailPage() {
             </div>
             {/* ── Attachment ── */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="bulk-email-attachment" className="block text-sm font-medium text-slate-700 mb-1">
                 Attachment <span className="font-normal text-slate-400">(optional)</span>
               </label>
 
@@ -339,6 +343,7 @@ export default function AdminBulkEmailPage() {
               )}
 
               <input
+                id="bulk-email-attachment"
                 ref={fileInputRef}
                 type="file"
                 className="sr-only"
@@ -394,13 +399,15 @@ export default function AdminBulkEmailPage() {
                     {optedOutSelected > 0 && (
                       <span className="block mt-1 text-warning-700">
                         {optedOutSelected} of the selected companies turned off promotional
-                        email. Sending anyway will still reach them.
+                        email and will be skipped.
                       </span>
                     )}
                   </>
                 )}
               </div>
-              <Button variant="primary" onClick={() => sendMut.mutate()} isLoading={sendMut.isPending} disabled={!canSend}>
+              {/* Opens a confirmation rather than sending: one click used to email every
+                  selected company, and a bulk send cannot be recalled. */}
+              <Button variant="primary" onClick={() => setConfirmSend(true)} isLoading={sendMut.isPending} disabled={!canSend}>
                 <Send className="h-4 w-4 mr-2" aria-hidden="true" />
                 Send Email
               </Button>
@@ -437,6 +444,52 @@ export default function AdminBulkEmailPage() {
         </Card>
 
       </div>
+
+      <Modal
+        open={confirmSend}
+        onClose={() => { if (!sendMut.isPending) setConfirmSend(false); }}
+        title="Send this email?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmSend(false)} disabled={sendMut.isPending}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={() => sendMut.mutate()} isLoading={sendMut.isPending}>
+              <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+              Send now
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-sm text-slate-600">
+          <p>
+            <span className="font-medium text-slate-700">Subject:</span>{" "}
+            <span className="break-words">{subject.trim()}</span>
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            {selectedIds.size > 0 && (
+              <li>
+                {selectedIds.size} compan{selectedIds.size === 1 ? "y" : "ies"}
+              </li>
+            )}
+            {extraEmails.length > 0 && (
+              <li>
+                {extraEmails.length} other address{extraEmails.length === 1 ? "" : "es"}
+              </li>
+            )}
+            {attachment && <li>With attachment {attachment.name}</li>}
+          </ul>
+          {selectedIds.size > 0 && (
+            <p className="text-warning-700">
+              Companies that opted out of promotional email will be skipped
+              {/* Only the loaded page can be counted — see optedOutSelected. */}
+              {optedOutSelected > 0 ? ` (at least ${optedOutSelected} of those selected)` : ""}.
+            </p>
+          )}
+          <p>This cannot be undone once sent.</p>
+        </div>
+      </Modal>
     </DashboardShell>
   );
 }

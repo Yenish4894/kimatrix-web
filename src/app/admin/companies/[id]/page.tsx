@@ -236,7 +236,9 @@ export default function AdminCompanyDetailPage({
       {confirmModal && (
         <Modal
           open={true}
-          onClose={() => setConfirmModal(null)}
+          // Escape and the X close through here, not through Cancel — clear the reason
+          // on every path or it survives into the next ban dialog.
+          onClose={() => { setConfirmModal(null); setBanReason(""); }}
           title={`${TOGGLE_LABEL[confirmModal]} — ${company.name}`}
           footer={
             <>

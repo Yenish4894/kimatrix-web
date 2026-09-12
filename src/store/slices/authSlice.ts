@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/tool
 import type { AuthState, AuthUser, BusinessType, RegistrationFormData, LoginFormData } from "@/types";
 import { TokenStorage } from "@/lib/tokens";
 import { authService } from "@/services";
+import { getQueryClient } from "@/lib/query-client";
+import { clearCompany } from "./companySlice";
 
 const initialState: AuthState = {
   user: null,
@@ -44,7 +46,7 @@ export const registerCompany = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk("auth/logout", async () => {
+export const logout = createAsyncThunk("auth/logout", async (_, { dispatch }) => {
   const refreshToken = TokenStorage.getRefreshToken();
   if (refreshToken) {
     // Fire and forget — always clear client state regardless
@@ -55,6 +57,10 @@ export const logout = createAsyncThunk("auth/logout", async () => {
     }
   }
   TokenStorage.clear();
+  // Query keys are not user-scoped, so without this the next account to sign in on
+  // this tab briefly sees the previous account's profile, purchases and plans.
+  dispatch(clearCompany());
+  getQueryClient().clear();
 });
 
 // Restore session from localStorage on app boot

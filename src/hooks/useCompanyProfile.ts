@@ -36,11 +36,16 @@ export function useCompanyProfile() {
   // surface, and the rule is a property of the endpoint, not of any one component.
   const isSuperAdmin =
     useAppSelector((state) => state.auth.user?.userType) === "super_admin";
+  // Also off while signed out. Logout empties the query cache, and the company layout
+  // stays mounted through it; an enabled observer would immediately refetch with no
+  // token, fail the refresh, and toast "Your session has ended" at someone who just
+  // logged out on purpose.
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
   return useQuery<CompanyProfile>({
     queryKey: COMPANY_PROFILE_KEY,
     queryFn: companyService.getProfile,
-    enabled: !isSuperAdmin,
+    enabled: isAuthenticated && !isSuperAdmin,
     // The gate depends on this, so a failure must surface rather than retry forever.
     retry: 1,
   });

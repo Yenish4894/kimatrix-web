@@ -25,25 +25,37 @@ jobs:
             echo ">>> Pulling latest code..."
             git pull origin main
 
+            # `npm ci`: exactly the lockfile, and a hard failure if it disagrees with
+            # package.json, rather than resolving different versions than were tested.
             echo ">>> Installing dependencies..."
-            npm install --production=false
+            npm ci --include=dev
 
-            # Clear previous build output so a deleted route or chunk can't linger.
-            # `.next/cache` is deliberately preserved — it holds the incremental
-            # compiler cache, and removing it turns every deploy into a cold build.
-            echo ">>> Cleaning stale build output..."
+            # Clear previous build output so a deleted route or chunk can't linger, but
+            # keep it aside rather than deleting it: a failed build used to leave the
+            # site with no build at all. `.next/cache` stays in place — it holds the
+            # incremental compiler cache, and removing it makes every deploy a cold build.
+            echo ">>> Keeping the previous build..."
+            rm -rf .next.prev
+            mkdir -p .next .next.prev
+            find .next -mindepth 1 -maxdepth 1 ! -name cache -exec cp -a {} .next.prev/ \;
             find .next -mindepth 1 -maxdepth 1 ! -name cache -exec rm -rf {} + 2>/dev/null || true
 
             echo ">>> Building..."
-            npm run build
+            if ! npm run build; then
+              echo ">>> Build failed — restoring the previous build"
+              find .next -mindepth 1 -maxdepth 1 ! -name cache -exec rm -rf {} + 2>/dev/null || true
+              cp -a .next.prev/. .next/
+              exit 1
+            fi
 
             echo ">>> Restarting frontend..."
             pm2 restart kimatrix-web
 
-            echo ">>> Waiting for startup..."
-            sleep 5
-
             echo ">>> Health check..."
-            curl -sf --retry 5 --retry-delay 2 http://127.0.0.1:3000 -o /dev/null || (pm2 logs kimatrix-web --lines 20 --nostream && exit 1)
+            if ! curl -sf --retry 10 --retry-delay 3 --retry-all-errors http://127.0.0.1:3000 -o /dev/null; then
+              pm2 logs kimatrix-web --lines 40 --nostream
+              exit 1
+            fi
 
+            rm -rf .next.prev
             echo ">>> Deploy complete!"

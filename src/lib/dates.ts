@@ -9,6 +9,18 @@
  * saved and what is shown — is what makes the date the admin picked the date they see.
  */
 
+/**
+ * "2027-03-15" → the first millisecond of that day in the viewer's timezone, as ISO.
+ *
+ * For date-range filters. Sending the bare "2027-03-15" makes the server read UTC
+ * midnight, which in South Africa or India is already 02:00 / 05:30 local — the start
+ * of the user's day was cut off.
+ */
+export function startOfLocalDayIso(ymd: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y!, m! - 1, d!, 0, 0, 0, 0).toISOString();
+}
+
 /** "2027-03-15" → the last millisecond of that day in the viewer's timezone, as ISO. */
 export function endOfLocalDayIso(ymd: string): string {
   const [y, m, d] = ymd.split("-").map(Number);

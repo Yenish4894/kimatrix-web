@@ -450,16 +450,9 @@ export default function QRSubmissionPage({
               {success.fullName}, your purchase of{" "}
               <strong className="text-slate-700">{formatCurrency(success.amount, company?.country ?? "")}</strong> has been recorded.
             </p>
-            <div className="mt-6 bg-primary-50 rounded-xl p-4 border border-primary-100">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Your Total Spend Here</p>
-              <p className="text-2xl sm:text-3xl font-bold font-heading text-primary-700 mt-1">
-                {formatCurrency(success.customerTotalInvoiceAmount, company?.country ?? "")}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">
-                {success.customerSubmissionCount} purchase
-                {success.customerSubmissionCount > 1 ? "s" : ""} recorded
-              </p>
-            </div>
+            {/* No running total here any more: this page is public, and showing a
+                customer's total spend to whoever typed their mobile number disclosed
+                it to anyone who knew the number. */}
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6">

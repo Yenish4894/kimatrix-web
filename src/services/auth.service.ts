@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api, { publicApi } from "@/lib/api";
 import type {
   AuthUser,
   AuthTokens,
@@ -92,8 +92,13 @@ export const authService = {
 
   // POST /api/auth/email-verification/confirm — public; the link is opened from an
   // inbox, possibly in a browser with no session.
+  //
+  // Through `publicApi`, not `api`: an invalid or expired link answers 401, and the
+  // shared interceptor read that as an expired session — it tried a refresh, logged a
+  // signed-in user out, and the page showed a generic error instead of "link no
+  // longer valid". The token in the body is the credential here, not a Bearer.
   confirmEmailVerification: async (token: string) => {
-    await api.post("/auth/email-verification/confirm", { token });
+    await publicApi.post("/auth/email-verification/confirm", { token });
   },
 
   // POST /api/auth/email-verification/resend — authenticated, so it takes no email

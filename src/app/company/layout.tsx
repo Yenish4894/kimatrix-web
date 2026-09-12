@@ -15,7 +15,8 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
   const router = useRouter();
   const pathname = usePathname();
 
-  const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
+  const isSuperAdmin = user?.userType === "super_admin";
   const [sessionChecked, setSessionChecked] = useState(false);
 
   // Restore session from localStorage once.
@@ -41,8 +42,15 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
   // page's queries had already gone out and 403'd on the way.
   useEffect(() => {
     if (!sessionChecked) return;
-    if (!isAuthenticated) router.replace("/login");
-  }, [sessionChecked, isAuthenticated, router]);
+    if (!isAuthenticated) {
+      router.replace("/login");
+      return;
+    }
+    // The mirror of admin/layout.tsx. A super admin has no company: the profile query
+    // is disabled for them, so without this the layout waited on an entitlement that
+    // could never arrive and showed "Loading..." forever on any /company/* URL.
+    if (isSuperAdmin) router.replace("/admin/dashboard");
+  }, [sessionChecked, isAuthenticated, isSuperAdmin, router]);
 
   // Only an authorization failure means "not subscribed". Treating every failure as one
   // told customers with an active paid subscription to pay again — a 500, a CORS

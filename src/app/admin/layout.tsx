@@ -32,6 +32,9 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
     if (!sessionChecked) return;
 
     if (!isAuthenticated) {
+      // Close the gate again on logout, so admin pages unmount before the emptied
+      // query cache could make them refetch without a session.
+      setGatePassed(false);
       router.replace("/login");
       return;
     }

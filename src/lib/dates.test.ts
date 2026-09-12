@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
-import { endOfLocalDayIso, toLocalDateInput } from "@/lib/dates";
+import { endOfLocalDayIso, startOfLocalDayIso, toLocalDateInput } from "@/lib/dates";
 import { formatDate } from "@/lib/utils";
 
 /**
@@ -42,5 +42,36 @@ describe("comp end dates", () => {
     process.env.TZ = "Asia/Kolkata";
     assert.equal(toLocalDateInput(endOfLocalDayIso("2026-12-31")), "2026-12-31");
     assert.equal(toLocalDateInput(endOfLocalDayIso("2028-02-29")), "2028-02-29");
+  });
+});
+
+describe("date range filters", () => {
+  for (const tz of ZONES) {
+    it(`starts at local midnight of the chosen day (${tz})`, () => {
+      process.env.TZ = tz;
+      const start = new Date(startOfLocalDayIso("2027-03-15"));
+      assert.equal(toLocalDateInput(start), "2027-03-15");
+      assert.equal(start.getHours(), 0);
+      assert.equal(start.getMinutes(), 0);
+      // One millisecond earlier is the previous local day — nothing of the 15th is cut.
+      assert.equal(toLocalDateInput(new Date(start.getTime() - 1)), "2027-03-14");
+    });
+
+    it(`a single-day range covers the whole local day (${tz})`, () => {
+      process.env.TZ = tz;
+      // The bug: from=to=the same bare date matched only one instant, so it returned
+      // nothing. A purchase at 23:30 local must fall inside the range.
+      const from = new Date(startOfLocalDayIso("2027-03-15")).getTime();
+      const to = new Date(endOfLocalDayIso("2027-03-15")).getTime();
+      const lateEvening = new Date(2027, 2, 15, 23, 30).getTime();
+      assert.ok(from <= lateEvening && lateEvening <= to);
+      assert.equal(to - from, 24 * 60 * 60 * 1000 - 1);
+    });
+  }
+
+  it("handles month and year boundaries", () => {
+    process.env.TZ = "Africa/Johannesburg";
+    assert.equal(toLocalDateInput(startOfLocalDayIso("2027-01-01")), "2027-01-01");
+    assert.equal(toLocalDateInput(startOfLocalDayIso("2028-02-29")), "2028-02-29");
   });
 });

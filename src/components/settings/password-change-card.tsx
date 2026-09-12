@@ -10,6 +10,8 @@ import { authService } from "@/services";
 import { TokenStorage } from "@/lib/tokens";
 import { useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/authSlice";
+import { clearCompany } from "@/store/slices/companySlice";
+import { getQueryClient } from "@/lib/query-client";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 
 const schema = Joi.object({
@@ -71,6 +73,10 @@ export function PasswordChangeCard() {
       // BE revoked all refresh tokens — clear local state and route to login
       TokenStorage.clear();
       dispatch(clearAuth());
+      // The next sign-in on this tab may be a different account; nothing cached for
+      // this one may carry over to it.
+      dispatch(clearCompany());
+      getQueryClient().clear();
       router.replace("/login");
     } catch (err) {
       const parsed = parseApiError(err);

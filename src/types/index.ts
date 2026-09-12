@@ -280,8 +280,6 @@ export interface QRSubmissionPayload {
 export interface QRSubmissionResponse {
   purchaseId: string;
   customerId: string;
-  customerTotalInvoiceAmount: string;
-  customerSubmissionCount: number;
   submittedAt: string;
 }
 

@@ -32,6 +32,9 @@ function VerifyEmailInner() {
     } catch (err) {
       const parsed = parseApiError(err);
       if (parsed.status === 401 || parsed.status === 400) {
+        // The server's own wording ("This verification link is invalid or has
+        // expired.") — it knows why the link was refused; the static copy is a fallback.
+        setMessage(parsed.message);
         setStatus("invalid");
       } else {
         setStatus("error");
@@ -100,8 +103,8 @@ function VerifyEmailInner() {
             <AlertTriangle className="h-8 w-8 text-error-500" />
           </div>
           <p className="text-slate-600">
-            This link has expired or has already been used. Log in and we&apos;ll send you a
-            fresh one.
+            {message || "This link has expired or has already been used."} Log in and
+            we&apos;ll send you a fresh one.
           </p>
           <Link href="/login" className="inline-block">
             <Button variant="primary" className="mt-2">

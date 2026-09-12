@@ -75,12 +75,24 @@ export function Modal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
+  // onClose and dismissible live in refs so the keydown handler — and with it the
+  // open effect below — never changes identity. Callers pass an inline `onClose`, so
+  // depending on it re-ran the effect on every parent render: each keystroke in a
+  // field inside the dialog re-focused the first focusable element (the header Close
+  // button), and typing a ban reason lost focus after one character.
+  const onCloseRef = useRef(onClose);
+  const dismissibleRef = useRef(dismissible);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    dismissibleRef.current = dismissible;
+  }, [onClose, dismissible]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         // The focus trap below still runs when non-dismissible: the dialog stays
         // keyboard-navigable, it just cannot be escaped out of.
-        if (dismissible) onClose();
+        if (dismissibleRef.current) onCloseRef.current();
         return;
       }
       // Focus trap on Tab: cycle focus within the dialog
@@ -100,7 +112,7 @@ export function Modal({
         }
       }
     },
-    [onClose, dismissible]
+    []
   );
 
   useEffect(() => {
