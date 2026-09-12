@@ -83,6 +83,9 @@ export interface PlatformSettings {
   trialDurationDays: number;
   platformCurrency: string;
   spinAddonPriceUsd: number;
+  /** Free lucky draw spins every running trial gets. Optional only while a backend
+   *  without it may still be live during a deploy. */
+  trialDrawSpins?: number;
 }
 
 /** What the admin onboarding form submits. Mirrors public registration minus the
