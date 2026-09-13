@@ -394,6 +394,10 @@ export interface RegistrationFormData {
   confirmPassword: string;
   promoEmailOptIn: boolean;
   termsAccepted: boolean;
+  /** Honeypot — hidden from humans, must be sent empty. */
+  website?: string;
+  /** Cloudflare Turnstile token; only sent when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set. */
+  turnstileToken?: string;
 }
 
 export interface LoginFormData {

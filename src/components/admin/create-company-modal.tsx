@@ -7,6 +7,7 @@ import { Gift } from "lucide-react";
 import { Button, Input, Modal, Select } from "@/components/ui";
 import { adminService } from "@/services/admin.service";
 import { parseApiError, fieldErrorsFromDetails } from "@/lib/errors";
+import { EmailSuggestion, useEmailSuggestion } from "@/components/ui/email-suggestion";
 import type { CreateCompanyPayload } from "@/types";
 import { endOfLocalDayIso, toLocalDateInput } from "@/lib/dates";
 
@@ -56,6 +57,9 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => (e[key] ? { ...e, [key]: "" } : e));
   };
+
+  const contactEmailHint = useEmailSuggestion(set("contactEmail"));
+  const loginEmailHint = useEmailSuggestion(set("email"));
 
   const createM = useMutation({
     mutationFn: async () => {
@@ -212,13 +216,18 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
             Contact
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="Contact email"
-              type="email"
-              value={form.contactEmail}
-              onChange={(e) => set("contactEmail")(e.target.value)}
-              error={errors["contactEmail"]}
-            />
+            <div>
+              <Input
+                ref={contactEmailHint.inputRef}
+                label="Contact email"
+                type="email"
+                value={form.contactEmail}
+                onChange={(e) => { set("contactEmail")(e.target.value); contactEmailHint.reset(); }}
+                onBlur={(e) => contactEmailHint.check(e.target.value)}
+                error={errors["contactEmail"]}
+              />
+              <EmailSuggestion suggestion={contactEmailHint.suggestion} error={errors["contactEmail"]} onApply={contactEmailHint.apply} />
+            </div>
             <Input
               label="Contact phone"
               value={form.contactPhone}
@@ -240,14 +249,19 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Owner login
           </h3>
-          <Input
-            label="Login email"
-            type="email"
-            value={form.email}
-            onChange={(e) => set("email")(e.target.value)}
-            error={errors["email"]}
-            helperText="The invite link is sent here. It can be the same as the contact email."
-          />
+          <div>
+            <Input
+              ref={loginEmailHint.inputRef}
+              label="Login email"
+              type="email"
+              value={form.email}
+              onChange={(e) => { set("email")(e.target.value); loginEmailHint.reset(); }}
+              onBlur={(e) => loginEmailHint.check(e.target.value)}
+              error={errors["email"]}
+              helperText="The invite link is sent here. It can be the same as the contact email."
+            />
+            <EmailSuggestion suggestion={loginEmailHint.suggestion} error={errors["email"]} onApply={loginEmailHint.apply} />
+          </div>
         </section>
 
         <section className="space-y-3 rounded-xl border border-primary-100 bg-primary-50/60 p-4">

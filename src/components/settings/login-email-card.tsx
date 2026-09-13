@@ -7,6 +7,7 @@ import { Button, Card, CardContent, CardHeader, Input, Modal } from "@/component
 import { authService } from "@/services";
 import { useAppSelector } from "@/store/hooks";
 import { parseApiError, errorMessageWithId, fieldErrorsFromDetails } from "@/lib/errors";
+import { EmailSuggestion, useEmailSuggestion } from "@/components/ui/email-suggestion";
 
 // Deliberately loose: the server is the judge of what an address is. This only catches
 // the typo that would otherwise cost a round trip.
@@ -31,11 +32,17 @@ export function LoginEmailCard() {
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
+  const emailHint = useEmailSuggestion((value) => {
+    setForm((prev) => ({ ...prev, newEmail: value }));
+    setErrors((prev) => ({ ...prev, newEmail: "" }));
+  });
+
   const close = () => {
     setOpen(false);
     setForm(initialForm);
     setErrors({});
     setSentTo(null);
+    emailHint.reset();
   };
 
   const validate = (): boolean => {
@@ -138,15 +145,20 @@ export function LoginEmailCard() {
           </div>
         ) : (
           <form id="login-email-form" onSubmit={submit} noValidate className="space-y-4">
-            <Input
-              label="New email"
-              name="newEmail"
-              type="email"
-              autoComplete="email"
-              value={form.newEmail}
-              onChange={onChange}
-              error={errors.newEmail}
-            />
+            <div>
+              <Input
+                ref={emailHint.inputRef}
+                label="New email"
+                name="newEmail"
+                type="email"
+                autoComplete="email"
+                value={form.newEmail}
+                onChange={(e) => { onChange(e); emailHint.reset(); }}
+                onBlur={(e) => emailHint.check(e.target.value)}
+                error={errors.newEmail}
+              />
+              <EmailSuggestion suggestion={emailHint.suggestion} error={errors.newEmail} onApply={emailHint.apply} />
+            </div>
             <Input
               label="Current password"
               name="currentPassword"

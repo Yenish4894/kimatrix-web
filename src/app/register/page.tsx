@@ -13,7 +13,13 @@ import { registerCompany } from "@/store/slices/authSlice";
 import { authService } from "@/services/auth.service";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 import { toast } from "react-toastify";
+import { EmailSuggestion, useEmailSuggestion } from "@/components/ui/email-suggestion";
+import { TurnstileWidget } from "@/components/auth/turnstile-widget";
 import type { BusinessType } from "@/types";
+
+// Inlined at build time. Unset → no widget, no token sent (the server only enforces
+// Turnstile when it has a secret configured).
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 import Joi from "joi";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
@@ -115,8 +121,18 @@ export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { isLoading } = useAppSelector((state) => state.auth);
+  // Kept out of `form`: the Joi schema would reject unknown keys.
+  const [website, setWebsite] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const awaitingTurnstile = !!TURNSTILE_SITE_KEY && !turnstileToken;
 
-
+  const applyEmail = (name: "email" | "contactEmail") => (value: string) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+  const loginEmailHint = useEmailSuggestion(applyEmail("email"));
+  const contactEmailHint = useEmailSuggestion(applyEmail("contactEmail"));
 
   /** Pure — builds the error map without touching state, so the caller can both set
    *  it and use it to decide which field to focus. */
@@ -170,7 +186,8 @@ export default function RegisterPage() {
    * as "the register button does nothing".
    */
   const focusFirstError = (errs: Record<string, string>) => {
-    const firstKey = Object.keys(errs).find((k) => errs[k]);
+    // Never focus the honeypot, even if the server names it.
+    const firstKey = Object.keys(errs).find((k) => errs[k] && k !== "website");
     if (!firstKey) return;
     const el =
       document.querySelector<HTMLElement>(`[name="${firstKey}"]`) ??
@@ -182,7 +199,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     // Defensive guard against double-submit on slow connections / Suspense
-    if (isLoading || isProcessing) return;
+    if (isLoading || isProcessing || awaitingTurnstile) return;
 
     const validationErrors = computeErrors();
     if (Object.keys(validationErrors).length > 0) {
@@ -215,13 +232,26 @@ export default function RegisterPage() {
     let result: Awaited<ReturnType<typeof authService.registerCompany>>;
     try {
       result = await dispatch(
-        registerCompany({ ...form, businessType: form.businessType as BusinessType })
+        registerCompany({
+          ...form,
+          businessType: form.businessType as BusinessType,
+          website,
+          ...(TURNSTILE_SITE_KEY && turnstileToken ? { turnstileToken } : {}),
+        })
       ).unwrap();
     } catch (err) {
       setIsProcessing(false);
+      // Turnstile tokens are single-use: the one just sent is spent either way.
+      if (TURNSTILE_SITE_KEY) {
+        setTurnstileToken(null);
+        setTurnstileResetKey((k) => k + 1);
+      }
       const parsed = parseApiError(err);
       if (parsed.details?.length) {
-        setErrors(fieldErrorsFromDetails(parsed.details));
+        const fieldErrors = fieldErrorsFromDetails(parsed.details);
+        setErrors(fieldErrors);
+        // e.g. a rejected login email sits far above the submit button.
+        focusFirstError(fieldErrors);
         toast.error(parsed.message);
       } else {
         toast.error(errorMessageWithId(parsed));
@@ -342,7 +372,21 @@ export default function RegisterPage() {
         <div>
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Contact Information</h2>
           <div className="space-y-4">
-            <Input label="Contact Email" name="contactEmail" type="email" placeholder="contact@company.com" value={form.contactEmail} onChange={handleChange} onBlur={handleBlur} error={errors.contactEmail} helperText="Public contact email" />
+            <div>
+              <Input
+                ref={contactEmailHint.inputRef}
+                label="Contact Email"
+                name="contactEmail"
+                type="email"
+                placeholder="contact@company.com"
+                value={form.contactEmail}
+                onChange={(e) => { handleChange(e); contactEmailHint.reset(); }}
+                onBlur={(e) => { handleBlur(e); contactEmailHint.check(e.target.value); }}
+                error={errors.contactEmail}
+                helperText="Public contact email"
+              />
+              <EmailSuggestion suggestion={contactEmailHint.suggestion} error={errors.contactEmail} onApply={contactEmailHint.apply} />
+            </div>
             <div className="grid grid-cols-1 gap-4">
               <PhoneInput
                 label="Contact Phone"
@@ -378,7 +422,21 @@ export default function RegisterPage() {
         <div>
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Account Setup</h2>
           <div className="space-y-4">
-            <Input label="Login Email" name="email" type="email" placeholder="admin@company.com" value={form.email} onChange={handleChange} onBlur={handleBlur} error={errors.email} helperText="Private email for logging in" />
+            <div>
+              <Input
+                ref={loginEmailHint.inputRef}
+                label="Login Email"
+                name="email"
+                type="email"
+                placeholder="admin@company.com"
+                value={form.email}
+                onChange={(e) => { handleChange(e); loginEmailHint.reset(); }}
+                onBlur={(e) => { handleBlur(e); loginEmailHint.check(e.target.value); }}
+                error={errors.email}
+                helperText="Private email for logging in"
+              />
+              <EmailSuggestion suggestion={loginEmailHint.suggestion} error={errors.email} onApply={loginEmailHint.apply} />
+            </div>
             <Input label="Username" name="username" placeholder="Choose a unique username" value={form.username} onChange={handleChange} onBlur={handleBlur} error={errors.username} helperText="Letters, numbers, dots, dashes, underscores only" />
             {/* The rules live in helper text, not the placeholder: a placeholder was cut
                 off at this width and disappears as soon as the user starts typing. */}
@@ -426,7 +484,35 @@ export default function RegisterPage() {
           />
         </div>
 
-        <Button type="submit" fullWidth isLoading={isLoading || isProcessing}>
+        {/* Honeypot. Off-screen rather than display:none, which bots detect and skip.
+            A human never sees, tabs to, or autofills it; anything typed here marks a bot. */}
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}
+        >
+          <label htmlFor="register-website">Website</label>
+          <input
+            id="register-website"
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+        </div>
+
+        {TURNSTILE_SITE_KEY && (
+          <TurnstileWidget
+            siteKey={TURNSTILE_SITE_KEY}
+            action="register"
+            resetKey={turnstileResetKey}
+            onToken={setTurnstileToken}
+          />
+        )}
+
+        <Button type="submit" fullWidth isLoading={isLoading || isProcessing} disabled={awaitingTurnstile}>
           <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
           {isProcessing ? "Creating your account…" : "Start my free trial"}
         </Button>

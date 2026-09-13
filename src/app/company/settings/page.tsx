@@ -19,6 +19,7 @@ import {useCompanyProfile} from "@/hooks/useCompanyProfile";
 import {useAppSelector} from "@/store/hooks";
 import {parseApiError, fieldErrorsFromDetails, errorMessageWithId} from "@/lib/errors";
 import type { UpdateCompanyProfilePayload } from "@/types";
+import { EmailSuggestion, useEmailSuggestion } from "@/components/ui/email-suggestion";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
 
@@ -106,6 +107,10 @@ export default function CompanySettingsPage() {
     promoEmailOptIn: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const contactEmailHint = useEmailSuggestion((value) => {
+    setForm((prev) => ({ ...prev, contactEmail: value }));
+    setErrors((prev) => ({ ...prev, contactEmail: "" }));
+  });
 
   // Sync form to fetched profile
   useEffect(() => {
@@ -297,15 +302,20 @@ export default function CompanySettingsPage() {
                     helperText="Leave blank if not used"
                   />
                 </div>
-                <Input
-                  label="Contact Email"
-                  name="contactEmail"
-                  type="email"
-                  value={form.contactEmail}
-                  onChange={handleChange}
-                  error={errors.contactEmail}
-                  helperText="Public contact email"
-                />
+                <div>
+                  <Input
+                    ref={contactEmailHint.inputRef}
+                    label="Contact Email"
+                    name="contactEmail"
+                    type="email"
+                    value={form.contactEmail}
+                    onChange={(e) => { handleChange(e); contactEmailHint.reset(); }}
+                    onBlur={(e) => contactEmailHint.check(e.target.value)}
+                    error={errors.contactEmail}
+                    helperText="Public contact email"
+                  />
+                  <EmailSuggestion suggestion={contactEmailHint.suggestion} error={errors.contactEmail} onApply={contactEmailHint.apply} />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <PhoneInput
                     label="Contact Phone"

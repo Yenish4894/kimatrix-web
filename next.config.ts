@@ -8,14 +8,23 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:500
 //  - allow data: images (QR codes are data URLs, jsPDF embeds PNG dataURLs)
 //  - allow blob: for downloads (CSV/PDF blobs)
 //  - allow fetches to the backend API (NEXT_PUBLIC_API_BASE_URL)
-//  - block <object>, <embed>, <iframe> entirely (frame-src 'none')
+//  - block <object>, <embed>; iframes only from Cloudflare Turnstile (see below)
 //  - upgrade-insecure-requests in production
+//
+// Cloudflare Turnstile (bot check on /register, active only when
+// NEXT_PUBLIC_TURNSTILE_SITE_KEY is set): api.js is loaded from challenges.cloudflare.com
+// (script-src) and renders its challenge in an iframe from the same host (frame-src,
+// previously 'none'). connect-src is deliberately NOT widened: the challenge's own
+// network traffic runs inside that cross-origin iframe, under Cloudflare's CSP, not ours.
+// Allowed unconditionally so enabling the key never needs a CSP change; the host is only
+// ever contacted when the widget is rendered.
+const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 function buildCsp(): string {
   const isDev = process.env.NODE_ENV !== "production";
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     // Next.js needs unsafe-eval in dev for fast refresh; production drops it.
-    "script-src": ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : [])],
+    "script-src": ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : []), TURNSTILE_ORIGIN],
     // Tailwind + Next inline styles
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:"],
@@ -26,7 +35,7 @@ function buildCsp(): string {
       apiBaseUrl,
       ...(isDev ? ["ws:", "wss:"] : []),
     ],
-    "frame-src": ["'none'"],
+    "frame-src": [TURNSTILE_ORIGIN],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
