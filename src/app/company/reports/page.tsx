@@ -83,9 +83,14 @@ async function fetchAllCustomers(): Promise<{ customers: Customer[]; truncated: 
  * Sort helper: by total spend DESC, then by latest activity DESC (tiebreaker).
  * Equal-spending customers are ordered by who purchased most recently.
  */
+/**
+ * Same order as the server (pdf/reports.ts rankCustomers and the monthly query): spend,
+ * then more purchases, then mobile — so ranks are consecutive and every list agrees.
+ */
 function compareRows(a: CustomerRow, b: CustomerRow): number {
   if (b.totalSpend !== a.totalSpend) return b.totalSpend - a.totalSpend;
-  return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+  if (b.purchaseCount !== a.purchaseCount) return b.purchaseCount - a.purchaseCount;
+  return String(a.mobile ?? "").localeCompare(String(b.mobile ?? ""));
 }
 
 // ─── Shared preview table ──────────────────────────────────────
@@ -297,11 +302,6 @@ export default function ReportsPage() {
                   <div>
                     <h3 className="font-semibold text-slate-800">
                       Top 10 — {top10Label}
-                      {top10Report.length > 10 && (
-                        <span className="ml-2 text-xs font-normal text-slate-500">
-                          ({top10Report.length} shown — includes {top10Report.length - 10} tied at the cutoff)
-                        </span>
-                      )}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">{companyName}</p>
                   </div>
