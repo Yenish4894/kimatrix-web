@@ -2,7 +2,6 @@ import api, { publicApi } from "@/lib/api";
 import type {
   AuthUser,
   AuthTokens,
-  Company,
   BusinessType,
   LoginFormData,
   RegistrationFormData,
@@ -16,32 +15,21 @@ interface LoginResponse {
   tokens: AuthTokens;
 }
 
-// Registration now auto-logs the user in (issues a session) so the subscription
-// payment can begin immediately in the same flow. The company is still created
-// in the pending state (companyIsActive=false) until payment is captured.
-interface RegisterCompanyResponse {
-  user: AuthUser;
-  company: Company;
-  companyId?: string;
-  companyIsActive?: boolean;
-  /** False until the confirmation link is clicked. The trial clock starts on confirm. */
-  emailVerified?: boolean;
-  /**
-   * Whether a free trial is coming once they confirm their email.
-   *
-   * Advisory — the server re-decides authoritatively at confirmation time. It never
-   * says WHICH identifier was already used: registration is unauthenticated, and
-   * naming the field would turn it into an enumeration oracle.
-   */
-  trial?: { eligible: boolean; durationDays: number };
-  tokens: AuthTokens;
+/**
+ * The whole success payload of registration (HTTP 202). No session, no profile.
+ *
+ * The server answers exactly like this whether it created an account or the login
+ * email was already registered (then it emails that address's owner instead), so the
+ * form can't be used to check who is a customer. Don't add anything that differs.
+ */
+export interface RegisterCompanyResponse {
+  status: "check_email";
 }
 
 export const authService = {
   // POST /api/auth/register/company
-  // Creates the company (pending) and returns a session, so the caller can land the
-  // customer straight inside the app. Payment is NOT part of registration any more —
-  // the default path is a free trial that starts when they confirm their email.
+  // Does NOT sign the user in. Next steps: confirm the emailed link (which starts the
+  // free trial), then log in — an unverified login still works, as before.
   registerCompany: async (
     payload: Omit<RegistrationFormData, "businessType"> & { businessType: BusinessType }
   ) => {

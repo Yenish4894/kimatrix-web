@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { MailCheck, Sparkles } from "lucide-react";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button, Input, Select, Checkbox } from "@/components/ui";
 import { CountrySelect, StateSelect, CityInput } from "@/components/ui/country-state-select";
 import { PhoneInput, validatePhoneForCountry } from "@/components/ui/phone-input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { registerCompany } from "@/store/slices/authSlice";
-import { authService } from "@/services/auth.service";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 import { toast } from "react-toastify";
 import { EmailSuggestion, useEmailSuggestion } from "@/components/ui/email-suggestion";
@@ -114,7 +112,8 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const dispatch = useAppDispatch();
-  const router = useRouter();
+  /** Set once the server accepts the form; switches the page to "check your email". */
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const { isLoading } = useAppSelector((state) => state.auth);
   // Kept out of `form`, which mirrors the validation schema field for field.
   const [website, setWebsite] = useState("");
@@ -222,11 +221,11 @@ export default function RegisterPage() {
 
     setIsProcessing(true);
 
-    // Create the account. This also establishes a session (auto-login), so the
-    // customer lands inside the app rather than back at a login screen.
-    let result: Awaited<ReturnType<typeof authService.registerCompany>>;
+    // Create the account. No session comes back: the server answers the same neutral
+    // "check your email" whether it created an account or the login email was already
+    // registered (it emails that owner instead), so this page can't reveal which.
     try {
-      result = await dispatch(
+      await dispatch(
         registerCompany({
           ...form,
           businessType: form.businessType as BusinessType,
@@ -254,26 +253,49 @@ export default function RegisterPage() {
       return;
     }
 
-    // Registration is finished. No payment step.
-    //
-    // It used to redirect straight to PayPal, which meant the free trial was
-    // unreachable — the trial existed in the backend and no customer could ever get
-    // to it, because the front door demanded a plan and a card. The default path is
-    // now the trial; paying is something they choose later from the billing page.
-    //
-    // `trial.eligible` is advisory (the server re-decides at confirmation), so it is
-    // only used to pick a destination, never to promise anything.
-    if (result.trial?.eligible === false) {
-      // A repeat email or phone. Deliberately not told which — that would be an
-      // enumeration oracle — and never blocked from registering, only from the trial.
-      toast.info("Account created. Choose a plan to activate your QR code.");
-      router.replace("/company/billing");
-      return;
+    // Done. No payment step and no redirect into the app: show "check your email".
+    // The emailed link starts the free trial; paying is a later choice from billing.
+    setIsProcessing(false);
+    // Spent either way; a fresh one is needed if they come back to edit the form.
+    if (TURNSTILE_SITE_KEY) {
+      setTurnstileToken(null);
+      setTurnstileResetKey((k) => k + 1);
     }
-
-    toast.success("Account created. Check your email to start your free trial.");
-    router.replace("/company/dashboard");
+    setSubmittedEmail(form.email.trim());
+    window.scrollTo({ top: 0 });
   };
+
+  if (submittedEmail) {
+    return (
+      <AuthLayout title="Check your email" subtitle="One more step to start your free trial">
+        <div className="space-y-5 text-center" role="status" aria-live="polite">
+          <MailCheck className="mx-auto h-12 w-12 text-primary-600" aria-hidden="true" />
+          <p className="text-sm text-slate-700">
+            We&apos;ve sent an email to{" "}
+            <span className="font-semibold text-slate-900 break-all">{submittedEmail}</span>.
+            Click the link in it to confirm your address — your free trial starts then.
+          </p>
+          <p className="text-sm text-slate-500">
+            Can&apos;t find it? Check your spam or promotions folder. If you already have an
+            account with this email, we&apos;ve sent you a sign-in reminder instead.
+          </p>
+          <Link href="/login" className="block">
+            <Button type="button" fullWidth>Log in</Button>
+          </Link>
+          <p className="text-sm text-slate-500">
+            Wrong email address?{" "}
+            <button
+              type="button"
+              className="text-primary-600 hover:underline font-medium"
+              onClick={() => setSubmittedEmail(null)}
+            >
+              Go back and fix it
+            </button>
+          </p>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;

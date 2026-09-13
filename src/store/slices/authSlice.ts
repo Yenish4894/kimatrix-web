@@ -26,17 +26,14 @@ export const login = createAsyncThunk("auth/login", async (credentials: LoginFor
   }
 });
 
-// Registration creates the company (pending) AND returns a session so the user
-// can immediately pay for a plan in the same flow. We persist the tokens/user
-// exactly like login, then the register page kicks off the PayPal order.
+// Registration does NOT sign the user in — the response is a neutral "check your
+// email" (identical whether or not the address was already registered), so there is
+// nothing to persist. They confirm the emailed link, then log in.
 export const registerCompany = createAsyncThunk(
   "auth/registerCompany",
   async (payload: Omit<RegistrationFormData, "businessType"> & { businessType: BusinessType }, { rejectWithValue }) => {
     try {
-      const result = await authService.registerCompany(payload);
-      TokenStorage.setTokens(result.tokens);
-      TokenStorage.setUser(result.user, result.companyId ?? null);
-      return result;
+      return await authService.registerCompany(payload);
     } catch (err) {
       return rejectWithValue(err);
     }
@@ -121,15 +118,9 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
       })
-      // register — auto-login: establish the session so payment can start
+      // register — no session: the user confirms their email, then logs in
       .addCase(registerCompany.pending, (state) => { state.isLoading = true; })
-      .addCase(registerCompany.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.companyId = action.payload.companyId ?? null;
-        state.tokens = action.payload.tokens;
-        state.isAuthenticated = true;
-        state.isLoading = false;
-      })
+      .addCase(registerCompany.fulfilled, (state) => { state.isLoading = false; })
       .addCase(registerCompany.rejected, (state) => { state.isLoading = false; })
       // logout
       .addCase(logout.fulfilled, (state) => {
