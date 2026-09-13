@@ -129,6 +129,7 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
         confirmLabel={requestMut.isPending ? "Scheduling…" : "Schedule deletion"}
         confirmVariant="danger"
         confirmDisabled={requestMut.isPending || reason.trim().length < 3}
+        error={requestMut.error}
       >
         <div className="space-y-4">
           <p className="flex items-start gap-2 rounded-lg bg-error-50 px-3 py-2 text-sm text-error-800">
@@ -165,6 +166,7 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
         cancelLabel="Keep it scheduled"
         confirmLabel={cancelMut.isPending ? "Saving…" : "Call it off"}
         confirmDisabled={cancelMut.isPending || reason.trim().length < 3}
+        error={cancelMut.error}
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">

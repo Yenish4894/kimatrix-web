@@ -85,6 +85,7 @@ export function VoidPurchaseModal({
       confirmLabel="Void purchase"
       confirmVariant="danger"
       isLoading={voidM.isPending}
+      error={voidM.error}
     >
       {purchase && (
         <div className="space-y-4">

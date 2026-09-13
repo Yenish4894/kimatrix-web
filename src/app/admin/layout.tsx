@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { loginUrlForCurrentPage } from "@/lib/return-url";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loadSession } from "@/store/slices/authSlice";
 import { PageLoader } from "@/components/ui/loader";
@@ -20,6 +21,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
 
   const [sessionChecked, setSessionChecked] = useState(false);
   const [gatePassed, setGatePassed] = useState(false);
+  const wasAuthenticated = useRef(false);
 
   // Restore session from localStorage once.
   useEffect(() => {
@@ -35,9 +37,12 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
       // Close the gate again on logout, so admin pages unmount before the emptied
       // query cache could make them refetch without a session.
       setGatePassed(false);
-      router.replace("/login");
+      // Arrived signed out: back to login, remembering this page. A logout or session
+      // invalidation on a live session navigates on its own (see company/layout.tsx).
+      if (!wasAuthenticated.current) router.replace(loginUrlForCurrentPage());
       return;
     }
+    wasAuthenticated.current = true;
 
     if (user && user.userType !== "super_admin") {
       router.replace("/company/dashboard");

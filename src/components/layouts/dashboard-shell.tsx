@@ -8,6 +8,7 @@ import { PageLoader } from "@/components/ui/loader";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { loadSession } from "@/store/slices/authSlice";
 import { cn } from "@/lib/utils";
+import { loginUrlForCurrentPage } from "@/lib/return-url";
 import { SmtpDownBanner } from "@/components/admin/service-status";
 
 interface DashboardShellProps {
@@ -22,6 +23,7 @@ export function DashboardShell({ children, title, requiredRole }: Readonly<Dashb
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const wasAuthenticated = useRef(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
@@ -43,9 +45,12 @@ export function DashboardShell({ children, title, requiredRole }: Readonly<Dashb
   useEffect(() => {
     if (!hasCheckedSession) return;
     if (!isAuthenticated) {
-      router.replace("/login");
+      // Arrived signed out: back to login, remembering this page. A logout or session
+      // invalidation on a live session navigates on its own (see company/layout.tsx).
+      if (!wasAuthenticated.current) router.replace(loginUrlForCurrentPage());
       return;
     }
+    wasAuthenticated.current = true;
     // Role mismatch → redirect to the correct dashboard
     if (requiredRole && user && user.userType !== requiredRole) {
       const target = user.userType === "super_admin" ? "/admin/dashboard" : "/company/dashboard";

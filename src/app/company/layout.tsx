@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { loginUrlForCurrentPage } from "@/lib/return-url";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loadSession } from "@/store/slices/authSlice";
 import { useEntitlement } from "@/hooks/useEntitlement";
@@ -18,6 +19,7 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
   const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
   const isSuperAdmin = user?.userType === "super_admin";
   const [sessionChecked, setSessionChecked] = useState(false);
+  const wasAuthenticated = useRef(false);
 
   // Restore session from localStorage once.
   useEffect(() => {
@@ -43,9 +45,13 @@ export default function CompanyLayout({ children }: Readonly<{ children: React.R
   useEffect(() => {
     if (!sessionChecked) return;
     if (!isAuthenticated) {
-      router.replace("/login");
+      // Arrived signed out: back to login, remembering this page. If the session was
+      // live on this mount it was ended by a logout or an invalidation, and those
+      // navigate on their own — replacing here would race them (and drop `next`).
+      if (!wasAuthenticated.current) router.replace(loginUrlForCurrentPage());
       return;
     }
+    wasAuthenticated.current = true;
     // The mirror of admin/layout.tsx. A super admin has no company: the profile query
     // is disabled for them, so without this the layout waited on an entitlement that
     // could never arrive and showed "Loading..." forever on any /company/* URL.

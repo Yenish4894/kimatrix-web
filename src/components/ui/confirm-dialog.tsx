@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Modal } from "./modal";
 import { Button } from "./button";
+import { actionErrorMessage } from "@/lib/errors";
 
 type ButtonVariant = React.ComponentProps<typeof Button>["variant"];
 
@@ -23,6 +25,13 @@ export interface ConfirmDialogProps {
   cancelDisabled?: boolean;
   size?: "sm" | "md" | "lg";
   role?: "dialog" | "alertdialog";
+  /**
+   * The action's failure — pass the mutation's `error` straight through. Shown inside
+   * the dialog, so a failed confirm (a 429 included) can never look like a dialog that
+   * simply did nothing. An error that already existed when the dialog opened (left over
+   * from a previous attempt) is not shown.
+   */
+  error?: unknown;
 }
 
 /**
@@ -48,7 +57,19 @@ export function ConfirmDialog({
   cancelDisabled,
   size = "sm",
   role,
+  error,
 }: Readonly<ConfirmDialogProps>) {
+  // The error present at the moment the dialog (re)opened belongs to an earlier attempt.
+  // Mutation errors are new objects per failure, so identity is enough to tell them apart.
+  // (State adjusted during render — React's pattern for deriving from a changed prop.)
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [staleError, setStaleError] = useState<unknown>(error);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) setStaleError(error);
+  }
+  const shownError = error && error !== staleError && !isLoading ? error : null;
+
   return (
     <Modal
       open={open}
@@ -65,7 +86,7 @@ export function ConfirmDialog({
             {...(confirmVariant ? { variant: confirmVariant } : {})}
             onClick={onConfirm}
             isLoading={isLoading}
-            disabled={confirmDisabled}
+            disabled={confirmDisabled || isLoading}
           >
             {confirmLabel}
           </Button>
@@ -73,6 +94,11 @@ export function ConfirmDialog({
       }
     >
       {children}
+      {shownError ? (
+        <p role="alert" className="mt-3 text-sm text-error-600 bg-error-50 border border-error-100 rounded-lg p-3">
+          {actionErrorMessage(shownError)}
+        </p>
+      ) : null}
     </Modal>
   );
 }

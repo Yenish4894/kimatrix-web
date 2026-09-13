@@ -229,6 +229,7 @@ export default function AdminPlansPage() {
         confirmLabel="Hide plan"
         confirmVariant="danger"
         isLoading={availabilityM.isPending}
+        error={availabilityM.error}
         confirmDisabled={availabilityM.isPending}
       >
         <p className="text-sm text-slate-600">

@@ -16,11 +16,7 @@ import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import {
   getAdminToggleAction,
-  getCompanyStatus,
-  STATUS_BADGE_VARIANT,
-  STATUS_LABEL,
-  SUBSCRIPTION_STATUS_LABEL,
-  SUBSCRIPTION_STATUS_TONE,
+  getCompanyBadge,
   TOGGLE_LABEL,
 } from "@/lib/company-status";
 import { SubscriptionPanel } from "@/components/admin/subscription-panel";
@@ -139,7 +135,7 @@ export default function AdminCompanyDetailPage({
 
   const isFuelStation = company.businessType === "fuel_station";
   const BizIcon = isFuelStation ? Fuel : Store;
-  const status = getCompanyStatus(company);
+  const badge = getCompanyBadge(company);
   const toggleAction = getAdminToggleAction(company);
 
   return (
@@ -162,20 +158,10 @@ export default function AdminCompanyDetailPage({
               <p className="text-sm text-slate-500 mt-1 font-mono">{company.registrationNumber}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge variant="brand">{isFuelStation ? "Fuel Station" : "Shop"}</Badge>
-                {/* Prefers the precise subscription state over the coarse
-                    active/pending/deactivated view, so this badge and the Subscription
-                    panel below cannot describe the same row differently. */}
-                <Badge
-                  variant={
-                    company.subscriptionStatus
-                      ? SUBSCRIPTION_STATUS_TONE[company.subscriptionStatus] ?? STATUS_BADGE_VARIANT[status]
-                      : STATUS_BADGE_VARIANT[status]
-                  }
-                >
-                  {company.subscriptionStatus
-                    ? SUBSCRIPTION_STATUS_LABEL[company.subscriptionStatus] ?? STATUS_LABEL[status]
-                    : STATUS_LABEL[status]}
-                </Badge>
+                {/* Banned beats everything, then live complimentary access, then the precise
+                    subscription state — see getCompanyBadge. The subscription state alone once
+                    labelled a banned company "Active". */}
+                <Badge variant={badge.tone}>{badge.label}</Badge>
                 {company.promoEmailOptIn && <Badge variant="info">Promo opt-in</Badge>}
               </div>
             </div>
@@ -185,6 +171,7 @@ export default function AdminCompanyDetailPage({
             <Button
               variant={toggleAction === "deactivate" ? "danger" : "primary"}
               onClick={() => setConfirmModal(toggleAction)}
+              disabled={confirmModal !== null || toggleMut.isPending}
               className="shrink-0"
             >
               <Power className="h-4 w-4" aria-hidden="true" />
@@ -292,6 +279,7 @@ export default function AdminCompanyDetailPage({
         title="Resend invite?"
         confirmLabel={<><Send className="h-4 w-4" aria-hidden="true" /> Send invite</>}
         isLoading={resendM.isPending}
+        error={resendM.error}
       >
         <p className="text-sm text-slate-600">
           We&apos;ll email a fresh invite to{" "}
@@ -312,6 +300,7 @@ export default function AdminCompanyDetailPage({
           confirmLabel={TOGGLE_LABEL[confirmModal]}
           confirmVariant={confirmModal === "activate" ? "primary" : "danger"}
           isLoading={toggleMut.isPending}
+          error={toggleMut.error}
           confirmDisabled={confirmModal === "deactivate" && banReason.trim().length < 3}
         >
           <p className="text-sm text-slate-600">

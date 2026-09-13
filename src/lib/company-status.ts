@@ -75,6 +75,35 @@ export const SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
   deactivated: "Deactivated",
 };
 
+/**
+ * The one status badge for a company, on the list and on the detail header alike.
+ *
+ * Precedence, most decisive first:
+ *  1. **Banned.** An admin ban overrides everything. The badge used to prefer the
+ *     subscription projection whenever one was present, so a banned company with paid
+ *     time left read "Active" at the top of its own page.
+ *  2. **Complimentary.** Live comped access reads as that, not as plain "Active" —
+ *     otherwise nothing on the list tells a free account from a paying one.
+ *  3. The precise subscription state, when known; else the coarse three-state view.
+ */
+export function getCompanyBadge(
+  company: Pick<Company, "isActive" | "deactivatedAt" | "subscriptionStatus" | "isComped" | "compedUntil">,
+  now: Date = new Date(),
+): { label: string; tone: "success" | "warning" | "error" | "info" } {
+  if (company.deactivatedAt) return { label: "Banned", tone: "error" };
+  if (company.isComped && (!company.compedUntil || new Date(company.compedUntil).getTime() > now.getTime())) {
+    return { label: "Complimentary", tone: "info" };
+  }
+  const status = getCompanyStatus(company);
+  if (company.subscriptionStatus) {
+    return {
+      label: SUBSCRIPTION_STATUS_LABEL[company.subscriptionStatus] ?? STATUS_LABEL[status],
+      tone: SUBSCRIPTION_STATUS_TONE[company.subscriptionStatus] ?? STATUS_BADGE_VARIANT[status],
+    };
+  }
+  return { label: STATUS_LABEL[status], tone: STATUS_BADGE_VARIANT[status] };
+}
+
 export const SUBSCRIPTION_STATUS_TONE: Record<string, "success" | "warning" | "error" | "info"> = {
   active: "success",
   trialing: "info",

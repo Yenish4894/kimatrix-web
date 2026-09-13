@@ -455,6 +455,7 @@ export default function AdminBulkEmailPage() {
         cancelDisabled={sendMut.isPending}
         confirmVariant="primary"
         isLoading={sendMut.isPending}
+        error={sendMut.error}
         confirmLabel={
           <>
             <Send className="h-4 w-4 mr-2" aria-hidden="true" />

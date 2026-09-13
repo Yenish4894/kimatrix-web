@@ -85,7 +85,15 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
       return adminService.createCompany(payload);
     },
     onSuccess: (res) => {
-      toast.success(`Company created. Invite sent to ${res.ownerEmail}.`);
+      // "Queued", not "sent": the invite goes through the email queue after this returns,
+      // and saying "sent" while SMTP was refusing every message told the admin a lie.
+      toast.success(`Company created. Invite queued for ${res.ownerEmail}.`);
+      if (res.emailDeliveryDown) {
+        toast.warning(
+          "Email is currently not being delivered — the invite will not arrive until email is fixed.",
+          { autoClose: false },
+        );
+      }
       onCreated();
     },
     onError: (err) => {

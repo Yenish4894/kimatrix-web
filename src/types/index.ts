@@ -114,6 +114,8 @@ export interface CreateCompanyResult {
   companyId: string;
   ownerEmail: string;
   compedUntil: string | null;
+  /** True when the last SMTP send was refused outright: the queued invite will not arrive. */
+  emailDeliveryDown?: boolean;
 }
 
 export interface Company extends CompanyAddress {
@@ -376,6 +378,8 @@ export interface ApiErrorResponse {
   error: string;
   details?: Array<{ field: string; message: string }>;
   requestId?: string;
+  /** Seconds to wait, on some 429s (mirrors the Retry-After header, which CORS hides). */
+  retryAfterSeconds?: number;
   timestamp: string;
 }
 

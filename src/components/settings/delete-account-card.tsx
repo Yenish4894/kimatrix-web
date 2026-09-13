@@ -134,6 +134,7 @@ export function DeleteAccountCard() {
         confirmLabel={requestMut.isPending ? "Scheduling…" : "Close my account"}
         confirmVariant="danger"
         confirmDisabled={requestMut.isPending || confirmText.trim().toUpperCase() !== CONFIRM_WORD}
+        error={requestMut.error}
       >
         <div className="space-y-4 text-sm text-slate-600">
           <p>
@@ -168,6 +169,7 @@ export function DeleteAccountCard() {
         cancelLabel="Leave it scheduled"
         confirmLabel={cancelMut.isPending ? "Saving…" : "Keep my account"}
         confirmDisabled={cancelMut.isPending}
+        error={cancelMut.error}
       >
         <div className="space-y-3 text-sm text-slate-600">
           <p>Nothing will be erased and your account carries on as normal.</p>

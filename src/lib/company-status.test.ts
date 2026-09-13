@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   getAdminToggleAction,
+  getCompanyBadge,
   getCompanyStatus,
   STATUS_BADGE_VARIANT,
   STATUS_LABEL,
@@ -67,5 +68,50 @@ describe("status presentation", () => {
       assert.ok(STATUS_LABEL[s], `${s} needs a label`);
       assert.ok(STATUS_BADGE_VARIANT[s], `${s} needs a badge variant`);
     }
+  });
+});
+
+describe("getCompanyBadge", () => {
+  const now = new Date("2026-09-13T00:00:00Z");
+  const base = { isActive: true, deactivatedAt: null, isComped: false, compedUntil: null } as const;
+
+  it("a banned company reads Banned even with an active subscription", () => {
+    assert.deepEqual(
+      getCompanyBadge({ ...base, isActive: false, deactivatedAt: "2026-09-01T00:00:00Z", subscriptionStatus: "active" }, now),
+      { label: "Banned", tone: "error" },
+    );
+  });
+
+  it("a banned comped company still reads Banned", () => {
+    assert.equal(
+      getCompanyBadge({ ...base, deactivatedAt: "2026-09-01T00:00:00Z", isComped: true }, now).label,
+      "Banned",
+    );
+  });
+
+  it("live complimentary access reads Complimentary, open-ended or dated", () => {
+    assert.deepEqual(getCompanyBadge({ ...base, isComped: true, subscriptionStatus: "active" }, now), {
+      label: "Complimentary",
+      tone: "info",
+    });
+    assert.equal(
+      getCompanyBadge({ ...base, isComped: true, compedUntil: "2026-10-01T00:00:00Z", subscriptionStatus: "active" }, now).label,
+      "Complimentary",
+    );
+  });
+
+  it("a lapsed comp falls back to the subscription state", () => {
+    assert.equal(
+      getCompanyBadge(
+        { ...base, isActive: false, isComped: true, compedUntil: "2026-09-01T00:00:00Z", subscriptionStatus: "expired" },
+        now,
+      ).label,
+      "Subscription expired",
+    );
+  });
+
+  it("prefers the precise subscription state, else the coarse one", () => {
+    assert.equal(getCompanyBadge({ ...base, subscriptionStatus: "trialing" }, now).label, "On free trial");
+    assert.deepEqual(getCompanyBadge({ ...base, isActive: false }, now), { label: "Pending", tone: "warning" });
   });
 });

@@ -209,6 +209,7 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
         confirmLabel={cancelMut.isPending ? "Cancelling…" : "Yes, cancel"}
         confirmVariant="danger"
         confirmDisabled={cancelMut.isPending}
+        error={cancelMut.error}
       >
         <div className="space-y-3 text-sm text-slate-600">
           <p>

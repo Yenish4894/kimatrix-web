@@ -76,16 +76,10 @@ async function buildReport({ title, subtitle, companyName, country = "", rows, f
     return;
   }
 
-  const rankLabel = (i: number) => {
-    if (!ranked) return String(i + 1);
-    if (i === 0) return "1st";
-    if (i === 1) return "2nd";
-    if (i === 2) return "3rd";
-    return String(i + 1);
-  };
-
+  // Plain 1, 2, 3 — the same as the server-rendered Top 10 PDF, which used to disagree
+  // with this one ("1st" here, "1" there). Podium styling still marks the top three.
   const body = rows.map((r, i) => [
-    rankLabel(i),
+    String(i + 1),
     r.fullName + (r.vehicleNumber ? `\n${r.vehicleNumber}` : ""),
     r.mobile,
     String(r.purchaseCount),

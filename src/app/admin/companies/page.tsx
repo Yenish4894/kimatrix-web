@@ -16,11 +16,7 @@ import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import {
   getAdminToggleAction,
-  getCompanyStatus,
-  STATUS_BADGE_VARIANT,
-  STATUS_LABEL,
-  SUBSCRIPTION_STATUS_LABEL,
-  SUBSCRIPTION_STATUS_TONE,
+  getCompanyBadge,
   TOGGLE_LABEL,
 } from "@/lib/company-status";
 import type { Company } from "@/types";
@@ -111,6 +107,10 @@ export default function AdminCompaniesPage() {
     },
   });
 
+  const dialogBusy =
+    confirmModal !== null || resendTarget !== null || trialTarget !== null || showCreate ||
+    toggleMut.isPending || resendM.isPending;
+
   const items = companiesQ.data?.items ?? [];
   const pagination = companiesQ.data?.pagination;
 
@@ -153,24 +153,11 @@ export default function AdminCompaniesPage() {
       key: "status",
       header: "Status",
       render: (row: Company) => {
-        const status = getCompanyStatus(row);
-        // Prefers the precise subscription state over the coarse
-        // active/pending/deactivated view. A company whose trial ended today is
-        // "Trial expired", not "Pending" — "Pending" reads as never having started,
-        // which is a different situation needing a different response. The detail
-        // page already showed the precise state, so the two screens disagreed about
-        // the same company.
-        const label = row.subscriptionStatus
-          ? (SUBSCRIPTION_STATUS_LABEL[row.subscriptionStatus] ?? STATUS_LABEL[status])
-          : STATUS_LABEL[status];
-        const tone = row.subscriptionStatus
-          ? (SUBSCRIPTION_STATUS_TONE[row.subscriptionStatus] ?? STATUS_BADGE_VARIANT[status])
-          : STATUS_BADGE_VARIANT[status];
-        return (
-          <Badge variant={tone}>
-            {label}
-          </Badge>
-        );
+        // Banned first, then live complimentary access, then the precise subscription
+        // state (a trial that ended today is "Trial expired", not "Pending"). Shared with
+        // the detail header through getCompanyBadge, so the two screens cannot disagree.
+        const { label, tone } = getCompanyBadge(row);
+        return <Badge variant={tone}>{label}</Badge>;
       },
     },
     {
@@ -186,7 +173,14 @@ export default function AdminCompaniesPage() {
         return (
           <div className="relative">
             <button
-              onClick={(e) => { e.stopPropagation(); setActionMenuId(actionMenuId === row.id ? null : row.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                // One dialog at a time: while one is open or its action is still running,
+                // the menu that opens another stays shut.
+                if (dialogBusy) return;
+                setActionMenuId(actionMenuId === row.id ? null : row.id);
+              }}
+              disabled={dialogBusy}
               className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100"
               aria-label={`Actions for ${row.name}`}
               aria-expanded={actionMenuId === row.id}
@@ -351,6 +345,7 @@ export default function AdminCompaniesPage() {
         title="Resend invite?"
         confirmLabel={<><Send className="h-4 w-4" aria-hidden="true" /> Send invite</>}
         isLoading={resendM.isPending}
+        error={resendM.error}
       >
         <p className="text-sm text-slate-600">
           We&apos;ll email a fresh invite to{" "}
@@ -371,6 +366,7 @@ export default function AdminCompaniesPage() {
           confirmLabel={TOGGLE_LABEL[confirmModal.action]}
           confirmVariant={confirmModal.action === "activate" ? "primary" : "danger"}
           isLoading={toggleMut.isPending}
+          error={toggleMut.error}
           confirmDisabled={confirmModal.action === "deactivate" && banReason.trim().length < 3}
         >
           <p className="text-sm text-slate-600">

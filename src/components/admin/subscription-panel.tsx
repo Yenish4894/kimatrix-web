@@ -309,6 +309,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
         confirmLabel={compMut.isPending ? "Saving…" : "Remove"}
         confirmVariant="danger"
         confirmDisabled={compMut.isPending}
+        error={compMut.error}
       >
         <p className="text-sm text-slate-600">
           <strong className="text-slate-800">{company.name}</strong> loses free access
@@ -325,6 +326,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
         title="Release this identifier"
         confirmLabel={releaseMut.isPending ? "Saving…" : "Release"}
         confirmDisabled={releaseMut.isPending || releaseReason.trim().length < 3}
+        error={releaseMut.error}
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">

@@ -246,6 +246,7 @@ export default function QRCodePage() {
         confirmLabel="Regenerate now"
         confirmVariant="danger"
         isLoading={regenM.isPending}
+        error={regenM.error}
         confirmDisabled={!regenUnderstood || regenM.isPending}
       >
         <div className="space-y-4 text-sm">
@@ -290,6 +291,7 @@ export default function QRCodePage() {
         confirmLabel="Pause QR code"
         confirmVariant="danger"
         isLoading={pauseM.isPending}
+        error={pauseM.error}
         confirmDisabled={pauseM.isPending}
       >
         <p className="text-sm text-slate-600">
