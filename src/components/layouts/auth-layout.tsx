@@ -7,6 +7,8 @@ import { QrCode, BarChart3, Shield, Zap, Fuel } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { loadSession } from "@/store/slices/authSlice";
 import { PageLoader } from "@/components/ui/loader";
+import { formatCurrency } from "@/lib/utils";
+import { RETURN_PARAM, returnPathFor } from "@/lib/return-url";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -28,10 +30,13 @@ const features = [
   { icon: Shield,    text: "Plans from 7 to 30 days"           },
 ];
 
+// Illustrative only. Set at a South African fuel station (the mockup's header), so the
+// amounts are rand, formatted by the same helper as the real dashboard.
+const MOCK_COUNTRY = "South Africa";
 const recentPurchases = [
-  { initials: "AM", name: "Ali Mohamed",  amount: "25,000", time: "2m ago"  },
-  { initials: "FA", name: "Fatima Abdou", amount: "12,000", time: "18m ago" },
-  { initials: "OH", name: "Omar Hassan",  amount: "8,500",  time: "1h ago"  },
+  { initials: "TM", name: "Thabo Mokoena", amount: 850,  time: "2m ago"  },
+  { initials: "PN", name: "Priya Naidoo",  amount: 1240, time: "18m ago" },
+  { initials: "JV", name: "Johan van Wyk", amount: 620,  time: "1h ago"  },
 ];
 
 export function AuthLayout({
@@ -52,8 +57,9 @@ export function AuthLayout({
 
   useEffect(() => {
     if (!redirectIfAuthenticated || !hasCheckedSession || !isAuthenticated || !user) return;
-    const target = user.userType === "super_admin" ? "/admin/dashboard" : "/company/dashboard";
-    router.replace(target);
+    // Already signed in on /login?next=…: go where they were headed (validated), not home.
+    const requested = new URLSearchParams(globalThis.location.search).get(RETURN_PARAM);
+    router.replace(returnPathFor(requested, user.userType));
   }, [redirectIfAuthenticated, hasCheckedSession, isAuthenticated, user, router]);
 
   if (!hasCheckedSession || (redirectIfAuthenticated && isAuthenticated)) {
@@ -162,7 +168,7 @@ export function AuthLayout({
                     <span className="text-[10px] text-white/70 font-medium">{row.name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-semibold text-white">R {row.amount}</p>
+                    <p className="text-[10px] font-semibold text-white">{formatCurrency(row.amount, MOCK_COUNTRY)}</p>
                     <p className="text-[8px] text-white/30">{row.time}</p>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CalendarClock, RefreshCw, XCircle } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardHeader, Modal, Select } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, ConfirmDialog, Modal, Select } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
@@ -200,21 +200,15 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
       </Card>
 
       {/* ── Cancel ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "cancel"}
         onClose={() => setModal(null)}
+        onConfirm={() => cancelMut.mutate()}
         title="Cancel your subscription?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setModal(null)}>
-              Keep my subscription
-            </Button>
-            <Button variant="danger" onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending}>
-              {cancelMut.isPending ? "Cancelling…" : "Yes, cancel"}
-            </Button>
-          </>
-        }
+        cancelLabel="Keep my subscription"
+        confirmLabel={cancelMut.isPending ? "Cancelling…" : "Yes, cancel"}
+        confirmVariant="danger"
+        confirmDisabled={cancelMut.isPending}
       >
         <div className="space-y-3 text-sm text-slate-600">
           <p>
@@ -229,7 +223,7 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
           </p>
           <p>Your customer data stays exactly as it is, and you can download it at any time.</p>
         </div>
-      </Modal>
+      </ConfirmDialog>
 
       {/* ── Change plan ── */}
       <Modal

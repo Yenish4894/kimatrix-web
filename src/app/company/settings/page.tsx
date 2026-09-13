@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {toast} from "react-toastify";
 import {Building2, Lock as LockIcon} from "lucide-react";
-import Joi from "joi";
+import { v } from "@/lib/validation";
 import {DashboardShell} from "@/components/layouts/dashboard-shell";
 import {Card, CardContent, CardHeader, Input, Button, Badge, Checkbox} from "@/components/ui";
 import {CountrySelect, StateSelect, CityInput} from "@/components/ui/country-state-select";
@@ -23,35 +23,35 @@ import { EmailSuggestion, useEmailSuggestion } from "@/components/ui/email-sugge
 
 const E164 = /^\+[1-9]\d{1,14}$/;
 
-const profileSchema = Joi.object({
-  streetAddress: Joi.string().min(3).max(512).required().messages({
+const profileSchema = v.object({
+  streetAddress: v.string().min(3).max(512).required().messages({
     "string.empty": "Street address is required",
     "string.min": "Street address must be at least 3 characters",
   }),
-  city: Joi.string().min(2).max(128).required().messages({
+  city: v.string().min(2).max(128).required().messages({
     "string.empty": "City is required",
     "string.min": "City must be at least 2 characters",
   }),
-  state: Joi.string().min(2).max(128).required().messages({
+  state: v.string().min(2).max(128).required().messages({
     "string.empty": "State or region is required",
   }),
-  country: Joi.string().min(2).max(128).required().messages({
+  country: v.string().min(2).max(128).required().messages({
     "string.empty": "Country is required",
   }),
-  postalCode: Joi.string().min(1).max(32).allow("").optional(),
-  contactEmail: Joi.string().email({ tlds: { allow: false } }).max(255).required().messages({
+  postalCode: v.string().min(1).max(32).allow("").optional(),
+  contactEmail: v.string().email().max(255).required().messages({
     "string.empty": "Contact email is required",
     "string.email": "Enter a valid email address",
   }),
-  // Country-specific phone validation runs post-Joi via libphonenumber-js.
-  contactPhone: Joi.string().pattern(E164).required().messages({
+  // Country-specific phone validation runs after this via libphonenumber-js.
+  contactPhone: v.string().pattern(E164).required().messages({
     "string.empty": "Contact phone is required",
     "string.pattern.base": "Enter a valid phone number",
   }),
-  whatsappNumber: Joi.string().pattern(E164).allow("").optional().messages({
+  whatsappNumber: v.string().pattern(E164).allow("").optional().messages({
     "string.pattern.base": "Enter a valid WhatsApp number",
   }),
-  promoEmailOptIn: Joi.boolean().optional(),
+  promoEmailOptIn: v.boolean().optional(),
 });
 
 type ProfileForm = {

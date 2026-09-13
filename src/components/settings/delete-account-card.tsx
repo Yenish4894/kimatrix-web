@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarX, Download, Trash2, Undo2 } from "lucide-react";
-import { Button, Card, CardContent, CardHeader, Input, Modal } from "@/components/ui";
+import { Button, Card, CardContent, CardHeader, Input, ConfirmDialog } from "@/components/ui";
 import { companyService } from "@/services/company.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
@@ -125,25 +125,15 @@ export function DeleteAccountCard() {
       </Card>
 
       {/* ── Request ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "request"}
         onClose={close}
+        onConfirm={() => requestMut.mutate()}
         title="Close your account?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Keep my account
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => requestMut.mutate()}
-              disabled={requestMut.isPending || confirmText.trim().toUpperCase() !== CONFIRM_WORD}
-            >
-              {requestMut.isPending ? "Scheduling…" : "Close my account"}
-            </Button>
-          </>
-        }
+        cancelLabel="Keep my account"
+        confirmLabel={requestMut.isPending ? "Scheduling…" : "Close my account"}
+        confirmVariant="danger"
+        confirmDisabled={requestMut.isPending || confirmText.trim().toUpperCase() !== CONFIRM_WORD}
       >
         <div className="space-y-4 text-sm text-slate-600">
           <p>
@@ -167,24 +157,17 @@ export function DeleteAccountCard() {
             autoComplete="off"
           />
         </div>
-      </Modal>
+      </ConfirmDialog>
 
       {/* ── Cancel ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "cancel"}
         onClose={close}
+        onConfirm={() => cancelMut.mutate()}
         title="Keep your account?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Leave it scheduled
-            </Button>
-            <Button onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending}>
-              {cancelMut.isPending ? "Saving…" : "Keep my account"}
-            </Button>
-          </>
-        }
+        cancelLabel="Leave it scheduled"
+        confirmLabel={cancelMut.isPending ? "Saving…" : "Keep my account"}
+        confirmDisabled={cancelMut.isPending}
       >
         <div className="space-y-3 text-sm text-slate-600">
           <p>Nothing will be erased and your account carries on as normal.</p>
@@ -194,7 +177,7 @@ export function DeleteAccountCard() {
             billing page.
           </p>
         </div>
-      </Modal>
+      </ConfirmDialog>
     </>
   );
 }

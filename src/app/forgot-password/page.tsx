@@ -7,11 +7,12 @@ import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Button, Input } from "@/components/ui";
 import { authService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
-import Joi from "joi";
+import { v } from "@/lib/validation";
 
-const schema = Joi.object({
-  email: Joi.string().email({ tlds: { allow: false } }).required().messages({
+const schema = v.object({
+  email: v.string().email().required().messages({
     "string.empty": "Email is required",
+    "any.required": "Email is required",
     "string.email": "Enter a valid email address",
   }),
 });

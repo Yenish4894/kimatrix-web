@@ -8,11 +8,9 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Button } from "@/components/ui";
 import { PageLoader } from "@/components/ui/loader";
 import { paymentService } from "@/services/payment.service";
-import { useAppDispatch } from "@/store/hooks";
-import { setCompanyIsActive } from "@/store/slices/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateCompanyProfile } from "@/hooks/useCompanyProfile";
-import { parseApiError } from "@/lib/errors";
+import { parseApiError, errorMessageWithId } from "@/lib/errors";
 
 type CaptureState = "loading" | "success" | "error";
 
@@ -20,7 +18,6 @@ type CaptureState = "loading" | "success" | "error";
 function CaptureHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   // Read `subscription_id` FIRST.
   //
@@ -34,6 +31,9 @@ function CaptureHandler() {
   const [state, setState] = useState<CaptureState>("loading");
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [isSpinAddon, setIsSpinAddon] = useState(false);
+  // The server's reason for a failed confirmation, kept on the page rather than only in
+  // a toast that disappears after a few seconds (FE-10).
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const capturedRef = useRef(false);
 
   useEffect(() => {
@@ -45,16 +45,34 @@ function CaptureHandler() {
     if (capturedRef.current) return;
     capturedRef.current = true;
 
+    const fail = (err: unknown) => {
+      const parsed = parseApiError(err);
+      setErrorMessage(errorMessageWithId(parsed));
+      setState("error");
+      toast.error(
+        parsed.message || "We couldn't confirm your payment. Please contact support if you were charged."
+      );
+    };
+
+    // Everything a payment can change: access (profile), the recurring subscription
+    // card, the payment history and the lucky-draw spins. Also run on failure — a
+    // confirmation that errored after PayPal took the money may still have been recorded.
+    const refreshAfterPayment = () => {
+      void invalidateCompanyProfile(queryClient);
+      void queryClient.invalidateQueries({ queryKey: ["subscription", "status"] });
+      void queryClient.invalidateQueries({ queryKey: ["company", "draws"] });
+      void queryClient.invalidateQueries({ queryKey: ["company", "payments"] });
+    };
+
     if (paypalSubscriptionId) {
       paymentService
         .confirmSubscription(paypalSubscriptionId)
         .then((status) => {
           setExpiresAt(status.currentPeriodEnd);
-          dispatch(setCompanyIsActive(true));
-          void invalidateCompanyProfile(queryClient);
           setState("success");
         })
-        .catch(() => setState("error"));
+        .catch(fail)
+        .finally(refreshAfterPayment);
       return;
     }
 
@@ -63,22 +81,14 @@ function CaptureHandler() {
       .then((result) => {
         setExpiresAt(result.subscriptionEndsAt);
         setIsSpinAddon(result.kind === "spin_addon");
-        dispatch(setCompanyIsActive(true));
-        // Invalidate the shared profile query so the gate, sidebar and every page see
-        // the new subscription immediately. Previously this dispatched a Redux refetch
-        // and left the query cache alone, so with a 60s staleTime a user who had
-        // viewed the dashboard just before paying came back to pre-payment status.
-        void invalidateCompanyProfile(queryClient);
+        // refreshAfterPayment invalidates the shared profile query, so the gate, sidebar
+        // and every page see the new subscription immediately. A Redux flag used to be
+        // set here too; it duplicated the profile and drifted from it (ARC-5).
         setState("success");
       })
-      .catch((err) => {
-        setState("error");
-        const parsed = parseApiError(err);
-        toast.error(
-          parsed.message || "We couldn't confirm your payment. Please contact support if you were charged."
-        );
-      });
-  }, [paypalOrderId, paypalSubscriptionId, dispatch]);
+      .catch(fail)
+      .finally(refreshAfterPayment);
+  }, [paypalOrderId, paypalSubscriptionId, queryClient]);
 
   if (state === "loading") {
     return (
@@ -98,8 +108,15 @@ function CaptureHandler() {
         <div>
           <h2 className="text-xl font-bold text-slate-800">Payment Confirmation Failed</h2>
           <p className="text-slate-500 text-sm mt-2">
-            We couldn&apos;t verify your payment. If you were charged, please contact support with your PayPal transaction ID.
+            {paypalOrderId || paypalSubscriptionId
+              ? "We couldn't verify your payment. If you were charged, please contact support with your PayPal transaction ID."
+              : "This page was opened without a PayPal reference, so there is no payment to confirm."}
           </p>
+          {errorMessage && (
+            <p className="text-sm text-error-600 bg-error-50 border border-error-100 rounded-lg p-3 mt-3 break-words">
+              {errorMessage}
+            </p>
+          )}
         </div>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => router.push("/company/billing")}>

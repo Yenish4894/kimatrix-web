@@ -6,6 +6,8 @@ import {
   formatLatency,
   outageMessage,
   serviceMetaItems,
+  smtpCheck,
+  smtpDownMessage,
 } from "./system-status";
 
 const fmt = (iso: string) => `@${iso}`;
@@ -22,6 +24,51 @@ describe("outageMessage", () => {
   });
 });
 
+describe("SMTP delivery", () => {
+  const fmt = (iso: string) => `<${iso}>`;
+
+  it("finds the smtp entry", () => {
+    assert.equal(smtpCheck({ services: [{ key: "smtp" }] as never })?.key, "smtp");
+    assert.equal(smtpCheck(undefined), undefined);
+  });
+
+  it("dates the down banner from the last successful send", () => {
+    assert.equal(
+      smtpDownMessage({ lastSuccessAt: "2026-09-12T08:00:00Z" }, fmt),
+      "Emails are not being delivered — the mail server is rejecting outgoing email since <2026-09-12T08:00:00Z>. Check the Hostinger panel (Outbound sending).",
+    );
+  });
+
+  it("omits 'since' when there has never been a success", () => {
+    assert.match(smtpDownMessage({ lastSuccessAt: null }, fmt), /rejecting outgoing email\. Check/);
+  });
+
+  it("shows last success, failure and error, emphasising a failure after the last success", () => {
+    const items = serviceMetaItems(
+      {
+        key: "smtp",
+        lastSuccessAt: "2026-09-12T08:00:00Z",
+        lastFailureAt: "2026-09-12T09:00:00Z",
+        lastError: "550 Sender not allowed",
+      },
+      fmt,
+    );
+    assert.deepEqual(items, [
+      { label: "Last success", value: "<2026-09-12T08:00:00Z>" },
+      { label: "Last failure", value: "<2026-09-12T09:00:00Z>", emphasis: true },
+      { label: "Last error", value: "550 Sender not allowed", emphasis: true },
+    ]);
+  });
+
+  it("does not emphasise an old failure once mail is flowing again", () => {
+    const items = serviceMetaItems(
+      { key: "smtp", lastSuccessAt: "2026-09-12T10:00:00Z", lastFailureAt: "2026-09-12T09:00:00Z" },
+      fmt,
+    );
+    assert.equal(items.find((i) => i.label === "Last failure")?.emphasis, false);
+  });
+});
+
 describe("downServices", () => {
   it("returns only down services", () => {
     const s = [{ status: "ok" }, { status: "down" }, { status: "degraded" }] as const;
@@ -32,7 +79,7 @@ describe("downServices", () => {
 
 describe("labels", () => {
   it("every state has a text label, never colour alone", () => {
-    assert.deepEqual(SERVICE_HEALTH_LABEL, { ok: "OK", degraded: "Degraded", down: "Down" });
+    assert.deepEqual(SERVICE_HEALTH_LABEL, { ok: "OK", up: "OK", degraded: "Degraded", down: "Down" });
   });
   it("latency", () => {
     assert.equal(formatLatency(12.6), "13 ms");

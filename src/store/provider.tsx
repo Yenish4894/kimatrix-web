@@ -9,6 +9,7 @@ import { clearAuth } from "./slices/authSlice";
 import { clearCompany } from "./slices/companySlice";
 import { QueryProvider, getQueryClient } from "@/lib/query-client";
 import { onSessionInvalidated } from "@/lib/api";
+import { loginUrlWithReturn } from "@/lib/return-url";
 
 // Inner component — handles session invalidation events from axios interceptor
 function SessionHandler({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,9 @@ function SessionHandler({ children }: { children: React.ReactNode }) {
       store.dispatch(clearCompany());
       getQueryClient().clear();
       toast.error("Your session has ended. Please log in again.");
-      router.push("/login");
+      // Bring them back to the page they were on once they sign in again (FE-14).
+      const here = `${globalThis.location.pathname}${globalThis.location.search}`;
+      router.push(/^\/(company|admin)(\/|$)/.test(here) ? loginUrlWithReturn(here) : "/login");
     });
     return unsubscribe;
   }, [router]);

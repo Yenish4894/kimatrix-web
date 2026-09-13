@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Pagination, Input, Button, Card, CardContent, CardHeader, QueryErrorState, Modal } from "@/components/ui";
+import { Pagination, Input, Button, Card, CardContent, CardHeader, QueryErrorState, ConfirmDialog } from "@/components/ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   ATTACHMENT_ACCEPT,
@@ -445,20 +445,20 @@ export default function AdminBulkEmailPage() {
 
       </div>
 
-      <Modal
+      <ConfirmDialog
         open={confirmSend}
+        // Also Cancel's handler; while sending Cancel is disabled anyway, and Escape/X
+        // must not close the dialog mid-send.
         onClose={() => { if (!sendMut.isPending) setConfirmSend(false); }}
+        onConfirm={() => sendMut.mutate()}
         title="Send this email?"
-        size="sm"
-        footer={
+        cancelDisabled={sendMut.isPending}
+        confirmVariant="primary"
+        isLoading={sendMut.isPending}
+        confirmLabel={
           <>
-            <Button variant="ghost" onClick={() => setConfirmSend(false)} disabled={sendMut.isPending}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={() => sendMut.mutate()} isLoading={sendMut.isPending}>
-              <Send className="h-4 w-4 mr-2" aria-hidden="true" />
-              Send now
-            </Button>
+            <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+            Send now
           </>
         }
       >
@@ -489,7 +489,7 @@ export default function AdminBulkEmailPage() {
           )}
           <p>This cannot be undone once sent.</p>
         </div>
-      </Modal>
+      </ConfirmDialog>
     </DashboardShell>
   );
 }

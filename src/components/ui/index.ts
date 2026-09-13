@@ -13,6 +13,7 @@ export { Card, CardHeader, CardContent, CardFooter } from "./card";
 export { Badge } from "./badge";
 export { StatCard } from "./stat-card";
 export { Modal } from "./modal";
+export { ConfirmDialog } from "./confirm-dialog";
 export { Table } from "./table";
 export { Pagination } from "./pagination";
 export { Loader, PageLoader } from "./loader";

@@ -7,27 +7,29 @@
  * bytes interleaved with the digits, which renders as a wrong glyph followed by
  * widely-spaced, unreadable numbers.
  *
- * That is not hypothetical. `getCurrencySymbol("Niger")` returns "₣" (U+20A3), so
- * every Total Spend value in every report downloaded in the platform's primary market
- * came out mangled — the one column the report exists for.
+ * The primary markets are South Africa (ZAR, "R") and India (INR, "₹"). "R" is plain
+ * ASCII and prints as-is, but "₹" (U+20B9) is outside CP1252, so without this module
+ * every amount in an Indian company's report — the Total Spend column the report
+ * exists for — would come out mangled. The same applies to the other non-Latin
+ * symbols in COUNTRY_CURRENCY (for example "₣", used by several CFA-franc countries).
  *
- * The fix is to substitute an ASCII form in PDFs only. On screen the symbols are fine,
- * and "FCFA" is what people in West Africa actually write anyway.
+ * The fix is to substitute an ASCII form in PDFs only: "INR 1,250.00". On screen the
+ * real symbols render correctly and remain the better choice.
  */
 
-import { COUNTRY_CURRENCY, getCurrencySymbol } from "@/lib/utils";
+import { COUNTRY_CURRENCY, formatNumber, getCurrencySymbol } from "@/lib/utils";
 
 /**
  * Replacements for symbols the PDF fonts cannot encode.
  *
  * Keyed on the symbol rather than the country so one entry covers every country that
- * shares it — "₣" is used by six.
+ * shares it — "₣" is used by six. South Africa's "R" needs no entry.
  */
 const PDF_SYMBOL_OVERRIDES: Record<string, string> = {
+  "₹": "INR", // India — a primary market
   "₣": "FCFA", // XOF / XAF — the local written form, not "F"
   "₦": "NGN",
   "GH₵": "GHS",
-  "₹": "INR",
   "₩": "KRW",
   "฿": "THB",
   "₱": "PHP",
@@ -79,7 +81,7 @@ export function formatPdfCurrency(
   const value =
     typeof num !== "number" || !Number.isFinite(num)
       ? "0.00"
-      : num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      : formatNumber(num, 2);
   return symbol ? `${symbol} ${value}` : value;
 }
 

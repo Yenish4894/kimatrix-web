@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { CompanyRecordsTabs } from "@/components/admin/company-records-tabs";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Card, CardContent, CardHeader, Badge, Button, Modal } from "@/components/ui";
+import { Card, CardContent, CardHeader, Badge, Button, ConfirmDialog, QueryErrorState } from "@/components/ui";
 import { formatDate, formatDateTime, formatAddress } from "@/lib/utils";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
@@ -89,6 +89,25 @@ export default function AdminCompanyDetailPage({
   });
 
   if (companyQ.isError) {
+    // Only a 404 (or a malformed id, 400) means the company does not exist. A 500, a
+    // timeout or an offline laptop used to read as "Company not found" too, which sent
+    // admins looking for a deleted company that was fine (FE-12).
+    const { status } = parseApiError(companyQ.error);
+    if (status !== 404 && status !== 400) {
+      return (
+        <DashboardShell title="Company Detail" requiredRole="super_admin">
+          <div className="max-w-4xl mx-auto">
+            <Link
+              href="/admin/companies"
+              className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Companies
+            </Link>
+            <QueryErrorState error={companyQ.error} onRetry={() => companyQ.refetch()} resource="this company" />
+          </div>
+        </DashboardShell>
+      );
+    }
     return (
       <DashboardShell title="Company Not Found" requiredRole="super_admin">
         <div className="text-center py-12">
@@ -242,7 +261,10 @@ export default function AdminCompanyDetailPage({
                       address. You can start one for them with <strong>Grant trial</strong> above.
                     </p>
                   )}
-                  {!company.owner.emailVerifiedAt && (
+                  {/* Only an admin-onboarded company has an invite to resend. A self-signup
+                      gets a verification email instead, which the owner resends from
+                      their own paywall. */}
+                  {company.createdByAdmin === true && !company.owner.emailVerifiedAt && (
                     <Button variant="secondary" size="sm" onClick={() => setConfirmResend(true)}>
                       <Send className="h-4 w-4" aria-hidden="true" /> Resend invite
                     </Button>
@@ -263,47 +285,34 @@ export default function AdminCompanyDetailPage({
         <CompanyRecordsTabs company={company} />
       </div>
 
-      <Modal
+      <ConfirmDialog
         open={confirmResend}
         onClose={() => setConfirmResend(false)}
+        onConfirm={() => resendM.mutate()}
         title="Resend invite?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setConfirmResend(false)}>Cancel</Button>
-            <Button onClick={() => resendM.mutate()} isLoading={resendM.isPending}>
-              <Send className="h-4 w-4" aria-hidden="true" /> Send invite
-            </Button>
-          </>
-        }
+        confirmLabel={<><Send className="h-4 w-4" aria-hidden="true" /> Send invite</>}
+        isLoading={resendM.isPending}
       >
         <p className="text-sm text-slate-600">
           We&apos;ll email a fresh invite to{" "}
           <strong className="break-all text-slate-800">{company.owner?.email ?? "the owner"}</strong>{" "}
           so they can confirm the address and sign in.
         </p>
-      </Modal>
+      </ConfirmDialog>
 
       {confirmModal && (
-        <Modal
+        <ConfirmDialog
           open={true}
-          // Escape and the X close through here, not through Cancel — clear the reason
-          // on every path or it survives into the next ban dialog.
+          // Cancel, Escape and the X all close through here — the reason is cleared on
+          // every path, so it never survives into the next ban dialog.
           onClose={() => { setConfirmModal(null); setBanReason(""); }}
+          onConfirm={() => toggleMut.mutate(confirmModal)}
           title={`${TOGGLE_LABEL[confirmModal]} — ${company.name}`}
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => { setConfirmModal(null); setBanReason(""); }}>Cancel</Button>
-              <Button
-                variant={confirmModal === "activate" ? "primary" : "danger"}
-                isLoading={toggleMut.isPending}
-                disabled={confirmModal === "deactivate" && banReason.trim().length < 3}
-                onClick={() => toggleMut.mutate(confirmModal)}
-              >
-                {TOGGLE_LABEL[confirmModal]}
-              </Button>
-            </>
-          }
+          size="md"
+          confirmLabel={TOGGLE_LABEL[confirmModal]}
+          confirmVariant={confirmModal === "activate" ? "primary" : "danger"}
+          isLoading={toggleMut.isPending}
+          confirmDisabled={confirmModal === "deactivate" && banReason.trim().length < 3}
         >
           <p className="text-sm text-slate-600">
             {confirmModal === "activate"
@@ -335,7 +344,7 @@ export default function AdminCompanyDetailPage({
               </p>
             </>
           )}
-        </Modal>
+        </ConfirmDialog>
       )}
     </DashboardShell>
   );

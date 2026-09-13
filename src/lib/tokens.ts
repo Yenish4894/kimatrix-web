@@ -18,8 +18,11 @@ const KEYS = {
   REFRESH_EXPIRY: "kimates.refreshTokenExpiresAt",
   USER: "kimates.user",
   COMPANY_ID: "kimates.companyId",
-  COMPANY_IS_ACTIVE: "kimates.companyIsActive",
 } as const;
+
+// No longer written. `companyIsActive` duplicated the server-computed profile and drifted
+// from it (ARC-5); still removed on clear() so it does not linger in existing browsers.
+const LEGACY_KEYS = ["kimates.companyIsActive"] as const;
 
 // Edge-readable session hint (role only). Kept in sync with the stored user.
 export const SESSION_COOKIE = "kimates.session";
@@ -104,29 +107,9 @@ export const TokenStorage = {
     return localStorage.getItem(KEYS.COMPANY_ID);
   },
 
-  setCompanyIsActive(isActive: boolean | null) {
-    if (!isBrowser()) return;
-    try {
-      if (isActive === null) {
-        localStorage.removeItem(KEYS.COMPANY_IS_ACTIVE);
-      } else {
-        localStorage.setItem(KEYS.COMPANY_IS_ACTIVE, String(isActive));
-      }
-    } catch {
-      /* ignore */
-    }
-  },
-
-  getCompanyIsActive(): boolean | null {
-    if (!isBrowser()) return null;
-    const raw = localStorage.getItem(KEYS.COMPANY_IS_ACTIVE);
-    if (raw === null) return null;
-    return raw === "true";
-  },
-
   clear() {
     if (!isBrowser()) return;
-    Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+    [...Object.values(KEYS), ...LEGACY_KEYS].forEach((k) => localStorage.removeItem(k));
     Cookies.remove(SESSION_COOKIE, { path: "/" });
   },
 };

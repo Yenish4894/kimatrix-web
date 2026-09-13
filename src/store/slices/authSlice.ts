@@ -8,7 +8,6 @@ import { clearCompany } from "./companySlice";
 const initialState: AuthState = {
   user: null,
   companyId: null,
-  companyIsActive: null,
   tokens: null,
   isLoading: false,
   isAuthenticated: false,
@@ -21,7 +20,6 @@ export const login = createAsyncThunk("auth/login", async (credentials: LoginFor
     const result = await authService.login(credentials);
     TokenStorage.setTokens(result.tokens);
     TokenStorage.setUser(result.user, result.companyId ?? null);
-    TokenStorage.setCompanyIsActive(result.companyIsActive ?? null);
     return result;
   } catch (err) {
     return rejectWithValue(err);
@@ -38,7 +36,6 @@ export const registerCompany = createAsyncThunk(
       const result = await authService.registerCompany(payload);
       TokenStorage.setTokens(result.tokens);
       TokenStorage.setUser(result.user, result.companyId ?? null);
-      TokenStorage.setCompanyIsActive(result.companyIsActive ?? null);
       return result;
     } catch (err) {
       return rejectWithValue(err);
@@ -70,7 +67,6 @@ export const loadSession = createAsyncThunk(
     const user = TokenStorage.getUser();
     const tokens = TokenStorage.getTokens();
     const companyId = TokenStorage.getCompanyId();
-    const companyIsActive = TokenStorage.getCompanyIsActive();
 
     if (!user || !tokens) {
       return rejectWithValue("no_session");
@@ -82,11 +78,16 @@ export const loadSession = createAsyncThunk(
 
     // If access token is expired (or about to be), the axios interceptor
     // will handle refresh on the next request. We just restore state here.
-    return { user, tokens, companyId, companyIsActive };
+    return { user, tokens, companyId };
   }
 );
 
 // ─── Slice ────────────────────────────────────────────────
+//
+// Whether the company is active is NOT stored here. It used to be, as a copy of the
+// login response persisted to localStorage, and it drifted from the server-computed
+// profile exactly as the removed companySlice profile did (ARC-5). Read `hasAccess`
+// from useCompanyProfile() instead.
 
 const authSlice = createSlice({
   name: "auth",
@@ -96,15 +97,9 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = true;
     },
-    // Called after a successful PayPal capture to reflect the company is now active
-    setCompanyIsActive: (state, action: PayloadAction<boolean>) => {
-      state.companyIsActive = action.payload;
-      TokenStorage.setCompanyIsActive(action.payload);
-    },
     clearAuth: (state) => {
       state.user = null;
       state.companyId = null;
-      state.companyIsActive = null;
       state.tokens = null;
       state.isAuthenticated = false;
       state.isLoading = false;
@@ -118,7 +113,6 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.companyId = action.payload.companyId ?? null;
-        state.companyIsActive = action.payload.companyIsActive ?? null;
         state.tokens = action.payload.tokens;
         state.isAuthenticated = true;
         state.isLoading = false;
@@ -132,7 +126,6 @@ const authSlice = createSlice({
       .addCase(registerCompany.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.companyId = action.payload.companyId ?? null;
-        state.companyIsActive = action.payload.companyIsActive ?? null;
         state.tokens = action.payload.tokens;
         state.isAuthenticated = true;
         state.isLoading = false;
@@ -142,7 +135,6 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.companyId = null;
-        state.companyIsActive = null;
         state.tokens = null;
         state.isAuthenticated = false;
         state.isLoading = false;
@@ -152,7 +144,6 @@ const authSlice = createSlice({
       .addCase(loadSession.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.companyId = action.payload.companyId;
-        state.companyIsActive = action.payload.companyIsActive;
         state.tokens = action.payload.tokens;
         state.isAuthenticated = true;
         state.isLoading = false;
@@ -160,7 +151,6 @@ const authSlice = createSlice({
       .addCase(loadSession.rejected, (state) => {
         state.user = null;
         state.companyId = null;
-        state.companyIsActive = null;
         state.tokens = null;
         state.isAuthenticated = false;
         state.isLoading = false;
@@ -168,5 +158,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearAuth, setCompanyIsActive } = authSlice.actions;
+export const { setUser, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

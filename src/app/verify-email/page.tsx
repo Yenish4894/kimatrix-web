@@ -9,6 +9,8 @@ import { Button } from "@/components/ui";
 import { PageLoader } from "@/components/ui/loader";
 import { authService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
+import { getQueryClient } from "@/lib/query-client";
+import { COMPANY_PROFILE_KEY } from "@/hooks/useCompanyProfile";
 
 type Status = "verifying" | "success" | "invalid" | "error";
 
@@ -28,6 +30,10 @@ function VerifyEmailInner() {
     setStatus("verifying");
     try {
       await authService.confirmEmailVerification(raw);
+      // The page now works for a signed-in visitor too (FE-13). Their cached profile
+      // still says "unverified", which keeps the paywall up; refresh it so "Go to
+      // dashboard" lands on the trial that just started.
+      void getQueryClient().invalidateQueries({ queryKey: COMPANY_PROFILE_KEY });
       setStatus("success");
     } catch (err) {
       const parsed = parseApiError(err);
@@ -51,7 +57,7 @@ function VerifyEmailInner() {
 
   if (status === "verifying") {
     return (
-      <AuthLayout title="Confirming your email" subtitle="This will only take a moment">
+      <AuthLayout title="Confirming your email" subtitle="This will only take a moment" redirectIfAuthenticated={false}>
         <div className="text-center space-y-4 py-4" aria-live="polite">
           <Loader2
             className="h-8 w-8 text-primary-600 animate-spin mx-auto"
@@ -65,7 +71,7 @@ function VerifyEmailInner() {
 
   if (status === "success") {
     return (
-      <AuthLayout title="Email confirmed" subtitle="Your account is ready">
+      <AuthLayout title="Email confirmed" subtitle="Your account is ready" redirectIfAuthenticated={false}>
         <div className="text-center space-y-4" role="status">
           <div
             className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center"
@@ -94,7 +100,7 @@ function VerifyEmailInner() {
 
   if (status === "invalid") {
     return (
-      <AuthLayout title="Link no longer valid" subtitle="This confirmation link can't be used">
+      <AuthLayout title="Link no longer valid" subtitle="This confirmation link can't be used" redirectIfAuthenticated={false}>
         <div className="text-center space-y-4" role="alert">
           <div
             className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center"
@@ -117,7 +123,7 @@ function VerifyEmailInner() {
   }
 
   return (
-    <AuthLayout title="Something went wrong" subtitle="We couldn't confirm your email">
+    <AuthLayout title="Something went wrong" subtitle="We couldn't confirm your email" redirectIfAuthenticated={false}>
       <div className="text-center space-y-4" role="alert">
         <div
           className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center"

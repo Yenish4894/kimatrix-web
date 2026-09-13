@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, Card, CardContent, Button, Table, QueryErrorState } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatNumber } from "@/lib/utils";
 import { QR_COLORS, qrLogoSettings } from "@/lib/qr";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -99,12 +99,12 @@ export default function CompanyDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Total Customers"
-          value={isLoading ? "—" : (stats?.totalCustomers ?? 0).toLocaleString("en-US")}
+          value={isLoading ? "—" : formatNumber(stats?.totalCustomers)}
           icon={Users}
         />
         <StatCard
           title="Total Purchases"
-          value={isLoading ? "—" : (stats?.totalPurchases ?? 0).toLocaleString("en-US")}
+          value={isLoading ? "—" : formatNumber(stats?.totalPurchases)}
           icon={Receipt}
         />
         <StatCard

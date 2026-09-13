@@ -10,22 +10,15 @@ import { Button, Input } from "@/components/ui";
 import { PageLoader } from "@/components/ui/loader";
 import { authService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
-import Joi from "joi";
+import { v, newPasswordSchema, PASSWORD_HELP, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/validation";
+import { useAppDispatch } from "@/store/hooks";
+import { logout } from "@/store/slices/authSlice";
 
-const schema = Joi.object({
-  newPassword: Joi.string()
-    .min(8)
-    .max(18)
-    .pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
-    .required()
-    .messages({
-      "string.empty": "Password is required",
-      "string.min": "Password must be at least 8 characters",
-      "string.max": "Password must be at most 18 characters",
-      "string.pattern.base": "Must include lowercase, uppercase, number, and special character",
-    }),
-  confirmNewPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
+const schema = v.object({
+  newPassword: newPasswordSchema("Password is required"),
+  confirmNewPassword: v.string().valid(v.ref("newPassword")).required().messages({
     "string.empty": "Please confirm your password",
+    "any.required": "Please confirm your password",
     "any.only": "Passwords do not match",
   }),
 });
@@ -33,6 +26,7 @@ const schema = Joi.object({
 function ResetPasswordInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const token = searchParams.get("token");
 
   const [form, setForm] = useState({ newPassword: "", confirmNewPassword: "" });
@@ -43,7 +37,9 @@ function ResetPasswordInner() {
 
   if (!token) {
     return (
-      <AuthLayout title="Invalid Link" subtitle="This password reset link is missing its token">
+      // `redirectIfAuthenticated={false}` on every state: a signed-in visitor opening a
+      // reset link used to be bounced to their dashboard and never saw the form (FE-13).
+      <AuthLayout title="Invalid Link" subtitle="This password reset link is missing its token" redirectIfAuthenticated={false}>
         <div className="text-center space-y-4">
           <div className="mx-auto h-16 w-16 rounded-full bg-error-100 flex items-center justify-center" aria-hidden="true">
             <AlertTriangle className="h-8 w-8 text-error-500" />
@@ -83,7 +79,13 @@ function ResetPasswordInner() {
       });
       setSuccess(true);
       toast.success("Password reset successfully");
-      setTimeout(() => router.push("/login"), 2500);
+      // This page now also works for a visitor who is signed in (FE-13). Whoever's
+      // password just changed, drop the session on this browser before heading to
+      // /login — otherwise the login page would see a session and bounce straight to
+      // a dashboard, which is the opposite of "log in with your new password".
+      setTimeout(() => {
+        void dispatch(logout()).finally(() => router.push("/login"));
+      }, 2500);
     } catch (err) {
       const parsed = parseApiError(err);
       if (parsed.status === 401) {
@@ -104,7 +106,7 @@ function ResetPasswordInner() {
 
   if (success) {
     return (
-      <AuthLayout title="Password Reset" subtitle="Your password has been updated">
+      <AuthLayout title="Password Reset" subtitle="Your password has been updated" redirectIfAuthenticated={false}>
         <div className="text-center space-y-4">
           <div className="mx-auto h-16 w-16 rounded-full bg-success-100 flex items-center justify-center" aria-hidden="true">
             <CheckCircle className="h-8 w-8 text-success-500" />
@@ -116,14 +118,14 @@ function ResetPasswordInner() {
   }
 
   return (
-    <AuthLayout title="Reset Your Password" subtitle="Choose a new strong password">
+    <AuthLayout title="Reset Your Password" subtitle="Choose a new strong password" redirectIfAuthenticated={false}>
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <Input
           label="New Password"
           name="newPassword"
           type="password"
-          placeholder="8–18 chars, upper, lower, digit, special"
-          helperText="8–18 chars, lowercase, uppercase, number, and special character"
+          placeholder={`${PASSWORD_MIN}–${PASSWORD_MAX} characters`}
+          helperText={PASSWORD_HELP}
           value={form.newPassword}
           onChange={handleChange}
           error={errors.newPassword}

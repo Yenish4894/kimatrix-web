@@ -11,7 +11,7 @@ import { Button, Card, CardContent, QueryErrorState } from "@/components/ui";
 import { PageLoader } from "@/components/ui/loader";
 import { companyService } from "@/services";
 import { parseApiError } from "@/lib/errors";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime, formatNumber } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import type { LuckyDrawSpinResult } from "@/types";
 
@@ -38,9 +38,15 @@ export default function LuckyDrawPage() {
   const [result, setResult] = useState<LuckyDrawSpinResult | null>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Leaving mid-spin cancels the reveal, and with it the refresh that was waiting for
+  // the wheel to stop — so the cache kept the pre-spin count and history, and coming
+  // back showed a spin that had already been used (FE-11). Refresh on the way out.
   useEffect(() => () => {
-    if (revealTimer.current) clearTimeout(revealTimer.current);
-  }, []);
+    if (revealTimer.current) {
+      clearTimeout(revealTimer.current);
+      void qc.invalidateQueries({ queryKey: ["company", "draws"] });
+    }
+  }, [qc]);
 
   const spinM = useMutation({
     mutationFn: () => companyService.spinDraw(),
@@ -53,6 +59,7 @@ export default function LuckyDrawPage() {
     },
     onSuccess: (res) => {
       revealTimer.current = setTimeout(() => {
+        revealTimer.current = null;
         setSpinning(false);
         setResult(res.data);
         toast.success(res.message);
@@ -62,6 +69,9 @@ export default function LuckyDrawPage() {
     onError: (err) => {
       setSpinning(false);
       toast.error(parseApiError(err).message);
+      // A refused spin ("no spins left", "no eligible purchases") means this page's
+      // counts were stale — typically another tab spun. Re-read them.
+      void qc.invalidateQueries({ queryKey: ["company", "draws"] });
     },
   });
 
@@ -113,10 +123,10 @@ export default function LuckyDrawPage() {
           {/* ── Stats ── */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <Stat icon={Ticket} label="Spins left" value={String(status!.totalRemaining)} />
-              <Stat icon={Trophy} label="Winners so far" value={String(current.used)} />
-              <Stat icon={Gift} label="Entries in the draw" value={String(current.entries)} />
-              <Stat icon={Users} label="Eligible customers" value={String(current.eligibleCustomers)} />
+              <Stat icon={Ticket} label="Spins left" value={formatNumber(status!.totalRemaining)} />
+              <Stat icon={Trophy} label="Winners so far" value={formatNumber(current.used)} />
+              <Stat icon={Gift} label="Entries in the draw" value={formatNumber(current.entries)} />
+              <Stat icon={Users} label="Eligible customers" value={formatNumber(current.eligibleCustomers)} />
             </div>
             <Card>
               <CardContent className="flex items-start gap-3 py-4">
@@ -208,8 +218,8 @@ export default function LuckyDrawPage() {
                       {formatDate(String(result.winner.submittedAt))}
                     </p>
                     <p className="mt-2 text-xs text-slate-500">
-                      Picked from {result.entriesCount} {result.entriesCount === 1 ? "entry" : "entries"} by{" "}
-                      {result.eligibleCustomers} {result.eligibleCustomers === 1 ? "customer" : "customers"}.
+                      Picked from {formatNumber(result.entriesCount)} {result.entriesCount === 1 ? "entry" : "entries"} by{" "}
+                      {formatNumber(result.eligibleCustomers)} {result.eligibleCustomers === 1 ? "customer" : "customers"}.
                     </p>
                   </div>
                 )}
@@ -244,7 +254,7 @@ export default function LuckyDrawPage() {
                       <td className="py-2.5 pr-4 whitespace-nowrap text-slate-600">{h.mobile}</td>
                       <td className="py-2.5 pr-4 text-slate-600">{h.invoiceNumber}</td>
                       <td className="py-2.5 pr-4 text-right whitespace-nowrap text-slate-800">{fmtCurrency(h.invoiceAmount)}</td>
-                      <td className="py-2.5 text-right text-slate-600">{h.entriesCount}</td>
+                      <td className="py-2.5 text-right text-slate-600">{formatNumber(h.entriesCount)}</td>
                     </tr>
                   ))}
                 </tbody>

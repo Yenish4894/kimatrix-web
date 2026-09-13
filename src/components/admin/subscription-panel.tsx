@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Gift, KeyRound, Mail, Phone, Sparkles, Undo2 } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardHeader, Input, Modal } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, Input, Modal, ConfirmDialog } from "@/components/ui";
 import { adminService, type AdminTrialIdentity } from "@/services/admin.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
@@ -301,52 +301,30 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
       </Modal>
 
       {/* ── Remove complimentary access ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "uncomp"}
         onClose={close}
+        onConfirm={() => compMut.mutate(false)}
         title="Remove complimentary access"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => compMut.mutate(false)}
-              disabled={compMut.isPending}
-            >
-              {compMut.isPending ? "Saving…" : "Remove"}
-            </Button>
-          </>
-        }
+        confirmLabel={compMut.isPending ? "Saving…" : "Remove"}
+        confirmVariant="danger"
+        confirmDisabled={compMut.isPending}
       >
         <p className="text-sm text-slate-600">
           <strong className="text-slate-800">{company.name}</strong> loses free access
           immediately. Unless it has a live trial or a paid plan, the owner will be taken to
           the paywall, and any unused lucky draw spins from this access are removed.
         </p>
-      </Modal>
+      </ConfirmDialog>
 
       {/* ── Release a burned identifier ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "release"}
         onClose={close}
+        onConfirm={() => releaseMut.mutate()}
         title="Release this identifier"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => releaseMut.mutate()}
-              disabled={releaseMut.isPending || releaseReason.trim().length < 3}
-            >
-              {releaseMut.isPending ? "Saving…" : "Release"}
-            </Button>
-          </>
-        }
+        confirmLabel={releaseMut.isPending ? "Saving…" : "Release"}
+        confirmDisabled={releaseMut.isPending || releaseReason.trim().length < 3}
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
@@ -362,7 +340,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
             helperText="Required, and kept on the record."
           />
         </div>
-      </Modal>
+      </ConfirmDialog>
     </>
   );
 }

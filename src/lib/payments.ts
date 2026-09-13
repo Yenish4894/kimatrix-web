@@ -1,4 +1,5 @@
 import type { PaymentKind, PaymentStatus } from "@/types";
+import { formatNumber } from "@/lib/utils";
 
 /**
  * Display rules for payment records, shared by the company "Payments & invoices" page
@@ -68,7 +69,7 @@ export function formatPaymentAmount(amount: string | number, currency: string): 
   const n = typeof amount === "string" ? Number.parseFloat(amount) : amount;
   const code = (currency || "").toUpperCase();
   if (!Number.isFinite(n)) return code ? `${code} —` : "—";
-  const value = n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const value = formatNumber(n, 2);
   return code ? `${code} ${value}` : value;
 }
 

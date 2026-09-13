@@ -17,10 +17,13 @@ export function proxy(request: NextRequest) {
   const isAdminRoute = pathname.startsWith("/admin");
   const isCompanyRoute = pathname.startsWith("/company");
 
-  // Not signed in → send to login.
+  // Not signed in → send to login, remembering the deep link (FE-14). The login page
+  // re-validates `next` before using it; this only ever writes our own path into it.
   if (!role) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 

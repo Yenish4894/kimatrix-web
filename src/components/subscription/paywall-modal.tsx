@@ -137,7 +137,11 @@ export function PaywallModal({
           <h2
             ref={headingRef}
             tabIndex={-1}
-            className="text-h2 font-heading font-semibold text-white focus:outline-none"
+            // `focus-visible:outline-none` as well as `focus:outline-none`: the heading is
+            // focused programmatically on open, which browsers treat as focus-visible,
+            // and the global `*:focus-visible` ring in globals.css drew an outline round
+            // it on every page load. It is not interactive, so it needs no ring.
+            className="text-h2 font-heading font-semibold text-white focus:outline-none focus-visible:outline-none"
           >
             {heading}
           </h2>

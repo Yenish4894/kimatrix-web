@@ -27,7 +27,6 @@ export interface AuthTokens {
 export interface AuthState {
   user: AuthUser | null;
   companyId: string | null;
-  companyIsActive: boolean | null;
   tokens: AuthTokens | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -163,6 +162,12 @@ export interface Company extends CompanyAddress {
     /** Null until the owner confirms their address. The trial clock starts here. */
     emailVerifiedAt?: string | null;
   };
+  /**
+   * True when an admin onboarded this company ("Add company"), so the owner was sent
+   * an invite rather than signing up. Only those have an invite to resend. Admin list
+   * and detail endpoints only; absent (older backend) is treated as false.
+   */
+  createdByAdmin?: boolean;
 }
 
 /**
@@ -449,8 +454,10 @@ export interface BulkEmailLog {
 
 // ─── Lucky draw ──────────────────────────────────────────────────────────────
 
+export type LuckyDrawSource = "payment" | "comp" | "trial";
+
 export interface LuckyDrawPeriod {
-  source: "payment" | "comp";
+  source: LuckyDrawSource;
   periodStart: string;
   /** Null for a comp with no end date. */
   periodEnd: string | null;
@@ -463,7 +470,10 @@ export interface LuckyDrawPeriod {
 }
 
 export interface LuckyDrawWinner {
-  purchaseId: string;
+  /** Null once the winning purchase was erased by a purge; the row is then a snapshot. */
+  purchaseId: string | null;
+  /** True when the details come from the draw's snapshot (mobile masked). */
+  fromSnapshot?: boolean;
   customerId?: string;
   fullName: string;
   mobile: string;
@@ -475,7 +485,7 @@ export interface LuckyDrawWinner {
 
 export interface LuckyDrawHistoryItem extends LuckyDrawWinner {
   id: string;
-  source: "payment" | "comp";
+  source: LuckyDrawSource;
   periodStart: string;
   periodEnd: string | null;
   entriesCount: number;
@@ -536,7 +546,11 @@ export interface AdminPayment extends PaymentRecordBase {
 // ─── System status (admin dashboard) ─────────────────────────
 
 export type ServiceKey = "database" | "redis" | "smtp" | "paypal" | "email_queue";
-export type ServiceHealth = "ok" | "degraded" | "down";
+/**
+ * "up" is what the SMTP entry reports (it tracks real sends, not a probe); the other
+ * services report "ok". Both mean healthy and are displayed the same way.
+ */
+export type ServiceHealth = "ok" | "up" | "degraded" | "down";
 
 export interface ServiceCheck {
   key: ServiceKey;
@@ -545,6 +559,13 @@ export interface ServiceCheck {
   latencyMs: number | null;
   detail: string;
   meta?: Record<string, unknown>;
+  /**
+   * SMTP only: outcomes of real outgoing mail, which is what matters — the August 2026
+   * outage passed every connectivity check while Hostinger rejected every message.
+   */
+  lastSuccessAt?: string | null;
+  lastFailureAt?: string | null;
+  lastError?: string | null;
 }
 
 export interface SystemStatus {

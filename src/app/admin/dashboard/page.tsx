@@ -6,7 +6,7 @@ import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, QueryErrorState } from "@/components/ui";
 import { VisitorsCard } from "@/components/admin/visitors-card";
 import { ServiceOutageBanner, ServiceStatusPanel, useSystemStatus } from "@/components/admin/service-status";
-import { formatSpendByCurrency } from "@/lib/utils";
+import { formatNumber, formatSpendByCurrency } from "@/lib/utils";
 import { adminService } from "@/services";
 
 export default function AdminDashboardPage() {
@@ -39,23 +39,23 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             title="Total Companies"
-            value={isLoading ? "—" : (stats?.totalCompanies ?? 0).toLocaleString("en-US")}
+            value={isLoading ? "—" : formatNumber(stats?.totalCompanies)}
             icon={Building2}
           />
           <StatCard
             title="Active"
-            value={isLoading ? "—" : (stats?.activeCompanies ?? 0).toLocaleString("en-US")}
+            value={isLoading ? "—" : formatNumber(stats?.activeCompanies)}
             icon={Shield}
             trend={stats ? { value: `${activePct}% active`, positive: true } : undefined}
           />
           <StatCard
             title="Inactive"
-            value={isLoading ? "—" : (stats?.inactiveCompanies ?? 0).toLocaleString("en-US")}
+            value={isLoading ? "—" : formatNumber(stats?.inactiveCompanies)}
             icon={AlertCircle}
           />
           <StatCard
             title="Fuel vs Shops"
-            value={isLoading ? "—" : `${stats?.totalFuelStations ?? 0} / ${stats?.totalShops ?? 0}`}
+            value={isLoading ? "—" : `${formatNumber(stats?.totalFuelStations)} / ${formatNumber(stats?.totalShops)}`}
             icon={Fuel}
           />
         </div>
@@ -68,12 +68,12 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <StatCard
             title="Total Customers"
-            value={isLoading ? "—" : (stats?.totalCustomers ?? 0).toLocaleString("en-US")}
+            value={isLoading ? "—" : formatNumber(stats?.totalCustomers)}
             icon={Users}
           />
           <StatCard
             title="Total Purchases"
-            value={isLoading ? "—" : (stats?.totalPurchases ?? 0).toLocaleString("en-US")}
+            value={isLoading ? "—" : formatNumber(stats?.totalPurchases)}
             icon={Receipt}
           />
           <StatCard

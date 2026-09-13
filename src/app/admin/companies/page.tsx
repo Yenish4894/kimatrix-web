@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, MoreVertical, Power, Eye, CalendarPlus, Plus } from "lucide-react";
+import { Search, MoreVertical, Power, Eye, CalendarPlus, Plus, Send } from "lucide-react";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { CreateCompanyModal } from "@/components/admin/create-company-modal";
-import { Table, Pagination, Input, Badge, Button, Modal, Select, QueryErrorState } from "@/components/ui";
+import { Table, Pagination, Input, Badge, ConfirmDialog, Button, Select, QueryErrorState } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { PAGE_SIZE, formatPageRange } from "@/lib/pagination";
 import { GrantTrialModal } from "@/components/admin/grant-trial-modal";
@@ -42,6 +42,25 @@ export default function AdminCompaniesPage() {
   // Required before a ban can be submitted — see the note on the textarea below.
   const [banReason, setBanReason] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [resendTarget, setResendTarget] = useState<Company | null>(null);
+
+  const resendM = useMutation({
+    mutationFn: (companyId: string) => adminService.resendInvite(companyId),
+    onSuccess: (message) => {
+      toast.success(message);
+      setResendTarget(null);
+    },
+    onError: (err) => {
+      const parsed = parseApiError(err);
+      // 409 = the owner verified in the meantime. The server's words, then refresh so
+      // the menu item disappears instead of inviting a second try.
+      toast.error(parsed.status === 409 ? parsed.message : errorMessageWithId(parsed));
+      if (parsed.status === 409) {
+        setResendTarget(null);
+        void qc.invalidateQueries({ queryKey: ["admin", "companies"] });
+      }
+    },
+  });
 
   useEffect(() => {
     if (!actionMenuId) return;
@@ -199,6 +218,19 @@ export default function AdminCompaniesPage() {
                   <CalendarPlus className="h-4 w-4" aria-hidden="true" />
                   {row.trialEndsAt ? "Extend trial" : "Grant trial"}
                 </button>
+                {/* Admin-onboarded companies only — a self-signup has no invite. */}
+                {row.createdByAdmin === true && !row.owner?.emailVerifiedAt && (
+                  <button
+                    role="menuitem"
+                    className="w-full px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2"
+                    onClick={() => {
+                      setActionMenuId(null);
+                      setResendTarget(row);
+                    }}
+                  >
+                    <Send className="h-4 w-4" aria-hidden="true" /> Resend invite
+                  </button>
+                )}
                 <button
                   role="menuitem"
                   className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
@@ -312,26 +344,34 @@ export default function AdminCompaniesPage() {
         />
       )}
 
+      <ConfirmDialog
+        open={resendTarget !== null}
+        onClose={() => setResendTarget(null)}
+        onConfirm={() => resendTarget && resendM.mutate(resendTarget.id)}
+        title="Resend invite?"
+        confirmLabel={<><Send className="h-4 w-4" aria-hidden="true" /> Send invite</>}
+        isLoading={resendM.isPending}
+      >
+        <p className="text-sm text-slate-600">
+          We&apos;ll email a fresh invite to{" "}
+          <strong className="break-all text-slate-800">{resendTarget?.owner?.email ?? "the owner"}</strong>{" "}
+          so they can confirm the address and sign in.
+        </p>
+      </ConfirmDialog>
+
       {confirmModal && (
-        <Modal
+        <ConfirmDialog
           open={true}
-          // Escape and the X close through here, not through Cancel — clear the reason
-          // on every path or it is pre-filled for the next company.
+          // Cancel, Escape and the X all close through here — the reason is cleared on
+          // every path, so it is never pre-filled for the next company.
           onClose={() => { setConfirmModal(null); setBanReason(""); }}
+          onConfirm={() => toggleMut.mutate(confirmModal)}
           title={`${TOGGLE_LABEL[confirmModal.action]} — ${confirmModal.company.name}`}
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => { setConfirmModal(null); setBanReason(""); }}>Cancel</Button>
-              <Button
-                variant={confirmModal.action === "activate" ? "primary" : "danger"}
-                isLoading={toggleMut.isPending}
-                disabled={confirmModal.action === "deactivate" && banReason.trim().length < 3}
-                onClick={() => toggleMut.mutate(confirmModal)}
-              >
-                {TOGGLE_LABEL[confirmModal.action]}
-              </Button>
-            </>
-          }
+          size="md"
+          confirmLabel={TOGGLE_LABEL[confirmModal.action]}
+          confirmVariant={confirmModal.action === "activate" ? "primary" : "danger"}
+          isLoading={toggleMut.isPending}
+          confirmDisabled={confirmModal.action === "deactivate" && banReason.trim().length < 3}
         >
           <p className="text-sm text-slate-600">
             {confirmModal.action === "activate"
@@ -365,7 +405,7 @@ export default function AdminCompaniesPage() {
               </p>
             </>
           )}
-        </Modal>
+        </ConfirmDialog>
       )}
     </DashboardShell>
   );

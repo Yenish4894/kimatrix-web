@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { TriangleAlert } from "lucide-react";
-import { Button, Modal } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui";
 import { companyService } from "@/services";
 import { parseApiError, errorMessageWithId, fieldErrorsFromDetails } from "@/lib/errors";
 import { VOID_REASON_MAX, validateVoidReason } from "@/lib/void";
@@ -74,21 +74,17 @@ export function VoidPurchaseModal({
   };
 
   return (
-    <Modal
+    <ConfirmDialog
       open={purchase !== null}
       onClose={close}
+      onConfirm={submit}
       title="Void this purchase?"
       role="alertdialog"
-      footer={
-        <>
-          <Button variant="ghost" onClick={close} disabled={voidM.isPending}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={submit} isLoading={voidM.isPending}>
-            Void purchase
-          </Button>
-        </>
-      }
+      size="md"
+      cancelDisabled={voidM.isPending}
+      confirmLabel="Void purchase"
+      confirmVariant="danger"
+      isLoading={voidM.isPending}
     >
       {purchase && (
         <div className="space-y-4">
@@ -143,6 +139,6 @@ export function VoidPurchaseModal({
           </div>
         </div>
       )}
-    </Modal>
+    </ConfirmDialog>
   );
 }

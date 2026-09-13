@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarX, ShieldAlert, Trash2, Undo2 } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardHeader, Input, Modal } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, Input, ConfirmDialog } from "@/components/ui";
 import { adminService } from "@/services/admin.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
@@ -121,25 +121,14 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
       </Card>
 
       {/* ── Schedule ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "request"}
         onClose={close}
+        onConfirm={() => requestMut.mutate()}
         title="Schedule account deletion"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => requestMut.mutate()}
-              disabled={requestMut.isPending || reason.trim().length < 3}
-            >
-              {requestMut.isPending ? "Scheduling…" : "Schedule deletion"}
-            </Button>
-          </>
-        }
+        confirmLabel={requestMut.isPending ? "Scheduling…" : "Schedule deletion"}
+        confirmVariant="danger"
+        confirmDisabled={requestMut.isPending || reason.trim().length < 3}
       >
         <div className="space-y-4">
           <p className="flex items-start gap-2 rounded-lg bg-error-50 px-3 py-2 text-sm text-error-800">
@@ -165,27 +154,17 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
             helperText="Required, and kept on the record — the email is the only other evidence this was requested."
           />
         </div>
-      </Modal>
+      </ConfirmDialog>
 
       {/* ── Call off ── */}
-      <Modal
+      <ConfirmDialog
         open={modal === "cancel"}
         onClose={close}
+        onConfirm={() => cancelMut.mutate()}
         title="Call off deletion"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Keep it scheduled
-            </Button>
-            <Button
-              onClick={() => cancelMut.mutate()}
-              disabled={cancelMut.isPending || reason.trim().length < 3}
-            >
-              {cancelMut.isPending ? "Saving…" : "Call it off"}
-            </Button>
-          </>
-        }
+        cancelLabel="Keep it scheduled"
+        confirmLabel={cancelMut.isPending ? "Saving…" : "Call it off"}
+        confirmDisabled={cancelMut.isPending || reason.trim().length < 3}
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
@@ -202,7 +181,7 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
             helperText="Required, and kept on the record."
           />
         </div>
-      </Modal>
+      </ConfirmDialog>
     </>
   );
 }

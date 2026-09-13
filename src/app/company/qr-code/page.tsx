@@ -7,7 +7,7 @@ import {Checkbox} from "@/components/ui";
 import {toast} from "react-toastify";
 
 import {DashboardShell} from "@/components/layouts/dashboard-shell";
-import {Card, CardContent, Button, Modal} from "@/components/ui";
+import {Card, CardContent, Button, ConfirmDialog} from "@/components/ui";
 
 import {useCompanyProfile, invalidateCompanyProfile} from "@/hooks/useCompanyProfile";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
@@ -66,12 +66,20 @@ export default function QRCodePage() {
     onError: (err) => toast.error(parseApiError(err).message),
   });
 
-  const copyUrl = () => {
+  const copyUrl = async () => {
     if (!company?.qrUrl) return;
-    navigator.clipboard.writeText(company.qrUrl);
-    setCopied(true);
-    toast.success("URL copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
+    // "Copied" only once the write has actually succeeded (FE-16). It fails on plain
+    // http, in some in-app browsers, and when permission is denied — and the tick used
+    // to appear anyway, so the owner pasted whatever was on their clipboard before.
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(company.qrUrl);
+      setCopied(true);
+      toast.success("URL copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Couldn't copy automatically. Select the link and copy it instead.");
+    }
   };
 
   const handleDownload = async () => {
@@ -142,7 +150,7 @@ export default function QRCodePage() {
                 </span>
                 <button
                   type="button"
-                  onClick={copyUrl}
+                  onClick={() => void copyUrl()}
                   className="shrink-0 h-9 w-9 flex items-center justify-center rounded-md hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
                   aria-label="Copy URL"
                 >
@@ -226,26 +234,19 @@ export default function QRCodePage() {
         </Card>
       </div>
 
-      <Modal
+      <ConfirmDialog
         open={confirmRegen}
         onClose={closeRegen}
+        onConfirm={() => regenM.mutate()}
         title="Regenerate your QR code?"
         role="alertdialog"
-        footer={
-          <>
-            <Button variant="ghost" onClick={closeRegen} disabled={regenM.isPending}>
-              Keep my current code
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => regenM.mutate()}
-              isLoading={regenM.isPending}
-              disabled={!regenUnderstood || regenM.isPending}
-            >
-              Regenerate now
-            </Button>
-          </>
-        }
+        size="md"
+        cancelLabel="Keep my current code"
+        cancelDisabled={regenM.isPending}
+        confirmLabel="Regenerate now"
+        confirmVariant="danger"
+        isLoading={regenM.isPending}
+        confirmDisabled={!regenUnderstood || regenM.isPending}
       >
         <div className="space-y-4 text-sm">
           <div className="rounded-lg border border-error-200 bg-error-50 p-4 text-error-800">
@@ -279,35 +280,24 @@ export default function QRCodePage() {
             label="I understand my current posters and links will stop working, and I will print the new poster."
           />
         </div>
-      </Modal>
+      </ConfirmDialog>
 
-      <Modal
+      <ConfirmDialog
         open={confirmPause}
         onClose={() => setConfirmPause(false)}
+        onConfirm={() => pauseM.mutate()}
         title="Pause your QR code?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setConfirmPause(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => pauseM.mutate()}
-              isLoading={pauseM.isPending}
-              disabled={pauseM.isPending}
-            >
-              Pause QR code
-            </Button>
-          </>
-        }
+        confirmLabel="Pause QR code"
+        confirmVariant="danger"
+        isLoading={pauseM.isPending}
+        confirmDisabled={pauseM.isPending}
       >
         <p className="text-sm text-slate-600">
           Customers who scan it won&apos;t be able to record purchases until you resume.
           They&apos;ll see a message that the business has paused entries. Your data and
           printed posters are not affected.
         </p>
-      </Modal>
+      </ConfirmDialog>
     </DashboardShell>
   );
 }

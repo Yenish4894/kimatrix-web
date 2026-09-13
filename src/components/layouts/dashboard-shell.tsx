@@ -8,6 +8,7 @@ import { PageLoader } from "@/components/ui/loader";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { loadSession } from "@/store/slices/authSlice";
 import { cn } from "@/lib/utils";
+import { SmtpDownBanner } from "@/components/admin/service-status";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -136,6 +137,12 @@ export function DashboardShell({ children, title, requiredRole }: Readonly<Dashb
       <div className={cn("min-h-screen flex flex-col transition-all duration-300", sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-[260px]")}>
         <Header title={title} onMenuToggle={handleMenuToggle} />
         <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
+          {/* Every admin page, not just the dashboard: a mail outage breaks password
+              resets and verification for every customer, and must be seen wherever the
+              admin happens to be. Mounted here rather than in app/admin/layout.tsx so it
+              sits inside the page frame (beside the sidebar), and it only renders once
+              the super_admin role has been confirmed above. */}
+          {requiredRole === "super_admin" && <SmtpDownBanner />}
           {children}
         </main>
       </div>

@@ -19,7 +19,7 @@ import {
   CustomerPhoneInput,
   isoFromCountryName,
 } from "@/components/ui/customer-phone-input";
-import { formatCurrency, getCurrencySymbol } from "@/lib/utils";
+import { formatCurrency, formatNumber, getCurrencySymbol } from "@/lib/utils";
 import { qrService } from "@/services";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -60,7 +60,7 @@ const RULES: Record<string, (raw: string) => string | undefined> = {
     if (!Number.isFinite(n)) return "Enter a valid amount";
     if (n <= 0) return "Amount must be positive";
     if (n > MAX_INVOICE_AMOUNT)
-      return `Amount cannot exceed ${MAX_INVOICE_AMOUNT.toLocaleString()}`;
+      return `Amount cannot exceed ${formatNumber(MAX_INVOICE_AMOUNT)}`;
     return undefined;
   },
   vehicleNumber: (v) => {

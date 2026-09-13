@@ -4,8 +4,9 @@ import { Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/ui";
 import { adminService } from "@/services";
+import { formatNumber } from "@/lib/utils";
 
-const fmt = (n: unknown) => Number(n ?? 0).toLocaleString("en-US");
+const fmt = (n: unknown) => formatNumber(Number(n ?? 0));
 
 /**
  * Landing-page visitors. Its own query and its own failure state: this is a nice-to-have

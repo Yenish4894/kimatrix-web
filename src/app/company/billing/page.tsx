@@ -7,21 +7,23 @@ import { AlertCircle, Check, CreditCard, Loader2, ReceiptText, RefreshCw, Zap, S
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { SubscriptionCard } from "@/components/billing/subscription-card";
 import { useQuery } from "@tanstack/react-query";
-import { parseApiError } from "@/lib/errors";
+import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { hasLiveSubscription } from "@/lib/billing";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { fetchPlans } from "@/store/slices/companySlice";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
+
+const SPIN_QTY_MAX = 100;
 
 function formatPrice(price: string): string {
   // An admin can save a plan with a blank price; without this the customer sees
   // "ZAR NaN" on the card they are about to buy, and nobody completes that checkout.
   const n = Number.parseFloat(price);
-  return Number.isFinite(n) ? n.toFixed(2) : "—";
+  return Number.isFinite(n) ? formatNumber(n, 2) : "—";
 }
 
 function PlanCard({
@@ -111,7 +113,6 @@ export default function BillingPage() {
   // block can produce is an error. Changing plans is the supported path, and it lives
   // on the card above.
   const subscriptionIsLive = hasLiveSubscription(subscription);
-  const companyIsActive = useAppSelector((state) => state.auth.companyIsActive);
   // From the shared query, not Redux. The layout used to skip fetching the profile on
   // billing routes, so this was ALWAYS null on every real entry path — the gate
   // redirect, the PayPal cancel return, the post-register redirect, a reload. The
@@ -121,7 +122,12 @@ export default function BillingPage() {
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [spinQty, setSpinQty] = useState(1);
+  // Kept as the raw text so typing is never fought: clamping on every keystroke snapped
+  // an emptied field straight back to 1, so "25" could only be typed as "125" → 100
+  // (FE-16). Normalised on blur; the Buy button waits for a valid number.
+  const [spinQtyText, setSpinQtyText] = useState("1");
+  const spinQty = Number.parseInt(spinQtyText, 10);
+  const spinQtyValid = Number.isInteger(spinQty) && spinQty >= 1 && spinQty <= SPIN_QTY_MAX;
   const [isBuyingSpins, setIsBuyingSpins] = useState(false);
 
   useEffect(() => {
@@ -142,7 +148,7 @@ export default function BillingPage() {
   }, [plans, selectedPlanId]);
 
   const handleBuySpins = async () => {
-    if (isBuyingSpins) return;
+    if (isBuyingSpins || !spinQtyValid) return;
     setIsBuyingSpins(true);
     try {
       const { approvalUrl } = await paymentService.createSpinOrder(spinQty);
@@ -171,8 +177,11 @@ export default function BillingPage() {
         : await paymentService.createOrder(selectedPlanId);
       // Hard redirect to PayPal — must NOT use Next.js router (external URL)
       globalThis.location.href = approvalUrl;
-    } catch {
-      toast.error("Failed to initiate payment. Please try again.");
+    } catch (err) {
+      // The server's reason, not a generic line (FE-9): "you already have an active
+      // subscription" or "this plan is no longer available" tell the customer what to
+      // do, while "please try again" sent them round the same loop.
+      toast.error(errorMessageWithId(parseApiError(err)));
       setIsRedirecting(false);
     }
   };
@@ -180,7 +189,8 @@ export default function BillingPage() {
   // From the server-computed profile, not the localStorage-cached flag, which is only
   // refreshed at login and so could say "active" for an account an admin has since
   // deactivated — showing them the neutral "manage your subscription" banner.
-  const isPending = profile ? profile.hasAccess === false : companyIsActive === false;
+  // Nothing is assumed before the profile arrives — the neutral copy is the safe default.
+  const isPending = profile?.hasAccess === false;
   const isExpired =
     !!profile?.subscriptionExpiresAt &&
     new Date(profile.subscriptionExpiresAt).getTime() < Date.now();
@@ -313,7 +323,7 @@ export default function BillingPage() {
               ) : (
                 <>
                   <p className="text-xs text-slate-500 mb-4">
-                    Add spins to your current plan period. Each spin is USD {spinPrice.toFixed(2)}.
+                    Add spins to your current plan period. Each spin is USD {formatNumber(spinPrice, 2)}.
                   </p>
                   <div className="flex items-center gap-3">
                     <label htmlFor="spin-qty" className="text-sm text-slate-600 shrink-0">
@@ -322,21 +332,28 @@ export default function BillingPage() {
                     <input
                       id="spin-qty"
                       type="number"
+                      inputMode="numeric"
                       min={1}
-                      max={100}
-                      value={spinQty}
-                      onChange={(e) => setSpinQty(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+                      max={SPIN_QTY_MAX}
+                      value={spinQtyText}
+                      onChange={(e) => setSpinQtyText(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                      onBlur={() =>
+                        setSpinQtyText(
+                          String(Number.isInteger(spinQty) ? Math.min(SPIN_QTY_MAX, Math.max(1, spinQty)) : 1),
+                        )
+                      }
+                      aria-invalid={!spinQtyValid}
                       className="w-20 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-400"
                     />
                     <span className="text-sm font-medium text-slate-700">
-                      = USD {(spinQty * spinPrice).toFixed(2)}
+                      = USD {spinQtyValid ? formatNumber(spinQty * spinPrice, 2) : "—"}
                     </span>
                   </div>
                   <div className="mt-4">
                     <Button
                       fullWidth
                       onClick={handleBuySpins}
-                      disabled={isBuyingSpins}
+                      disabled={isBuyingSpins || !spinQtyValid}
                       isLoading={isBuyingSpins}
                     >
                       <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />

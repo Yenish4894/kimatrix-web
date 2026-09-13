@@ -10,15 +10,20 @@ import { Button, Input } from "@/components/ui";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { login } from "@/store/slices/authSlice";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
-import Joi from "joi";
+import { v } from "@/lib/validation";
+import { RETURN_PARAM, returnPathFor } from "@/lib/return-url";
 
-const schema = Joi.object({
-  identifier: Joi.string().required().messages({
+// Presence only. The login form must accept whatever password the account already has
+// — enforcing a minimum here locked out anyone whose password predates the current
+// rules, while the server itself accepted it (FE-8).
+const schema = v.object({
+  identifier: v.string().required().messages({
     "string.empty": "Email or username is required",
+    "any.required": "Email or username is required",
   }),
-  password: Joi.string().min(8).required().messages({
+  password: v.string().required().messages({
     "string.empty": "Password is required",
-    "string.min": "Password must be at least 8 characters",
+    "any.required": "Password is required",
   }),
 });
 
@@ -61,10 +66,16 @@ export default function LoginPage() {
       const result = await dispatch(login(form)).unwrap();
       toast.success("Login successful");
 
+      // Back to the deep link that sent them here (FE-14), validated to a same-origin
+      // path inside their own area; otherwise their dashboard. Read at submit time from
+      // `window.location` rather than useSearchParams, which would force a Suspense
+      // boundary around the whole page for one optional parameter.
+      const requested = new URLSearchParams(globalThis.location.search).get(RETURN_PARAM);
+
       if (result.user.userType === "super_admin") {
-        router.push("/admin/dashboard");
+        router.push(returnPathFor(requested, "super_admin"));
       } else {
-        // Always the dashboard; SubscriptionGate decides what actually renders.
+        // The dashboard by default; SubscriptionGate decides what actually renders.
         //
         // This used to send any company with `companyIsActive === false` to billing,
         // on the pre-trial assumption that inactive meant "must subscribe". Since the
@@ -74,7 +85,7 @@ export default function LoginPage() {
         // the page mentioning the trial they signed up for or the confirmation email
         // waiting in their inbox. The gate renders the paywall that does explain it and
         // offers a resend, so the decision belongs there rather than duplicated here.
-        router.push("/company/dashboard");
+        router.push(returnPathFor(requested, "company"));
       }
     } catch (err) {
       const parsed = parseApiError(err);

@@ -66,24 +66,62 @@ function flushQueue(token: string | null, error: unknown = null) {
   pendingQueue = [];
 }
 
-async function refreshTokens(): Promise<string> {
-  const refreshToken = TokenStorage.getRefreshToken();
-  if (!refreshToken) throw new Error("No refresh token available");
+/**
+ * Cross-tab single flight (FE-7).
+ *
+ * Refresh tokens are single-use and the backend treats a reused one as theft, revoking
+ * every session. All tabs share one localStorage, so two tabs whose access tokens expire
+ * together would each send the SAME refresh token: the first rotates it, the second is
+ * a "reuse", and both tabs get logged out. The in-tab queue below cannot see other tabs.
+ *
+ * So the refresh runs under a Web Lock shared by every tab of this origin. Inside the
+ * lock we first check whether another tab already rotated while we waited — if the
+ * stored access token is no longer the one our request failed with, we simply use the
+ * new one. Where Web Locks are unavailable (very old browsers) we fall back to that
+ * same check without the lock, which still catches every case but a true tie.
+ */
+const REFRESH_LOCK = "kimates:token-refresh";
 
-  // Use a bare axios call to avoid recursive interceptor loop
-  const { data } = await axios.post(
-    `${API_BASE_URL}/api/auth/refresh`,
-    { refreshToken },
-    { headers: { "Content-Type": "application/json" } }
-  );
+async function refreshTokens(failedAccessToken: string | null): Promise<string> {
+  const run = async (): Promise<string> => {
+    const stored = TokenStorage.getAccessToken();
+    if (stored && failedAccessToken && stored !== failedAccessToken) {
+      // Another tab refreshed while this one waited for the lock.
+      return stored;
+    }
 
-  const tokens = data?.data?.tokens;
-  if (!tokens?.accessToken || !tokens?.refreshToken) {
-    throw new Error("Invalid refresh response");
+    const refreshToken = TokenStorage.getRefreshToken();
+    if (!refreshToken) throw new Error("No refresh token available");
+
+    // Use a bare axios call to avoid recursive interceptor loop
+    const { data } = await axios.post(
+      `${API_BASE_URL}/api/auth/refresh`,
+      { refreshToken },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    const tokens = data?.data?.tokens;
+    if (!tokens?.accessToken || !tokens?.refreshToken) {
+      throw new Error("Invalid refresh response");
+    }
+
+    TokenStorage.setTokens(tokens);
+    return tokens.accessToken as string;
+  };
+
+  const locks = typeof navigator === "undefined" ? undefined : navigator.locks;
+  if (locks?.request) {
+    // The lock resolves with the callback's resolved value; the DOM typings model that
+    // as Promise<Promise<string>>, hence the cast.
+    return locks.request(REFRESH_LOCK, run) as unknown as Promise<string>;
   }
+  return run();
+}
 
-  TokenStorage.setTokens(tokens);
-  return tokens.accessToken as string;
+/** The bearer token a request was sent with, so a refresh can tell if it is stale. */
+function bearerOf(config: InternalAxiosRequestConfig): string | null {
+  const header = config.headers?.Authorization;
+  return typeof header === "string" && header.startsWith("Bearer ") ? header.slice(7) : null;
 }
 
 // ─── Response interceptor ─────────────────────────────────
@@ -145,7 +183,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const newAccessToken = await refreshTokens();
+        const newAccessToken = await refreshTokens(bearerOf(originalRequest));
         flushQueue(newAccessToken);
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

@@ -15,9 +15,8 @@ export const ATTACHMENT_ALLOWED_EXTENSIONS = [
   ".webp",
   ".csv",
   ".txt",
-  ".doc",
+  // Legacy .doc/.xls are refused server-side: they can carry macros.
   ".docx",
-  ".xls",
   ".xlsx",
 ] as const;
 

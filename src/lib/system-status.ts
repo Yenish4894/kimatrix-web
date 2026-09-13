@@ -1,4 +1,5 @@
-import type { ServiceCheck, ServiceHealth, ServiceKey } from "@/types";
+import type { ServiceCheck, ServiceHealth, ServiceKey, SystemStatus } from "@/types";
+import { formatNumber } from "@/lib/utils";
 
 /**
  * Display rules for the admin "Service status" panel. Pure, so it can be tested.
@@ -6,6 +7,7 @@ import type { ServiceCheck, ServiceHealth, ServiceKey } from "@/types";
 
 export const SERVICE_HEALTH_LABEL: Record<ServiceHealth, string> = {
   ok: "OK",
+  up: "OK",
   degraded: "Degraded",
   down: "Down",
 };
@@ -13,9 +15,43 @@ export const SERVICE_HEALTH_LABEL: Record<ServiceHealth, string> = {
 /** Dot colour and badge variant. Always shown beside the text label, never alone. */
 export const SERVICE_HEALTH_TONE: Record<ServiceHealth, { dot: string; badge: "success" | "warning" | "error" }> = {
   ok: { dot: "bg-success-500", badge: "success" },
+  up: { dot: "bg-success-500", badge: "success" },
   degraded: { dot: "bg-warning-500", badge: "warning" },
   down: { dot: "bg-error-500", badge: "error" },
 };
+
+// ─── SMTP delivery ────────────────────────────────────────────────────────
+
+/** The SMTP entry, if the backend reported one. */
+export function smtpCheck(status: Pick<SystemStatus, "services"> | undefined): ServiceCheck | undefined {
+  return status?.services.find((s) => s.key === "smtp");
+}
+
+function validIso(iso: string | null | undefined): iso is string {
+  return typeof iso === "string" && !Number.isNaN(Date.parse(iso));
+}
+
+/**
+ * The admin-wide banner while mail is being rejected. "Since" is the last successful
+ * send: failures began after it, and it is the moment that matters — every password
+ * reset, verification and notice since then has gone nowhere.
+ */
+export function smtpDownMessage(
+  smtp: Pick<ServiceCheck, "lastSuccessAt">,
+  fmtDateTime: (iso: string) => string,
+): string {
+  const since = validIso(smtp.lastSuccessAt) ? ` since ${fmtDateTime(smtp.lastSuccessAt)}` : "";
+  return `Emails are not being delivered — the mail server is rejecting outgoing email${since}. Check the Hostinger panel (Outbound sending).`;
+}
+
+/** The softer notice on the status panel: some sends fail, others still get through. */
+export function smtpDegradedMessage(
+  smtp: Pick<ServiceCheck, "lastFailureAt">,
+  fmtDateTime: (iso: string) => string,
+): string {
+  const when = validIso(smtp.lastFailureAt) ? ` (latest ${fmtDateTime(smtp.lastFailureAt)})` : "";
+  return `Some emails are failing to send${when}, though others still get through. Keep an eye on it; if it turns to Down, check the Hostinger panel (Outbound sending).`;
+}
 
 /**
  * What an outage means for customers, in plain words. The backend's `detail` says what
@@ -81,18 +117,35 @@ export interface MetaItem {
  * ignored, not dumped raw, to keep the panel readable at a glance.
  */
 export function serviceMetaItems(
-  service: Pick<ServiceCheck, "key" | "meta">,
+  service: Pick<ServiceCheck, "key" | "meta" | "lastSuccessAt" | "lastFailureAt" | "lastError">,
   fmtDateTime: (iso: string) => string,
 ): MetaItem[] {
-  const meta = service.meta;
-  if (!meta || typeof meta !== "object") return [];
   const items: MetaItem[] = [];
+
+  // Real delivery outcomes, top-level on the SMTP entry. Read before `meta`, which
+  // may be absent entirely.
+  if (service.key === "smtp") {
+    if (validIso(service.lastSuccessAt)) {
+      items.push({ label: "Last success", value: fmtDateTime(service.lastSuccessAt) });
+    }
+    const failedAfterSuccess =
+      validIso(service.lastFailureAt) &&
+      (!validIso(service.lastSuccessAt) || Date.parse(service.lastFailureAt) > Date.parse(service.lastSuccessAt));
+    if (validIso(service.lastFailureAt)) {
+      items.push({ label: "Last failure", value: fmtDateTime(service.lastFailureAt), emphasis: failedAfterSuccess });
+    }
+    const lastError = service.lastError?.trim();
+    if (lastError) items.push({ label: "Last error", value: lastError, emphasis: failedAfterSuccess });
+  }
+
+  const meta = service.meta;
+  if (!meta || typeof meta !== "object") return items;
 
   if (service.key === "email_queue") {
     const failed = readCount(meta, "failed");
     const waiting = readCount(meta, "waiting");
-    if (failed !== null) items.push({ label: "Failed", value: failed.toLocaleString("en-US"), emphasis: failed > 0 });
-    if (waiting !== null) items.push({ label: "Waiting", value: waiting.toLocaleString("en-US") });
+    if (failed !== null) items.push({ label: "Failed", value: formatNumber(failed), emphasis: failed > 0 });
+    if (waiting !== null) items.push({ label: "Waiting", value: formatNumber(waiting) });
     const reason = readText(meta, "lastFailedReason");
     if (reason) {
       const at = readText(meta, "lastFailedAt");

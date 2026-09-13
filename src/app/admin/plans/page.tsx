@@ -5,9 +5,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Plus, Pencil, Star, Archive, Eye, EyeOff, Info } from "lucide-react";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
-import { Badge, Button, Card, CardContent, Modal, QueryErrorState } from "@/components/ui";
+import { Badge, Button, Card, CardContent, ConfirmDialog, QueryErrorState } from "@/components/ui";
 import { adminService } from "@/services/admin.service";
 import { parseApiError } from "@/lib/errors";
+import { formatNumber } from "@/lib/utils";
 import { PlanFormModal } from "@/components/admin/plan-form-modal";
 import { TrialSettingsCard } from "@/components/admin/trial-settings-card";
 import type { AdminPlan } from "@/types";
@@ -15,10 +16,7 @@ import type { AdminPlan } from "@/types";
 function formatMoney(amount: string, currency: string): string {
   const n = Number.parseFloat(amount);
   if (Number.isNaN(n)) return `${currency} ${amount}`;
-  return `${currency} ${n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return `${currency} ${formatNumber(n, 2)}`;
 }
 
 function planStatus(plan: AdminPlan): { label: string; variant: "success" | "warning" | "error" } {
@@ -221,35 +219,24 @@ export default function AdminPlansPage() {
         </section>
       )}
 
-      <Modal
+      <ConfirmDialog
         open={hideTarget !== null}
         onClose={() => setHideTarget(null)}
-        title="Hide this plan?"
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setHideTarget(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() =>
-                hideTarget && availabilityM.mutate({ planId: hideTarget.id, isActive: false })
-              }
-              isLoading={availabilityM.isPending}
-              disabled={availabilityM.isPending}
-            >
-              Hide plan
-            </Button>
-          </>
+        onConfirm={() =>
+          hideTarget && availabilityM.mutate({ planId: hideTarget.id, isActive: false })
         }
+        title="Hide this plan?"
+        confirmLabel="Hide plan"
+        confirmVariant="danger"
+        isLoading={availabilityM.isPending}
+        confirmDisabled={availabilityM.isPending}
       >
         <p className="text-sm text-slate-600">
           <strong className="text-slate-800">{hideTarget?.name}</strong> will no longer be
           offered to companies. Anyone already on it keeps what they bought, and you can
           put it back on sale at any time.
         </p>
-      </Modal>
+      </ConfirmDialog>
 
       {(isCreating || editing) && (
         <PlanFormModal

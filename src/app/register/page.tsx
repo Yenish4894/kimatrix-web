@@ -20,75 +20,70 @@ import type { BusinessType } from "@/types";
 // Inlined at build time. Unset → no widget, no token sent (the server only enforces
 // Turnstile when it has a secret configured).
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
-import Joi from "joi";
+import { v, newPasswordSchema, PASSWORD_HELP } from "@/lib/validation";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
 
-const schema = Joi.object({
-  name: Joi.string().min(2).max(255).required().messages({
+const schema = v.object({
+  name: v.string().min(2).max(255).required().messages({
     "string.empty": "Company name is required",
     "string.min": "Name must be at least 2 characters",
   }),
-  streetAddress: Joi.string().min(3).max(512).required().messages({
+  streetAddress: v.string().min(3).max(512).required().messages({
     "string.empty": "Street address is required",
     "string.min": "Street address must be at least 3 characters",
   }),
-  city: Joi.string().min(2).max(128).required().messages({
+  city: v.string().min(2).max(128).required().messages({
     "string.empty": "City is required",
     "string.min": "City must be at least 2 characters",
   }),
-  state: Joi.string().min(2).max(128).required().messages({
+  state: v.string().min(2).max(128).required().messages({
     "string.empty": "State or region is required",
     "string.min": "State must be at least 2 characters",
   }),
-  country: Joi.string().min(2).max(128).required().messages({
+  country: v.string().min(2).max(128).required().messages({
     "string.empty": "Country is required",
     "string.min": "Country must be at least 2 characters",
   }),
-  postalCode: Joi.string().min(1).max(32).allow("").optional().messages({
+  postalCode: v.string().min(1).max(32).allow("").optional().messages({
     "string.max": "Postal code cannot exceed 32 characters",
   }),
-  registrationNumber: Joi.string().min(3).max(128).required().messages({
+  registrationNumber: v.string().min(3).max(128).required().messages({
     "string.empty": "Registration number is required",
   }),
-  contactEmail: Joi.string().email({ tlds: { allow: false } }).max(255).required().messages({
+  contactEmail: v.string().email().max(255).required().messages({
     "string.empty": "Contact email is required",
     "string.email": "Enter a valid email address",
   }),
-  // Country-specific phone validation runs post-Joi via libphonenumber-js.
-  // Joi here only enforces presence + basic shape (must start with +).
-  contactPhone: Joi.string().pattern(E164).required().messages({
+  // Country-specific phone validation runs after this via libphonenumber-js.
+  // The schema here only enforces presence + basic shape (must start with +).
+  contactPhone: v.string().pattern(E164).required().messages({
     "string.empty": "Contact phone is required",
     "string.pattern.base": "Enter a valid phone number",
   }),
-  whatsappNumber: Joi.string().pattern(E164).allow("").optional().messages({
+  whatsappNumber: v.string().pattern(E164).allow("").optional().messages({
     "string.pattern.base": "Enter a valid WhatsApp number",
   }),
-  businessType: Joi.string().valid("fuel_station", "shop").required().messages({
+  businessType: v.string().valid("fuel_station", "shop").required().messages({
     "any.only": "Select a business type",
     "string.empty": "Select a business type",
   }),
-  username: Joi.string().min(3).max(64).pattern(/^[a-zA-Z0-9_.-]+$/).required().messages({
+  username: v.string().min(3).max(64).pattern(/^[a-zA-Z0-9_.-]+$/).required().messages({
     "string.empty": "Username is required",
     "string.min": "Username must be at least 3 characters",
     "string.pattern.base": "Use only letters, numbers, dots, dashes, and underscores",
   }),
-  email: Joi.string().email({ tlds: { allow: false } }).max(255).required().messages({
+  email: v.string().email().max(255).required().messages({
     "string.empty": "Login email is required",
     "string.email": "Enter a valid email address",
   }),
-  password: Joi.string().min(8).max(18).pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/).required().messages({
-    "string.empty": "Password is required",
-    "string.min": "Password must be at least 8 characters",
-    "string.max": "Password must be at most 18 characters",
-    "string.pattern.base": "Must include lowercase, uppercase, number, and special character",
-  }),
-  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+  password: newPasswordSchema("Password is required"),
+  confirmPassword: v.string().valid(v.ref("password")).required().messages({
     "string.empty": "Please confirm your password",
     "any.only": "Passwords do not match",
   }),
-  promoEmailOptIn: Joi.boolean().optional(),
-  termsAccepted: Joi.boolean().valid(true).required().messages({
+  promoEmailOptIn: v.boolean().optional(),
+  termsAccepted: v.boolean().valid(true).required().messages({
     "any.only": "You must accept the Terms and Privacy Policy",
   }),
 });
@@ -121,7 +116,7 @@ export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { isLoading } = useAppSelector((state) => state.auth);
-  // Kept out of `form`: the Joi schema would reject unknown keys.
+  // Kept out of `form`, which mirrors the validation schema field for field.
   const [website, setWebsite] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
@@ -161,9 +156,9 @@ export default function RegisterPage() {
 
   const handlePhoneBlur = (name: "contactPhone" | "whatsappNumber") => {
     const { error } = schema.validate(form, { abortEarly: false });
-    const joiErr = error?.details.find((d) => d.path[0] === name);
-    if (joiErr) {
-      setErrors((prev) => ({ ...prev, [name]: joiErr.message }));
+    const shapeErr = error?.details.find((d) => d.path[0] === name);
+    if (shapeErr) {
+      setErrors((prev) => ({ ...prev, [name]: shapeErr.message }));
       return;
     }
     const value = form[name];
@@ -209,7 +204,7 @@ export default function RegisterPage() {
     }
 
     // Country-specific phone validation (libphonenumber-js)
-    // Joi already enforced E.164 shape; this checks length + country-specific rules.
+    // The schema already enforced E.164 shape; this checks length + country-specific rules.
     const phoneErrors: Record<string, string> = {};
     const cpErr = validatePhoneForCountry(form.contactPhone, form.country, { label: "Contact phone" });
     if (cpErr) phoneErrors.contactPhone = cpErr;
@@ -441,7 +436,7 @@ export default function RegisterPage() {
             {/* The rules live in helper text, not the placeholder: a placeholder was cut
                 off at this width and disappears as soon as the user starts typing. */}
             <div className="grid grid-cols-1 gap-4">
-              <Input label="Password" name="password" type="password" placeholder="Create a password" value={form.password} onChange={handleChange} onBlur={handleBlur} error={errors.password} helperText="8–18 characters, with upper and lower case, a number and a symbol" />
+              <Input label="Password" name="password" type="password" placeholder="Create a password" value={form.password} onChange={handleChange} onBlur={handleBlur} error={errors.password} helperText={PASSWORD_HELP} />
               <Input label="Confirm Password" name="confirmPassword" type="password" placeholder="Re-enter password" value={form.confirmPassword} onChange={handleChange} onBlur={handleBlur} error={errors.confirmPassword} />
             </div>
           </div>

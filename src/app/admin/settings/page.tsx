@@ -76,10 +76,15 @@ export default function AdminSettingsPage() {
             <h3 className="text-h4 font-heading font-semibold text-slate-800">Account</h3>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Username</span>
-              <span className="text-sm font-medium text-slate-800 font-mono">{user?.username ?? "—"}</span>
-            </div>
+            {/* Only when there is one. The super admin account has no username, so this
+                row used to read "Username –", which looked like a failed load. The login
+                email is shown in its own card below. */}
+            {user?.username && (
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                <span className="text-sm text-slate-500">Username</span>
+                <span className="text-sm font-medium text-slate-800 font-mono">{user.username}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center py-1.5">
               <span className="text-sm text-slate-500">Role</span>
               <span className="text-sm font-medium text-slate-800">

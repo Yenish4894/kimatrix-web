@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { Lock } from "lucide-react";
-import Joi from "joi";
 import { Card, CardContent, CardHeader, Input, Button } from "@/components/ui";
+import { v, newPasswordSchema, PASSWORD_HELP } from "@/lib/validation";
 import { authService } from "@/services";
 import { TokenStorage } from "@/lib/tokens";
 import { useAppDispatch } from "@/store/hooks";
@@ -14,24 +14,17 @@ import { clearCompany } from "@/store/slices/companySlice";
 import { getQueryClient } from "@/lib/query-client";
 import { parseApiError, fieldErrorsFromDetails, errorMessageWithId } from "@/lib/errors";
 
-const schema = Joi.object({
-  currentPassword: Joi.string().min(1).max(128).required().messages({
+const schema = v.object({
+  // Presence only — like login, the current password is whatever the account has.
+  currentPassword: v.string().max(128).required().messages({
     "string.empty": "Enter your current password",
+    "any.required": "Enter your current password",
   }),
-  newPassword: Joi.string()
-    .min(8)
-    .max(18)
-    .pattern(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
-    .required()
-    .messages({
-      "string.empty": "Enter a new password",
-      "string.min": "Password must be at least 8 characters",
-      "string.max": "Password must be at most 18 characters",
-      "string.pattern.base": "Must include lowercase, uppercase, number, and special character",
-    }),
-  confirmNewPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
+  newPassword: newPasswordSchema("Enter a new password"),
+  confirmNewPassword: v.string().valid(v.ref("newPassword")).required().messages({
     "any.only": "Passwords do not match",
     "string.empty": "Re-enter your new password",
+    "any.required": "Re-enter your new password",
   }),
 });
 
@@ -120,7 +113,7 @@ export function PasswordChangeCard() {
             value={form.newPassword}
             onChange={handleChange}
             error={errors.newPassword}
-            helperText="8–18 chars, lowercase, uppercase, number, and special character"
+            helperText={PASSWORD_HELP}
             autoComplete="new-password"
           />
           <Input

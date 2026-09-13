@@ -6,8 +6,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatNumber(n: number): string {
-  return new Intl.NumberFormat("en-US").format(n);
+/**
+ * The one number formatter (CON-3). Counts render as "1,234"; pass `fractionDigits`
+ * for fixed decimals ("1,234.50"). Locale is pinned to en-US so server and client
+ * render identically (no hydration mismatch) and every screen groups digits the same
+ * way. Anything non-finite — null, undefined, "abc" — renders as 0.
+ */
+export function formatNumber(n: number | string | null | undefined, fractionDigits?: number): string {
+  const num = typeof n === "string" ? Number.parseFloat(n) : n;
+  const safe = typeof num === "number" && Number.isFinite(num) ? num : 0;
+  return safe.toLocaleString(
+    "en-US",
+    fractionDigits === undefined
+      ? undefined
+      : { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits },
+  );
 }
 
 // Country → currency symbol mapping. Falls back to "$" for unknown countries.
@@ -59,10 +72,7 @@ export function formatCurrency(
   // AFTER the purchase was already recorded, so the customer saw a crash and
   // re-submitted straight into a duplicate-invoice error.
   if (typeof num !== "number" || !Number.isFinite(num)) return `${symbol} 0.00`;
-  return `${symbol} ${num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return `${symbol} ${formatNumber(num, 2)}`;
 }
 
 /**
@@ -128,18 +138,4 @@ export function formatAddress(address: Partial<CompanyAddress>): string {
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(", ");
-}
-
-// Relative time — "2 hours ago", "3 days ago"
-export function formatRelativeTime(iso: string): string {
-  const d = new Date(iso);
-  const diffMs = Date.now() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH} hour${diffH > 1 ? "s" : ""} ago`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD < 7) return `${diffD} day${diffD > 1 ? "s" : ""} ago`;
-  return formatDate(iso);
 }

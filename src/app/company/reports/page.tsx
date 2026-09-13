@@ -10,6 +10,7 @@ import {useCurrencyFormatter} from "@/hooks/useCurrencyFormatter";
 import {useCompanyProfile} from "@/hooks/useCompanyProfile";
 import {companyService} from "@/services";
 import {parseApiError} from "@/lib/errors";
+import {formatNumber} from "@/lib/utils";
 // PDF generators are lazy-loaded on click — saves ~200KB from initial bundle.
 // See handlers below for dynamic import().
 import type { Customer } from "@/types";
@@ -217,7 +218,7 @@ export default function ReportsPage() {
       const { customers, truncated } = await fetchAllCustomers();
       if (truncated) {
         setAllError(
-          `This report shows your top ${(MAX_REPORT_PAGES * REPORT_PAGE_SIZE).toLocaleString()} customers by spend. Use the CSV export in Settings to download all of them.`,
+          `This report shows your top ${formatNumber(MAX_REPORT_PAGES * REPORT_PAGE_SIZE)} customers by spend. Use the CSV export in Settings to download all of them.`,
         );
       }
       // Re-sort client-side with tiebreaker — BE sorts by amount only, so
