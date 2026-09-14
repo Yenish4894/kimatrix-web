@@ -312,7 +312,7 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <Input label="Company Name" name="name" placeholder="e.g. Sahel Fuel Co." value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="Company Registration Number" name="registrationNumber" placeholder="e.g. RC-12345" value={form.registrationNumber} onChange={handleChange} onBlur={handleBlur} error={errors.registrationNumber} />
+              <Input label="Registration Number" name="registrationNumber" placeholder="e.g. RC-12345" value={form.registrationNumber} onChange={handleChange} onBlur={handleBlur} error={errors.registrationNumber} />
               <Select
                 label="Business Type"
                 name="businessType"
