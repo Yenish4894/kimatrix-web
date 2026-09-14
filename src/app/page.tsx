@@ -154,7 +154,8 @@ const planIncludes = [
   "Your QR code & printable poster",
   "Live dashboard & customer records",
   "PDF reports & CSV exports",
-  "Lucky draw",
+  // Plans carry no spins (drawSpins = 0); spins are a separately priced add-on.
+  "Lucky draw (spins are an add-on)",
   "Email receipts & invoices",
 ];
 
@@ -173,7 +174,7 @@ const faqs = [
   },
   {
     q: "How does the lucky draw work?",
-    a: "Each purchase in the period is one entry. When you spin, the winner is picked at random on our server, and a customer can win only once per period. Spins can come with your free access or be bought as add-ons during a paid plan.",
+    a: "Each purchase in the period is one entry. When you spin, the winner is picked at random on our server, and a customer can win only once per period. Spins aren't part of the plan price: you buy them as an add-on during a paid plan.",
   },
   {
     q: "What businesses can use KIMates?",
@@ -458,7 +459,7 @@ export default function HomePage() {
             {[
               { icon: Trophy, title: "Fair by design", text: "Each purchase is one entry and the winner is picked at random on our server." },
               { icon: ShieldCheck, title: "One win per customer", text: "A customer can win only once per period, and voided purchases never count." },
-              { icon: Gift, title: "Spins when you need them", text: "Spins can come with your free access, or add more as you go during a paid plan." },
+              { icon: Gift, title: "Spins when you need them", text: "Buy spins as an add-on whenever you want during a paid plan. Complimentary access can include some too." },
             ].map((item) => (
               <li key={item.title} className="flex gap-4 bg-white/5 border border-white/10 rounded-xl p-4">
                 <div className="h-10 w-10 rounded-lg bg-accent-500/20 flex items-center justify-center shrink-0" aria-hidden="true">
@@ -550,7 +551,7 @@ export default function HomePage() {
             </p>
           )}
           <p className="text-center text-sm text-slate-500 mt-8">
-            Every plan includes every feature — pick the length that suits you.
+            Every plan includes every feature. Lucky draw spins are bought separately as an add-on during a paid plan.
           </p>
         </div>
       </section>
