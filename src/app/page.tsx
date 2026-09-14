@@ -207,17 +207,23 @@ export default function HomePage() {
       .finally(() => setPlansLoading(false));
   }, []);
 
-  // The public site advertises the 15- and 30-day plans; Billing lists every plan.
-  const plan15 = plans.find((p) => p.durationDays === 15);
-  const plan30 = plans.find((p) => p.durationDays === 30);
-  // Follow the admin's "Most Popular" flag; fall back to the 30-day plan.
-  const featured30 = plan30?.isPopular ?? !plan15?.isPopular;
-  const price = (p?: SubscriptionPlan) => (p ? Number.parseFloat(p.price).toFixed(2) : "—");
+  // Every active plan, in the admin's order (product decision 2026-09-15 — the page
+  // used to advertise only the 15- and 30-day plans, which hid the cheapest one and
+  // drifted from Billing whenever an admin changed the catalogue).
+  const shownPlans = [...plans].sort(
+    (a, b) => (a.sortOrder ?? a.durationDays) - (b.sortOrder ?? b.durationDays) || a.durationDays - b.durationDays,
+  );
+  const price = (p: SubscriptionPlan) => Number.parseFloat(p.price).toFixed(2);
 
-  const planCard = (p: SubscriptionPlan | undefined, days: number, tagline: string, featured: boolean) => (
+  const planCard = (p: SubscriptionPlan) => {
+    // Only the admin's "Most Popular" flag decides the badge — no guessing.
+    const featured = !!p.isPopular;
+    const tagline = p.description?.trim() || `${p.durationDays} days of full access`;
+    return (
     <div
+      key={p.id}
       className={cn(
-        "rounded-2xl p-8 relative",
+        "rounded-2xl p-7 relative flex flex-col",
         featured
           ? "bg-primary-600 text-white shadow-xl shadow-primary-600/20"
           : "bg-white border border-slate-200 hover:shadow-lg transition-shadow",
@@ -225,22 +231,18 @@ export default function HomePage() {
     >
       {featured && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="bg-accent-500 text-white text-xs font-bold px-4 py-1 rounded-full uppercase shadow-lg">
+          <span className="bg-accent-500 text-white text-xs font-bold px-4 py-1 rounded-full uppercase shadow-lg whitespace-nowrap">
             Most Popular
           </span>
         </div>
       )}
       <h3 className={cn("text-xl font-semibold font-heading", featured ? "text-white" : "text-slate-800")}>
-        {days}-Day Plan
+        {p.name}
       </h3>
       <p className={cn("mt-1 text-sm", featured ? "text-primary-200" : "text-slate-500")}>{tagline}</p>
       <div className="mt-6 mb-8">
-        {plansLoading ? (
-          <span className={cn("inline-block h-12 w-28 rounded-lg animate-pulse align-middle", featured ? "bg-white/20" : "bg-slate-100")} />
-        ) : (
-          <span className={cn("text-5xl font-bold font-heading", featured ? "" : "text-slate-900")}>${price(p)}</span>
-        )}
-        <span className={cn("ml-1 text-sm", featured ? "text-primary-200" : "text-slate-500")}>/ {days} days</span>
+        <span className={cn("text-4xl font-bold font-heading", featured ? "" : "text-slate-900")}>${price(p)}</span>
+        <span className={cn("ml-1 text-sm", featured ? "text-primary-200" : "text-slate-500")}>/ {p.durationDays} days</span>
       </div>
       <ul className="space-y-3 mb-8">
         {planIncludes.map((f) => (
@@ -250,11 +252,22 @@ export default function HomePage() {
           </li>
         ))}
       </ul>
-      <Link href="/register">
+      <Link href="/register" className="mt-auto">
         <Button variant={featured ? "accent" : "secondary"} fullWidth className="h-12">Start free trial</Button>
       </Link>
     </div>
-  );
+    );
+  };
+
+  // Up to four across on desktop; fewer plans get a narrower, centred grid.
+  const gridCols =
+    shownPlans.length >= 4
+      ? "md:grid-cols-2 xl:grid-cols-4 max-w-6xl"
+      : shownPlans.length === 3
+        ? "md:grid-cols-3 max-w-5xl"
+        : shownPlans.length === 2
+          ? "md:grid-cols-2 max-w-3xl"
+          : "max-w-sm";
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -520,12 +533,24 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {planCard(plan15, 15, "A great way to get going", !featured30)}
-            {planCard(plan30, 30, "Best value for busy businesses", featured30)}
-          </div>
+          {plansLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-6xl mx-auto" aria-hidden="true">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl border border-slate-200 p-7 h-[420px] animate-pulse bg-slate-50" />
+              ))}
+            </div>
+          ) : shownPlans.length > 0 ? (
+            <div className={cn("grid grid-cols-1 gap-6 mx-auto", gridCols)}>
+              {shownPlans.map(planCard)}
+            </div>
+          ) : (
+            <p className="text-center text-slate-500">
+              Plans are shown in Billing after you sign up.{" "}
+              <Link href="/register" className="text-primary-600 font-medium hover:underline">Start your free trial</Link>
+            </p>
+          )}
           <p className="text-center text-sm text-slate-500 mt-8">
-            Every plan includes every feature. More plan lengths are available in Billing once you&apos;re signed up.
+            Every plan includes every feature — pick the length that suits you.
           </p>
         </div>
       </section>
