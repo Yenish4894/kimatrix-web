@@ -75,6 +75,7 @@ const adminNav: NavSection[] = [
       { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
       { icon: Building2, label: "Companies", href: "/admin/companies" },
       { icon: Tag, label: "Plans & Trial", href: "/admin/plans" },
+      { icon: Gift, label: "Lucky Draw", href: "/admin/lucky-draw" },
       { icon: ReceiptText, label: "Payments", href: "/admin/payments" },
       { icon: Mail, label: "Bulk Email", href: "/admin/email" },
       { icon: ScrollText, label: "Audit log", href: "/admin/audit-log" },

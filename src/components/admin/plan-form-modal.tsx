@@ -143,7 +143,7 @@ export function PlanFormModal({ plan, onClose, onSaved }: Readonly<PlanFormModal
         />
 
         {/* No spins field: plans no longer include lucky draw spins. Companies buy them
-            as paid add-ons, priced in Settings, and the server ignores a plan's value. */}
+            as paid add-ons, priced on the admin Lucky Draw page, and the server ignores a plan's value. */}
 
         <div>
           <Checkbox
