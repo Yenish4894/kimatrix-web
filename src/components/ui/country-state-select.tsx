@@ -291,7 +291,7 @@ export function CityInput({
   onChange,
   error,
   helperText,
-  placeholder = "e.g. Cape Town",
+  placeholder = "e.g. your city",
 }: Readonly<CityInputProps>) {
   const [cities, setCities] = useState<{ name: string }[]>([]);
 

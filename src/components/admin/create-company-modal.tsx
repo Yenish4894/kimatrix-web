@@ -40,7 +40,7 @@ export function CreateCompanyModal({ onClose, onCreated }: Readonly<CreateCompan
     streetAddress: "",
     city: "",
     state: "",
-    country: "South Africa",
+    country: "",
     postalCode: "",
     contactEmail: "",
     contactPhone: "",

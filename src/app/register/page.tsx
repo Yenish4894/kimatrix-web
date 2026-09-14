@@ -88,8 +88,9 @@ const schema = v.object({
 
 const initialForm = {
   name: "",
-  // Default Country to South Africa — saves a click for 99% of users
-  country: "South Africa",
+  // No default country: the platform is global, so each business picks its own
+  // (it also drives the phone prefix and the currency shown on their dashboard).
+  country: "",
   state: "",
   city: "",
   streetAddress: "",
@@ -310,7 +311,7 @@ export default function RegisterPage() {
         <div>
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h2>
           <div className="space-y-4">
-            <Input label="Company Name" name="name" placeholder="e.g. Sahel Fuel Co." value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
+            <Input label="Company Name" name="name" placeholder="e.g. City Fuel Co." value={form.name} onChange={handleChange} onBlur={handleBlur} error={errors.name} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Registration Number" name="registrationNumber" placeholder="e.g. RC-12345" value={form.registrationNumber} onChange={handleChange} onBlur={handleBlur} error={errors.registrationNumber} />
               <Select

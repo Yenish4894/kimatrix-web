@@ -30,13 +30,14 @@ const features = [
   { icon: Shield,    text: "Plans from 7 to 30 days"           },
 ];
 
-// Illustrative only. Set at a South African fuel station (the mockup's header), so the
-// amounts are rand, formatted by the same helper as the real dashboard.
-const MOCK_COUNTRY = "South Africa";
+// Illustrative only, and deliberately not tied to any one country — the platform is
+// global. Amounts are in US dollars (the billing currency), formatted by the same
+// helper as the real dashboard.
+const MOCK_COUNTRY = "United States";
 const recentPurchases = [
-  { initials: "TM", name: "Thabo Mokoena", amount: 850,  time: "2m ago"  },
-  { initials: "PN", name: "Priya Naidoo",  amount: 1240, time: "18m ago" },
-  { initials: "JV", name: "Johan van Wyk", amount: 620,  time: "1h ago"  },
+  { initials: "AM", name: "Alex Morgan",  amount: 85,  time: "2m ago"  },
+  { initials: "SL", name: "Sam Lee",      amount: 124, time: "18m ago" },
+  { initials: "JR", name: "Jordan Reed",  amount: 62,  time: "1h ago"  },
 ];
 
 export function AuthLayout({
@@ -136,7 +137,7 @@ export function AuthLayout({
                     </span>
                     <span className="text-[8px] font-semibold text-green-300/90 uppercase tracking-widest">Live</span>
                   </div>
-                  <p className="text-[11px] font-semibold text-white leading-tight">Cape Town Fuel Station</p>
+                  <p className="text-[11px] font-semibold text-white leading-tight">City Fuel Station</p>
                 </div>
                 <div className="h-7 w-7 rounded-lg bg-white/10 border border-white/12 flex items-center justify-center">
                   <Fuel className="h-3.5 w-3.5 text-accent-300" />
@@ -147,7 +148,7 @@ export function AuthLayout({
               <div className="grid grid-cols-2 gap-1.5 mb-2.5">
                 <div className="bg-white/8 rounded-lg p-2">
                   <p className="text-[7px] text-white/40 uppercase tracking-wider">Total Spend</p>
-                  <p className="text-xs font-bold text-white mt-0.5">R 2.4M</p>
+                  <p className="text-xs font-bold text-white mt-0.5">$240K</p>
                   <p className="text-[8px] text-accent-300 mt-0.5">↑ 12% this week</p>
                 </div>
                 <div className="bg-white/8 rounded-lg p-2">
