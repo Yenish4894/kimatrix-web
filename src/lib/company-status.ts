@@ -67,7 +67,7 @@ export const STATUS_BADGE_VARIANT: Record<CompanyStatus, "warning" | "success" |
  */
 export const SUBSCRIPTION_STATUS_LABEL: Record<string, string> = {
   active: "Active",
-  trialing: "On free trial",
+  trialing: "On trial",
   pending: "Never subscribed",
   trial_expired: "Trial expired",
   expired: "Subscription expired",

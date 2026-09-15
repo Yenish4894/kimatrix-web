@@ -43,7 +43,7 @@ const features = [
     icon: QrCode,
     title: "Your own QR code",
     description:
-      "Ready the moment your trial starts and emailed to you as a printable poster. Pause it any time, or regenerate it if a poster goes missing.",
+      "Ready as soon as you confirm your email, and emailed to you as a printable poster. Pause it any time, or regenerate it if a poster goes missing.",
     color: "bg-primary-100 text-primary-600",
   },
   {
@@ -125,14 +125,14 @@ const steps = [
   {
     icon: UserPlus,
     step: "01",
-    title: "Sign up free",
-    description: "Create your account in a few minutes. No card needed.",
+    title: "Sign up",
+    description: "Create your account in a few minutes.",
   },
   {
     icon: MailCheck,
     step: "02",
     title: "Confirm your email",
-    description: "Your free trial starts and your QR code arrives by email, ready to print.",
+    description: "Your account is activated and your QR code arrives by email, ready to print.",
   },
   {
     icon: Printer,
@@ -161,8 +161,8 @@ const planIncludes = [
 
 const faqs = [
   {
-    q: "Do I need a card to start?",
-    a: "No. Sign up, confirm your email and your free trial starts straight away. You can choose a plan from Billing whenever you're ready.",
+    q: "How do I get started?",
+    a: "Sign up and confirm your email — your QR code arrives by email straight away. Choose a plan from Billing to keep using KIMates.",
   },
   {
     q: "Do my customers need to download an app?",
@@ -254,7 +254,7 @@ export default function HomePage() {
         ))}
       </ul>
       <Link href="/register" className="mt-auto">
-        <Button variant={featured ? "accent" : "secondary"} fullWidth className="h-12">Start free trial</Button>
+        <Button variant={featured ? "accent" : "secondary"} fullWidth className="h-12">Get started</Button>
       </Link>
     </div>
     );
@@ -291,7 +291,7 @@ export default function HomePage() {
                 <Button variant="ghost" size="sm">Login</Button>
               </Link>
               <Link href="/register">
-                <Button variant="primary" size="sm">Start free trial <ArrowRight className="h-4 w-4" aria-hidden="true" /></Button>
+                <Button variant="primary" size="sm">Get started <ArrowRight className="h-4 w-4" aria-hidden="true" /></Button>
               </Link>
             </div>
 
@@ -313,7 +313,7 @@ export default function HomePage() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-primary-50 border border-primary-100 rounded-full px-4 py-1.5 mb-6">
               <span className="h-2 w-2 rounded-full bg-primary-500" />
-              <span className="text-sm text-primary-700 font-medium">Free trial · No card required</span>
+              <span className="text-sm text-primary-700 font-medium">Built for fuel stations &amp; shops</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-slate-900 leading-[1.1] tracking-tight">
@@ -329,7 +329,7 @@ export default function HomePage() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
                 <Button size="lg" className="min-w-[200px] h-12 text-base">
-                  Start free trial <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                  Get started <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </Link>
               <a href="#how-it-works">
@@ -530,7 +530,7 @@ export default function HomePage() {
             <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Simple, transparent pricing</h2>
             <p className="text-slate-500 mt-3 max-w-xl mx-auto">
-              Start with a free trial — no card required. Then pick a plan in US dollars, paid once or on auto-renew. No lock-in.
+              Pick a plan in US dollars, paid once or on auto-renew. No lock-in.
             </p>
           </div>
 
@@ -547,7 +547,7 @@ export default function HomePage() {
           ) : (
             <p className="text-center text-slate-500">
               Plans are shown in Billing after you sign up.{" "}
-              <Link href="/register" className="text-primary-600 font-medium hover:underline">Start your free trial</Link>
+              <Link href="/register" className="text-primary-600 font-medium hover:underline">Get started</Link>
             </p>
           )}
           <p className="text-center text-sm text-slate-500 mt-8">
@@ -582,11 +582,11 @@ export default function HomePage() {
             Ready to know your customers?
           </h2>
           <p className="text-slate-400 mt-4 max-w-md mx-auto">
-            Start your free trial today. No card required — your QR code is on its way as soon as you confirm your email.
+            Sign up today — your QR code is on its way as soon as you confirm your email.
           </p>
           <Link href="/register" className="mt-8 inline-block">
             <Button variant="accent" size="lg" className="h-12 text-base">
-              Start free trial <ArrowRight className="h-5 w-5" aria-hidden="true" />
+              Get started <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </Button>
           </Link>
         </div>
@@ -612,7 +612,7 @@ export default function HomePage() {
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
                 <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Login</Link></li>
-                <li><Link href="/register" className="hover:text-white transition-colors">Start free trial</Link></li>
+                <li><Link href="/register" className="hover:text-white transition-colors">Get started</Link></li>
               </ul>
             </div>
             <div>

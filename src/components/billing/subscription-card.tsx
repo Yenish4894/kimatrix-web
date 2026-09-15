@@ -136,7 +136,7 @@ export function SubscriptionCard({ plans }: Readonly<SubscriptionCardProps>) {
             <p className="flex items-start gap-2 rounded-lg bg-primary-50 px-4 py-3 text-sm text-primary-900">
               <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-primary-500" aria-hidden="true" />
               <span>
-                You haven&apos;t been charged yet. Your free trial runs its full course first —
+                You haven&apos;t been charged yet. Your trial runs its full course first —
                 billing starts on{" "}
                 <strong>
                   {status.nextBillingTime ? formatDate(status.nextBillingTime) : "your trial end date"}

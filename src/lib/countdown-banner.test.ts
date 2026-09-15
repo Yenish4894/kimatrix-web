@@ -54,8 +54,8 @@ describe("planDisplayName", () => {
 
 describe("countdownCopy", () => {
   it("keeps the existing trial wording", () => {
-    assert.equal(text(countdownCopy("trial", formatCountdown(5 * DAY))), "Free trial — 5 days remaining.");
-    assert.equal(text(countdownCopy("trial", formatCountdown(3 * HOUR))), "Your free trial ends in 3 hours.");
+    assert.equal(text(countdownCopy("trial", formatCountdown(5 * DAY))), "Trial — 5 days remaining.");
+    assert.equal(text(countdownCopy("trial", formatCountdown(3 * HOUR))), "Your trial ends in 3 hours.");
     assert.equal(countdownCopy("trial", formatCountdown(5 * DAY)).cta, "Choose a plan");
   });
 

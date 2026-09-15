@@ -111,7 +111,7 @@ describe("getCompanyBadge", () => {
   });
 
   it("prefers the precise subscription state, else the coarse one", () => {
-    assert.equal(getCompanyBadge({ ...base, subscriptionStatus: "trialing" }, now).label, "On free trial");
+    assert.equal(getCompanyBadge({ ...base, subscriptionStatus: "trialing" }, now).label, "On trial");
     assert.deepEqual(getCompanyBadge({ ...base, isActive: false }, now), { label: "Pending", tone: "warning" });
   });
 });

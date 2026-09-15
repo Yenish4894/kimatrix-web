@@ -153,8 +153,8 @@ export function countdownCopy(
   const href = "/company/billing";
   if (kind === "trial") {
     return countdown.urgency === "urgent"
-      ? { before: "Your free trial ends in ", emphasis: countdown.label, after: ".", cta: "Choose a plan", href }
-      : { before: "Free trial — ", emphasis: countdown.label, after: " remaining.", cta: "Choose a plan", href };
+      ? { before: "Your trial ends in ", emphasis: countdown.label, after: ".", cta: "Choose a plan", href }
+      : { before: "Trial — ", emphasis: countdown.label, after: " remaining.", cta: "Choose a plan", href };
   }
   const plan = planDisplayName(opts.planName);
   if (opts.renews) {

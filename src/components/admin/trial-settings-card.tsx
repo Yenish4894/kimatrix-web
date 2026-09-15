@@ -109,7 +109,7 @@ export function TrialSettingsCard() {
             <Clock className="h-4 w-4 text-primary-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-heading font-semibold text-slate-800">Free trial</h2>
+            <h2 className="font-heading font-semibold text-slate-800">Trial</h2>
             <p className="text-sm text-slate-500 mt-0.5 leading-relaxed">
               How long a new company gets before they need to pay. The clock starts when
               they confirm their email, so time spent waiting on an inbox isn&apos;t

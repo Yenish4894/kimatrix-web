@@ -103,7 +103,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
   const releaseMut = useMutation({
     mutationFn: () => adminService.releaseTrialIdentity(releaseTarget!.id, releaseReason),
     onSuccess: async () => {
-      toast.success("That identifier can be used for a free trial again.");
+      toast.success("That identifier can be used for a trial again.");
       await refresh();
       close();
     },
@@ -183,7 +183,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
               Trial identifiers
             </h4>
             <p className="mt-1 text-xs text-slate-500">
-              Each of these has used its one free trial. Releasing one lets it start a trial again
+              Each of these has used its one trial. Releasing one lets it start a trial again
               — use it if someone entered a number or address that was not theirs.
             </p>
 
@@ -191,7 +191,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
               <p className="mt-3 text-sm text-slate-400">Loading…</p>
             ) : activeIdentities.length === 0 && releasedIdentities.length === 0 ? (
               <p className="mt-3 text-sm text-slate-400">
-                None — this company has not taken a free trial.
+                None — this company has not taken a trial.
               </p>
             ) : (
               <ul className="mt-3 space-y-2">
@@ -331,7 +331,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
             <span className="font-mono font-medium text-slate-800">{releaseTarget?.preview}</span>{" "}
-            will be able to start a free trial again, on this or any other account.
+            will be able to start a trial again, on this or any other account.
           </p>
           <Input
             label="Reason"

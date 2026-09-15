@@ -244,7 +244,7 @@ export default function AdminCompanyDetailPage({
                   </div>
                   {!company.owner.emailVerifiedAt && (
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      Their free trial has not started, and will not until they confirm this
+                      Their trial has not started, and will not until they confirm this
                       address. You can start one for them with <strong>Grant trial</strong> above.
                     </p>
                   )}

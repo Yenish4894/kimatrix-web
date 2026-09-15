@@ -72,7 +72,7 @@ export function EmailVerificationBanner({
             ) : (
               <>We sent you a confirmation link.</>
             )}{" "}
-            Your free trial starts once you confirm, so none of it is spent waiting.
+            Your account is activated once you confirm.
           </p>
         </div>
       </div>

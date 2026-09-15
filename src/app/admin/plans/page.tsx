@@ -62,7 +62,7 @@ export default function AdminPlansPage() {
         <div>
           <h2 className="text-h3 font-heading font-semibold text-slate-800">Subscription plans</h2>
           <p className="text-sm text-slate-500 mt-0.5">
-            What companies can buy after their free trial ends.
+            What companies can buy after their trial ends.
           </p>
         </div>
         <Button onClick={() => setIsCreating(true)} className="shrink-0">

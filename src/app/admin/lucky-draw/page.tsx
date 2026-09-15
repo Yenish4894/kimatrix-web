@@ -117,7 +117,7 @@ export default function AdminLuckyDrawPage() {
                       ? `Enter a whole number from 0 to ${TRIAL_SPINS_MAX}.`
                       : undefined
                   }
-                  helperText="Every company on a free trial gets this many draws. A change applies to trials already running. 0 = none."
+                  helperText="Every company on a trial gets this many draws. A change applies to trials already running. 0 = none."
                 />
                 <Button
                   onClick={handleSave}

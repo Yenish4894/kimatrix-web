@@ -32,15 +32,15 @@ function copyFor(
   // them to buy a plan would take money for something they are entitled to free.
   if (needsVerification) {
     return {
-      heading: "Confirm your email to start your free trial",
-      body: "We sent a confirmation link when you signed up. Click it and your free trial starts straight away — no payment needed. If it never arrived, send yourself a new one below.",
+      heading: "Confirm your email to activate your account",
+      body: "We sent a confirmation link when you signed up. Click it and your account is activated straight away. If it never arrived, send yourself a new one below.",
     };
   }
 
   switch (entitlement.status) {
     case "trial_expired":
       return {
-        heading: "Your free trial has ended",
+        heading: "Your trial has ended",
         body: "Nothing has been deleted. Choose a plan and everything picks up exactly where it left off — the same QR code, the same customer list.",
       };
     case "expired":

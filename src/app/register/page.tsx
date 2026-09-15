@@ -268,13 +268,13 @@ export default function RegisterPage() {
 
   if (submittedEmail) {
     return (
-      <AuthLayout title="Check your email" subtitle="One more step to start your free trial">
+      <AuthLayout title="Check your email" subtitle="One more step to activate your account">
         <div className="space-y-5 text-center" role="status" aria-live="polite">
           <MailCheck className="mx-auto h-12 w-12 text-primary-600" aria-hidden="true" />
           <p className="text-sm text-slate-700">
             We&apos;ve sent an email to{" "}
             <span className="font-semibold text-slate-900 break-all">{submittedEmail}</span>.
-            Click the link in it to confirm your address — your free trial starts then.
+            Click the link in it to confirm your address — your account is activated then.
           </p>
           <p className="text-sm text-slate-500">
             Can&apos;t find it? Check your spam or promotions folder. If you already have an
@@ -306,7 +306,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout title="Create Account" subtitle="Start your free trial — no card required">
+    <AuthLayout title="Create Account" subtitle="Set up your business account">
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div>
           <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4">Business Information</h2>
@@ -473,12 +473,11 @@ export default function RegisterPage() {
             <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
             <div>
               <p className="text-sm font-semibold text-primary-900">
-                Your free trial starts when you confirm your email
+                Confirm your email to activate your account
               </p>
               <p className="mt-1 text-sm text-primary-800/80">
-                No card needed. We&apos;ll email you a confirmation link — click it and your QR
-                code goes live straight away. You can choose a plan any time before the trial
-                ends.
+                We&apos;ll email you a confirmation link — click it and your QR code goes live
+                straight away.
               </p>
             </div>
           </div>
@@ -532,7 +531,7 @@ export default function RegisterPage() {
 
         <Button type="submit" fullWidth isLoading={isLoading || isProcessing} disabled={awaitingTurnstile}>
           <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
-          {isProcessing ? "Creating your account…" : "Start my free trial"}
+          {isProcessing ? "Creating your account…" : "Get started"}
         </Button>
 
         <p className="text-center text-sm text-slate-500">
