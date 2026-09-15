@@ -159,10 +159,12 @@ export function DrawMode({
   useEffect(() => {
     const delta = rotation - prevRotation.current;
     prevRotation.current = rotation;
-    if (delta > 0 && spinning && !mutedRef.current && soundRef.current?.ready) {
+    // With reduced motion the wheel lands at once, so a 4.5s drumroll would tick over a
+    // still wheel. Skip it; the fanfare on the reveal still plays.
+    if (delta > 0 && spinning && !reducedMotion && !mutedRef.current && soundRef.current?.ready) {
       soundRef.current.playTicks(tickTimes(delta, spinDurationMs, WHEEL_SEGMENTS));
     }
-  }, [rotation, spinning, spinDurationMs]);
+  }, [rotation, spinning, spinDurationMs, reducedMotion]);
 
   // A refused spin stops the wheel early — don't keep ticking.
   useEffect(() => {
