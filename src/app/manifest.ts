@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "KIMates — QR Purchase Tracking",
     short_name: "KIMates",
     description:
-      "Simple, powerful purchase tracking for fuel stations and shops. Subscribe, get your QR code, start tracking.",
+      "QR-based customer purchase tracking for fuel stations and shops. Start a free trial — no card required.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
