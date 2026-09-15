@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Gift, Trophy, Users, Ticket, CalendarRange } from "lucide-react";
+import { Gift, Trophy, Users, Ticket, CalendarRange, MonitorPlay } from "lucide-react";
 
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Button, Card, CardContent, QueryErrorState } from "@/components/ui";
 import { PageLoader } from "@/components/ui/loader";
+import { Wheel } from "@/components/lucky-draw/wheel";
+import { DrawMode } from "@/components/lucky-draw/draw-mode";
 import { companyService } from "@/services";
 import { parseApiError } from "@/lib/errors";
 import { formatDate, formatDateTime, formatNumber } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import type { LuckyDrawSpinResult } from "@/types";
 
-const SEGMENTS = 10;
-const SEGMENT_COLOURS = ["#0891B2", "#0E7490", "#14B8A6", "#0F766E"];
 /** Long enough to feel like a draw, short enough that nobody taps away. */
 const SPIN_MS = 4500;
 
@@ -37,6 +38,10 @@ export default function LuckyDrawPage() {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<LuckyDrawSpinResult | null>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const companyName = useCompanyProfile().data?.name ?? "";
+  // Customer-facing presentation of the same draw (TV/monitor). Presentation only.
+  const [drawMode, setDrawMode] = useState(false);
+  const closeDrawMode = useCallback(() => setDrawMode(false), []);
 
   // Leaving mid-spin cancels the reveal, and with it the refresh that was waiting for
   // the wheel to stop — so the cache kept the pre-spin count and history, and coming
@@ -147,43 +152,7 @@ export default function LuckyDrawPage() {
           {/* ── Wheel ── */}
           <Card>
             <CardContent className="flex flex-col items-center py-8">
-              <div className="relative h-64 w-64 sm:h-72 sm:w-72">
-                {/* Pointer */}
-                <div
-                  aria-hidden="true"
-                  className="absolute left-1/2 -top-1 z-10 h-0 w-0 -translate-x-1/2 border-x-[12px] border-t-[20px] border-x-transparent border-t-slate-800"
-                />
-                <svg
-                  viewBox="0 0 200 200"
-                  aria-hidden="true"
-                  className="h-full w-full drop-shadow-md transition-transform motion-reduce:transition-none"
-                  style={{
-                    transform: `rotate(${rotation}deg)`,
-                    transitionDuration: `${SPIN_MS}ms`,
-                    transitionTimingFunction: "cubic-bezier(0.17, 0.67, 0.12, 0.99)",
-                  }}
-                >
-                  {Array.from({ length: SEGMENTS }, (_, i) => {
-                    const a0 = (i / SEGMENTS) * 2 * Math.PI;
-                    const a1 = ((i + 1) / SEGMENTS) * 2 * Math.PI;
-                    const x0 = 100 + 98 * Math.sin(a0), y0 = 100 - 98 * Math.cos(a0);
-                    const x1 = 100 + 98 * Math.sin(a1), y1 = 100 - 98 * Math.cos(a1);
-                    return (
-                      <path
-                        key={i}
-                        d={`M100,100 L${x0},${y0} A98,98 0 0,1 ${x1},${y1} Z`}
-                        fill={SEGMENT_COLOURS[i % SEGMENT_COLOURS.length]}
-                        stroke="#fff"
-                        strokeWidth="1.5"
-                      />
-                    );
-                  })}
-                  <circle cx="100" cy="100" r="22" fill="#fff" />
-                  <text x="100" y="105" textAnchor="middle" fontSize="13" fontWeight="700" fill="#0E7490">
-                    SPIN
-                  </text>
-                </svg>
-              </div>
+              <Wheel rotation={rotation} durationMs={SPIN_MS} className="h-64 w-64 sm:h-72 sm:w-72" />
 
               <Button
                 size="lg"
@@ -198,6 +167,16 @@ export default function LuckyDrawPage() {
               {blocker && !spinning && (
                 <p className="mt-3 max-w-xs text-center text-sm text-slate-500">{blocker}</p>
               )}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-4"
+                onClick={() => setDrawMode(true)}
+                title="Full-screen draw for a customer-facing screen"
+              >
+                <MonitorPlay className="h-4 w-4" aria-hidden="true" />
+                Draw mode
+              </Button>
 
               {/* Announced to screen readers too — the wheel itself is decorative. */}
               <div aria-live="polite" className="w-full">
@@ -227,6 +206,21 @@ export default function LuckyDrawPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {current && drawMode && (
+        <DrawMode
+          onClose={closeDrawMode}
+          companyName={companyName}
+          rotation={rotation}
+          spinDurationMs={SPIN_MS}
+          spinning={spinning}
+          result={result}
+          spinsLeft={status!.totalRemaining}
+          canSpin={canSpin}
+          blocker={blocker}
+          onSpin={() => spinM.mutate()}
+        />
       )}
 
       {/* ── History ── */}

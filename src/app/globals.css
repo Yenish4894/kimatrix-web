@@ -214,3 +214,9 @@ body {
 .auth-dark-form a:hover {
   color: #fcd34d !important;
 }
+
+/* Lucky draw "Draw mode" winner reveal. */
+@keyframes draw-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  100% { opacity: 1; transform: scale(1); }
+}
