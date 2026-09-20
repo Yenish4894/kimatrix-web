@@ -155,7 +155,6 @@ export default function LuckyDrawPage() {
               <Wheel
                 rotation={rotation}
                 durationMs={SPIN_MS}
-                spinning={spinning}
                 className="h-64 w-64 sm:h-72 sm:w-72"
               />
 

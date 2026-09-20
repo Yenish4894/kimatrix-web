@@ -75,15 +75,12 @@ function SegmentWord({ deg }: Readonly<{ deg: number }>) {
 export function Wheel({
   rotation,
   durationMs,
-  spinning = false,
   flapMs,
   className,
   pointerClassName,
 }: Readonly<{
   rotation: number;
   durationMs: number;
-  /** Pauses the idle drift and arms the pointer while a spin is running. */
-  spinning?: boolean;
   /** Times (ms from now) at which a peg passes the pointer, so it can flap. */
   flapMs?: number[];
   /** Size of the wheel box, e.g. `h-64 w-64`. */
@@ -124,11 +121,9 @@ export function Wheel({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Rotating disc */}
-      <div
-        className="h-full w-full motion-safe:animate-[wheel-drift_90s_linear_infinite]"
-        style={{ animationPlayState: spinning ? "paused" : "running" }}
-      >
+      {/* Rotating disc. Still between draws — a wheel turning on its own reads as
+        loading, not as waiting. It only moves when `rotation` changes. */}
+      <div className="h-full w-full">
         <svg
           viewBox="0 0 200 200"
           aria-hidden="true"

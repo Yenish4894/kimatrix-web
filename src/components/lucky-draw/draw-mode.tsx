@@ -266,7 +266,6 @@ export function DrawMode({
         <Wheel
           rotation={rotation}
           durationMs={spinDurationMs}
-          spinning={spinning}
           flapMs={flapMs}
           className="h-[min(78vw,56vh)] w-[min(78vw,56vh)] shrink-0"
           pointerClassName="drop-shadow-lg"
