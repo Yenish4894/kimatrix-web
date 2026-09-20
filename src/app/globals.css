@@ -220,3 +220,8 @@ body {
   0% { opacity: 0; transform: scale(0.6); }
   100% { opacity: 1; transform: scale(1); }
 }
+
+/* Idle drift for the lucky-draw wheel, so it never looks dead before a spin */
+@keyframes wheel-drift {
+  to { transform: rotate(360deg); }
+}

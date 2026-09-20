@@ -152,7 +152,12 @@ export default function LuckyDrawPage() {
           {/* ── Wheel ── */}
           <Card>
             <CardContent className="flex flex-col items-center py-8">
-              <Wheel rotation={rotation} durationMs={SPIN_MS} className="h-64 w-64 sm:h-72 sm:w-72" />
+              <Wheel
+                rotation={rotation}
+                durationMs={SPIN_MS}
+                spinning={spinning}
+                className="h-64 w-64 sm:h-72 sm:w-72"
+              />
 
               <Button
                 size="lg"

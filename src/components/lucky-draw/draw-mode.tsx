@@ -155,20 +155,28 @@ export function DrawMode({
   }, []);
 
   // ── Ticks: scheduled when the wheel is given a new target ──
+  // The same schedule drives the sound and the pointer's flap, so a peg passing the
+  // pointer looks and sounds like one event.
+  const [flapMs, setFlapMs] = useState<number[] | undefined>(undefined);
   const prevRotation = useRef(rotation);
   useEffect(() => {
     const delta = rotation - prevRotation.current;
     prevRotation.current = rotation;
     // With reduced motion the wheel lands at once, so a 4.5s drumroll would tick over a
     // still wheel. Skip it; the fanfare on the reveal still plays.
-    if (delta > 0 && spinning && !reducedMotion && !mutedRef.current && soundRef.current?.ready) {
-      soundRef.current.playTicks(tickTimes(delta, spinDurationMs, WHEEL_SEGMENTS));
+    if (delta > 0 && spinning && !reducedMotion) {
+      const times = tickTimes(delta, spinDurationMs, WHEEL_SEGMENTS);
+      setFlapMs(times);
+      if (!mutedRef.current && soundRef.current?.ready) soundRef.current.playTicks(times);
     }
   }, [rotation, spinning, spinDurationMs, reducedMotion]);
 
-  // A refused spin stops the wheel early — don't keep ticking.
+  // A refused spin stops the wheel early — don't keep ticking or flapping.
   useEffect(() => {
-    if (!spinning) soundRef.current?.stopTicks();
+    if (!spinning) {
+      soundRef.current?.stopTicks();
+      setFlapMs(undefined);
+    }
   }, [spinning]);
 
   // ── Fanfare when a new winner is revealed ──
@@ -258,8 +266,10 @@ export function DrawMode({
         <Wheel
           rotation={rotation}
           durationMs={spinDurationMs}
+          spinning={spinning}
+          flapMs={flapMs}
           className="h-[min(78vw,56vh)] w-[min(78vw,56vh)] shrink-0"
-          pointerClassName="border-x-[18px] border-t-[30px] -top-2 border-t-accent-400 drop-shadow"
+          pointerClassName="drop-shadow-lg"
         />
 
         <div className="flex w-full max-w-md flex-col items-center text-center">
