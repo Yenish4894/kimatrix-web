@@ -282,11 +282,11 @@ export default function HomePage() {
             </Link>
 
             <div className="hidden lg:flex items-center gap-8">
-              <a href="#features" className="text-sm text-slate-600 hover:text-primary-600 transition-colors">Features</a>
-              <a href="#how-it-works" className="text-sm text-slate-600 hover:text-primary-600 transition-colors">How it Works</a>
-              <a href="#lucky-draw" className="text-sm text-slate-600 hover:text-primary-600 transition-colors">Lucky Draw</a>
-              <a href="#pricing" className="text-sm text-slate-600 hover:text-primary-600 transition-colors">Pricing</a>
-              <a href="#faq" className="text-sm text-slate-600 hover:text-primary-600 transition-colors">FAQ</a>
+              <a href="#features" className="text-sm text-slate-600 hover:text-primary-700 transition-colors">Features</a>
+              <a href="#how-it-works" className="text-sm text-slate-600 hover:text-primary-700 transition-colors">How it Works</a>
+              <a href="#lucky-draw" className="text-sm text-slate-600 hover:text-primary-700 transition-colors">Lucky Draw</a>
+              <a href="#pricing" className="text-sm text-slate-600 hover:text-primary-700 transition-colors">Pricing</a>
+              <a href="#faq" className="text-sm text-slate-600 hover:text-primary-700 transition-colors">FAQ</a>
               <Link href="/login">
                 <Button variant="ghost" size="sm">Login</Button>
               </Link>
@@ -405,7 +405,7 @@ export default function HomePage() {
       <section id="features" className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">Features</p>
+            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Everything you need to know your customers</h2>
             <p className="text-slate-500 mt-3 max-w-xl mx-auto">
               From the first scan to the monthly report — no spreadsheets, no paper slips.
@@ -419,7 +419,7 @@ export default function HomePage() {
       <section id="how-it-works" className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">How it works</p>
+            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">How it works</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Up and running in minutes</h2>
           </div>
 
@@ -430,7 +430,7 @@ export default function HomePage() {
                   <div className="hidden lg:block absolute top-10 left-[62%] w-[76%] border-t-2 border-dashed border-slate-200" />
                 )}
                 <div className="relative z-10">
-                  <span className="text-xs font-bold text-primary-600 tracking-widest">{item.step}</span>
+                  <span className="text-xs font-bold text-primary-700 tracking-widest">{item.step}</span>
                   <div className="mx-auto h-14 w-14 rounded-2xl bg-primary-600 flex items-center justify-center mt-3 mb-5 shadow-lg shadow-primary-600/20" aria-hidden="true">
                     <item.icon className="h-7 w-7 text-white" />
                   </div>
@@ -479,7 +479,7 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">Business Types</p>
+            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">Business Types</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Built for your business</h2>
           </div>
 
@@ -527,7 +527,7 @@ export default function HomePage() {
       <section id="pricing" className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">Pricing</p>
+            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Simple, transparent pricing</h2>
             <p className="text-slate-500 mt-3 max-w-xl mx-auto">
               Pick a plan in US dollars, paid once or on auto-renew. No lock-in.
@@ -547,7 +547,7 @@ export default function HomePage() {
           ) : (
             <p className="text-center text-slate-500">
               Plans are shown in Billing after you sign up.{" "}
-              <Link href="/register" className="text-primary-600 font-medium hover:underline">Get started</Link>
+              <Link href="/register" className="text-primary-700 font-medium hover:underline">Get started</Link>
             </p>
           )}
           <p className="text-center text-sm text-slate-500 mt-8">
@@ -560,7 +560,7 @@ export default function HomePage() {
       <section id="faq" className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wide mb-2">FAQ</p>
+            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">FAQ</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Common questions</h2>
           </div>
           <div className="space-y-4">
