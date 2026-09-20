@@ -27,6 +27,7 @@
   --color-accent-600: #EA580C;
   --color-accent-700: #C2410C;
   --color-accent-800: #9A3412;
+  --color-accent-900: #7C2D12;
 
   /* Semantic — Success (Emerald) */
   --color-success-50: #ECFDF5;
@@ -48,6 +49,7 @@
   --color-error-500: #F43F5E;
   --color-error-600: #E11D48;
   --color-error-700: #BE123C;
+  --color-error-800: #9F1239;
 
   /* Semantic — Info (Sky) */
   --color-info-50: #F0F9FF;

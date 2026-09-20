@@ -202,10 +202,18 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // The shared API client allows 30s. On the front door that is half a minute of
+    // pulsing grey before the fallback copy appears, so bound the skeleton tighter.
+    // Data arriving after the bound still renders — only the skeleton gives up early.
+    const giveUp = setTimeout(() => setPlansLoading(false), 8_000);
     paymentService.getPlans()
       .then(setPlans)
       .catch(() => {})
-      .finally(() => setPlansLoading(false));
+      .finally(() => {
+        clearTimeout(giveUp);
+        setPlansLoading(false);
+      });
+    return () => clearTimeout(giveUp);
   }, []);
 
   // Every active plan, in the admin's order (product decision 2026-09-15 — the page
@@ -226,13 +234,13 @@ export default function HomePage() {
       className={cn(
         "rounded-2xl p-7 relative flex flex-col",
         featured
-          ? "bg-primary-600 text-white shadow-xl shadow-primary-600/20"
+          ? "bg-primary-700 text-white shadow-xl shadow-primary-700/20"
           : "bg-white border border-slate-200 hover:shadow-lg transition-shadow",
       )}
     >
       {featured && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="bg-accent-500 text-white text-xs font-bold px-4 py-1 rounded-full uppercase shadow-lg whitespace-nowrap">
+          <span className="bg-accent-700 text-white text-xs font-bold px-4 py-1 rounded-full uppercase shadow-lg whitespace-nowrap">
             Most Popular
           </span>
         </div>
@@ -405,7 +413,6 @@ export default function HomePage() {
       <section id="features" className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Everything you need to know your customers</h2>
             <p className="text-slate-500 mt-3 max-w-xl mx-auto">
               From the first scan to the monthly report — no spreadsheets, no paper slips.
@@ -419,7 +426,6 @@ export default function HomePage() {
       <section id="how-it-works" className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">How it works</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Up and running in minutes</h2>
           </div>
 
@@ -479,7 +485,6 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">Business Types</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Built for your business</h2>
           </div>
 
@@ -527,7 +532,6 @@ export default function HomePage() {
       <section id="pricing" className="py-16 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Simple, transparent pricing</h2>
             <p className="text-slate-500 mt-3 max-w-xl mx-auto">
               Pick a plan in US dollars, paid once or on auto-renew. No lock-in.
@@ -560,7 +564,6 @@ export default function HomePage() {
       <section id="faq" className="py-16 sm:py-24 bg-slate-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary-700 uppercase tracking-wide mb-2">FAQ</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900">Common questions</h2>
           </div>
           <div className="space-y-4">

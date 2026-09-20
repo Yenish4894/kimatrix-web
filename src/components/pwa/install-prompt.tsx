@@ -81,7 +81,7 @@ export function InstallPrompt() {
             <button
               type="button"
               onClick={handleInstall}
-              className="h-8 px-3 rounded-md bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium transition-colors cursor-pointer"
+              className="h-8 px-3 rounded-md bg-primary-700 hover:bg-primary-800 text-white text-xs font-medium transition-colors cursor-pointer"
             >
               Install
             </button>

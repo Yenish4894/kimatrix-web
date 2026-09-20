@@ -61,7 +61,7 @@ function PlanCard({
       )}
     >
       {isPopular && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent-700 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full">
           Most Popular
         </span>
       )}
