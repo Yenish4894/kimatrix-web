@@ -103,6 +103,9 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
 
   const isAdmin = user?.userType === "super_admin";
   const nav = isAdmin ? adminNav : companyNav;
+  // Signed in, the logo belongs to the app, not the marketing site: clicking it
+  // used to drop people out to the landing page.
+  const homeHref = isAdmin ? "/admin/dashboard" : "/company/dashboard";
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -153,13 +156,13 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
         {!collapsed && (
-          <Link href="/" className="shrink-0" aria-label="KIMates home">
+          <Link href={homeHref} className="shrink-0" aria-label="KIMates dashboard">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/kimates-logo.png" alt="KIMates" width={140} height={30} className="h-[30px] w-auto" />
           </Link>
         )}
         {collapsed && (
-          <Link href="/" className="mx-auto shrink-0" aria-label="KIMates home">
+          <Link href={homeHref} className="mx-auto shrink-0" aria-label="KIMates dashboard">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/kimates-icon.png" alt="KIMates" width={32} height={32} className="h-8 w-8" />
           </Link>
