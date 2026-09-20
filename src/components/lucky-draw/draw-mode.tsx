@@ -246,7 +246,9 @@ export function DrawMode({
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-300 sm:text-sm">
           Lucky Draw
         </p>
-        <h2 id={titleId} className="mt-1 break-words text-2xl font-bold sm:text-4xl lg:text-5xl">
+        {/* text-white is explicit: globals.css sets every heading to near-black (#111827),
+          which on this dark overlay rendered the company name almost invisible. */}
+        <h2 id={titleId} className="mt-1 break-words text-2xl font-bold text-white drop-shadow-sm sm:text-4xl lg:text-5xl">
           {companyName || "Lucky Draw"}
         </h2>
       </div>
