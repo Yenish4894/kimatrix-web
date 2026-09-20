@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 
 import { cn } from "@/lib/utils";
-import { SPIN_EASING_CSS } from "@/lib/draw-sound";
+import { SPIN_EASING_CSS, tickTimes } from "@/lib/draw-sound";
 
 /**
  * Even, so the gift/name alternation closes cleanly at the top, and small enough
@@ -75,30 +75,38 @@ function SegmentWord({ deg }: Readonly<{ deg: number }>) {
 export function Wheel({
   rotation,
   durationMs,
-  flapMs,
   className,
   pointerClassName,
 }: Readonly<{
   rotation: number;
   durationMs: number;
-  /** Times (ms from now) at which a peg passes the pointer, so it can flap. */
-  flapMs?: number[];
   /** Size of the wheel box, e.g. `h-64 w-64`. */
   className?: string;
   /** Pointer size/colour. */
   pointerClassName?: string;
 }>) {
   const pointerRef = useRef<SVGGElement | null>(null);
+  // Two wheels are mounted at once whenever Draw mode opens over the page, so the
+  // gradient ids have to be per-instance or the document carries duplicate ids.
+  const gid = useId().replace(/:/g, "");
+  const bezelId = `wheel-bezel-${gid}`;
+  const glossId = `wheel-gloss-${gid}`;
 
-  // ── Pointer flap: one kick per peg, on the same schedule as the tick sounds ──
+  // ── Pointer flap: one kick per peg, derived here from the wheel's own movement ──
+  // Derived rather than passed in, so every caller gets the flap without wiring it up.
+  // At full speed pegs pass faster than the eye resolves, so flaps closer than
+  // MIN_FLAP_GAP_MS are dropped: the tick sounds stay denser than the flaps.
+  const prevRotation = useRef(rotation);
   useEffect(() => {
+    const delta = rotation - prevRotation.current;
+    prevRotation.current = rotation;
     const el = pointerRef.current;
-    if (!el || !flapMs?.length || typeof el.animate !== "function") return;
+    if (!(delta > 0) || !el || typeof el.animate !== "function") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     let last = -Infinity;
-    for (const ms of flapMs) {
+    for (const ms of tickTimes(delta, durationMs, WHEEL_SEGMENTS)) {
       if (ms - last < MIN_FLAP_GAP_MS) continue;
       last = ms;
       timers.push(
@@ -115,7 +123,7 @@ export function Wheel({
       );
     }
     return () => timers.forEach(clearTimeout);
-  }, [flapMs]);
+  }, [rotation, durationMs]);
 
   const step = 360 / WHEEL_SEGMENTS;
 
@@ -181,24 +189,24 @@ export function Wheel({
         className="pointer-events-none absolute inset-0 h-full w-full drop-shadow-lg"
       >
         <defs>
-          <linearGradient id="wheel-bezel" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={bezelId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FDE68A" />
             <stop offset="45%" stopColor="#F59E0B" />
             <stop offset="100%" stopColor="#B45309" />
           </linearGradient>
-          <radialGradient id="wheel-gloss" cx="35%" cy="28%" r="75%">
+          <radialGradient id={glossId} cx="35%" cy="28%" r="75%">
             <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.28" />
             <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.04" />
             <stop offset="100%" stopColor="#000000" stopOpacity="0.18" />
           </radialGradient>
         </defs>
 
-        <circle cx="100" cy="100" r="92" fill="url(#wheel-gloss)" />
-        <circle cx="100" cy="100" r="96" fill="none" stroke="url(#wheel-bezel)" strokeWidth="7" />
+        <circle cx="100" cy="100" r="92" fill={`url(#${glossId})`} />
+        <circle cx="100" cy="100" r="96" fill="none" stroke={`url(#${bezelId})`} strokeWidth="7" />
         <circle cx="100" cy="100" r="99.5" fill="none" stroke="#78350F" strokeWidth="0.75" opacity="0.5" />
 
         <circle cx="100" cy="100" r="23" fill="#FFFFFF" />
-        <circle cx="100" cy="100" r="23" fill="none" stroke="url(#wheel-bezel)" strokeWidth="3" />
+        <circle cx="100" cy="100" r="23" fill="none" stroke={`url(#${bezelId})`} strokeWidth="3" />
         <text
           x="100"
           y="100"
