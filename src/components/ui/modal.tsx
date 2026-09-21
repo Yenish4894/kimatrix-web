@@ -178,7 +178,7 @@ export function Modal({
             {dismissible && (
             <button
               onClick={onClose}
-              className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-600 transition-colors"
               aria-label="Close"
               type="button"
             >

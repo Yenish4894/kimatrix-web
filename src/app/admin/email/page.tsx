@@ -652,7 +652,7 @@ function LogsTable({
                     <button
                       type="button"
                       onClick={() => onToggleExpand(row.id)}
-                      className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100"
+                      className="h-8 w-8 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"
                       aria-label="Toggle body preview"
                     >
                       {expandedLogId === row.id

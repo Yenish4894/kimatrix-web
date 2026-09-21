@@ -124,7 +124,7 @@ export default function PurchasesPage() {
           <Link
             href={`/company/purchases/${row.id}`}
             aria-label={`View invoice ${row.invoiceNumber}`}
-            className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-primary-600 transition-colors"
+            className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-primary-600 transition-colors"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
           </Link>
@@ -134,7 +134,7 @@ export default function PurchasesPage() {
               onClick={() => setVoidTarget(row)}
               aria-label={`Void invoice ${row.invoiceNumber}`}
               title="Void purchase"
-              className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-error-50 hover:text-error-600 transition-colors"
+              className="tap-target inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-error-50 hover:text-error-600 transition-colors"
             >
               <Ban className="h-4 w-4" aria-hidden="true" />
             </button>

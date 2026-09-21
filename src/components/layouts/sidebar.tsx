@@ -171,7 +171,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           type="button"
           onClick={() => { setCollapsed((prev) => { const next = !prev; onCollapsedChange?.(next); return next; }); }}
           className={cn(
-            "tap-target h-9 w-9 flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 transition-colors text-slate-400",
+            "tap-target h-9 w-9 flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 transition-colors text-slate-500",
             collapsed && "mx-auto mt-0"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -290,7 +290,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+              className="tap-target h-8 w-8 flex items-center justify-center rounded-md text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
               title="Logout"
               aria-label="Logout"
             >
@@ -302,7 +302,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           <button
             type="button"
             onClick={handleLogout}
-            className="tap-target mt-2 h-8 w-8 mx-auto flex items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            className="tap-target mt-2 h-8 w-8 mx-auto flex items-center justify-center rounded-md text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors"
             title="Logout"
             aria-label="Logout"
           >

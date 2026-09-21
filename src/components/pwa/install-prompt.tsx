@@ -63,7 +63,7 @@ export function InstallPrompt() {
       <button
         type="button"
         onClick={handleDismiss}
-        className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-md text-slate-400 hover:bg-slate-100"
+        className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" aria-hidden="true" />
