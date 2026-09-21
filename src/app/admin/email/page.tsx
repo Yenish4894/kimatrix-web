@@ -266,7 +266,7 @@ export default function AdminBulkEmailPage() {
             <div>
               <label htmlFor="extra-emails" className="block text-sm font-medium text-slate-700 mb-1">
                 Other recipients{" "}
-                <span className="font-normal text-slate-400">(optional)</span>
+                <span className="font-normal text-slate-500">(optional)</span>
               </label>
               <textarea
                 id="extra-emails"
@@ -301,12 +301,12 @@ export default function AdminBulkEmailPage() {
                 onChange={(e) => setBody(e.target.value)}
                 maxLength={10000}
               />
-              <p className="text-xs text-slate-400 mt-1 text-right">{body.length}/10,000</p>
+              <p className="text-xs text-slate-500 mt-1 text-right">{body.length}/10,000</p>
             </div>
             {/* ── Attachment ── */}
             <div>
               <label htmlFor="bulk-email-attachment" className="block text-sm font-medium text-slate-700 mb-1">
-                Attachment <span className="font-normal text-slate-400">(optional)</span>
+                Attachment <span className="font-normal text-slate-500">(optional)</span>
               </label>
 
               {attachment ? (
@@ -324,7 +324,7 @@ export default function AdminBulkEmailPage() {
                     type="button"
                     onClick={clearAttachment}
                     disabled={sendMut.isPending}
-                    className="tap-target shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-40"
+                    className="tap-target shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-600 disabled:opacity-40"
                     aria-label={`Remove attachment ${attachment.name}`}
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
@@ -357,7 +357,7 @@ export default function AdminBulkEmailPage() {
                   {attachmentIssue}
                 </p>
               ) : (
-                <p className="mt-1.5 text-xs text-slate-400">
+                <p className="mt-1.5 text-xs text-slate-500">
                   One file, up to {formatBytes(ATTACHMENT_MAX_BYTES)}. PDF, image, or document.
                 </p>
               )}
@@ -388,7 +388,7 @@ export default function AdminBulkEmailPage() {
                       {totalRecipients} recipient{totalRecipients === 1 ? "" : "s"}
                     </strong>
                     {selectedIds.size > 0 && extraEmails.length > 0 && (
-                      <span className="text-slate-400">
+                      <span className="text-slate-500">
                         {" "}
                         ({selectedIds.size} compan{selectedIds.size === 1 ? "y" : "ies"} +{" "}
                         {extraEmails.length} other)
@@ -625,7 +625,7 @@ function LogsTable({
                         "did that announcement include the price list?". */}
                     {row.attachmentFilename && (
                       <span
-                        className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-slate-400"
+                        className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-slate-500"
                         title={row.attachmentFilename}
                       >
                         <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
@@ -641,7 +641,7 @@ function LogsTable({
                     {/* Which of them were typed in by hand rather than selected, so the
                         history can answer "who did we actually email" later. */}
                     {(row.extraEmails?.length ?? 0) > 0 && (
-                      <span className="block text-[11px] text-slate-400">
+                      <span className="block text-[11px] text-slate-500">
                         incl. {row.extraEmails!.length} direct
                       </span>
                     )}

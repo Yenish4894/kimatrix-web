@@ -97,7 +97,7 @@ export default function AdminPaymentsPage() {
         row.company?.id ? (
           <Link
             href={`/admin/companies/${row.company.id}`}
-            className="font-medium text-primary-700 hover:underline"
+            className="inline-block py-1 -my-1 font-medium text-primary-700 hover:underline"
           >
             {row.company.name}
           </Link>
@@ -189,26 +189,26 @@ export default function AdminPaymentsPage() {
         {/* Same control as the purchases page. The two inputs shrink to share the row
             at 375px instead of each keeping a fixed width that overflowed. */}
         <div className="flex items-center h-11 w-full sm:w-auto rounded-md border border-slate-200 bg-white hover:border-slate-300 divide-x divide-slate-200 overflow-hidden transition-colors focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15">
-          <div className="flex flex-1 min-w-0 items-center gap-1.5 px-3">
+          <div className="flex flex-1 min-w-0 items-center gap-1.5 self-stretch px-3">
             <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={fromDate}
               max={toDate || undefined}
               onChange={(e) => { setFromDate(e.target.value); setCurrentPage(1); }}
-              className="w-full sm:w-32 min-w-0 text-sm text-slate-700 bg-transparent focus:outline-none"
+              className="h-full w-full sm:w-32 min-w-0 text-sm text-slate-700 bg-transparent focus:outline-none"
               aria-label="From date"
             />
           </div>
           <span className="px-2 text-xs text-slate-500 select-none" aria-hidden="true">to</span>
-          <div className="flex flex-1 min-w-0 items-center gap-1.5 px-3">
+          <div className="flex flex-1 min-w-0 items-center gap-1.5 self-stretch px-3">
             <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={toDate}
               min={fromDate || undefined}
               onChange={(e) => { setToDate(e.target.value); setCurrentPage(1); }}
-              className="w-full sm:w-32 min-w-0 text-sm text-slate-700 bg-transparent focus:outline-none"
+              className="h-full w-full sm:w-32 min-w-0 text-sm text-slate-700 bg-transparent focus:outline-none"
               aria-label="To date"
             />
           </div>

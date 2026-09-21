@@ -102,7 +102,7 @@ export default function PurchaseDetailPage({
             <p
               className={
                 voided
-                  ? "text-4xl sm:text-5xl font-bold font-heading text-slate-400 line-through mt-4"
+                  ? "text-4xl sm:text-5xl font-bold font-heading text-slate-500 line-through mt-4"
                   : "text-4xl sm:text-5xl font-bold font-heading text-primary-700 mt-4"
               }
             >

@@ -188,9 +188,9 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
             </p>
 
             {identitiesQ.isLoading ? (
-              <p className="mt-3 text-sm text-slate-400">Loading…</p>
+              <p className="mt-3 text-sm text-slate-500">Loading…</p>
             ) : activeIdentities.length === 0 && releasedIdentities.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-sm text-slate-500">
                 None — this company has not taken a trial.
               </p>
             ) : (
@@ -223,7 +223,7 @@ export function SubscriptionPanel({ company }: Readonly<SubscriptionPanelProps>)
                 {releasedIdentities.map((identity) => (
                   <li
                     key={identity.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2 text-slate-400"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2 text-slate-500"
                   >
                     <span className="font-mono text-sm line-through">{identity.preview}</span>
                     <span className="text-xs">

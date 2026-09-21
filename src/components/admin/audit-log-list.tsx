@@ -59,24 +59,24 @@ export function AuditLogList({ companyId }: Readonly<{ companyId?: string }>) {
           />
         </div>
         <div className="flex items-center h-11 rounded-md border border-slate-200 bg-white divide-x divide-slate-200 overflow-hidden focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15">
-          <div className="flex flex-1 items-center gap-1.5 px-3">
+          <div className="flex flex-1 items-center gap-1.5 self-stretch px-3">
             <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={fromDate}
               onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
-              className="w-full sm:w-32 text-sm text-slate-700 bg-transparent focus:outline-none"
+              className="h-full w-full sm:w-32 text-sm text-slate-700 bg-transparent focus:outline-none"
               aria-label="From date"
             />
           </div>
           <span className="px-2 text-xs text-slate-500 select-none" aria-hidden="true">to</span>
-          <div className="flex flex-1 items-center gap-1.5 px-3">
+          <div className="flex flex-1 items-center gap-1.5 self-stretch px-3">
             <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={toDate}
               onChange={(e) => { setToDate(e.target.value); setPage(1); }}
-              className="w-full sm:w-32 text-sm text-slate-700 bg-transparent focus:outline-none"
+              className="h-full w-full sm:w-32 text-sm text-slate-700 bg-transparent focus:outline-none"
               aria-label="To date"
             />
           </div>
@@ -136,7 +136,7 @@ function AuditRow({ entry }: Readonly<{ entry: AuditLogEntry }>) {
             <span className="text-xs text-slate-500">
               on {humanizeAuditAction(entry.entityType)}
               {entry.entityId && (
-                <span className="ml-1 font-mono text-slate-400" title={entry.entityId}>
+                <span className="ml-1 font-mono text-slate-500" title={entry.entityId}>
                   {entry.entityId.slice(0, 8)}
                 </span>
               )}
@@ -144,14 +144,14 @@ function AuditRow({ entry }: Readonly<{ entry: AuditLogEntry }>) {
           </div>
           <p className="text-sm text-slate-700 break-words">
             <span className="font-medium">{entry.actorEmail ?? "System"}</span>
-            <span className="text-slate-400"> · </span>
+            <span className="text-slate-500"> · </span>
             <time dateTime={entry.createdAt} className="text-slate-500">
               {formatDateTime(entry.createdAt)}
             </time>
           </p>
           {entry.note && (
             <p className="text-sm text-slate-600 break-words">
-              <span className="text-slate-400">Note: </span>
+              <span className="text-slate-500">Note: </span>
               {entry.note}
             </p>
           )}
@@ -193,11 +193,11 @@ function AuditRow({ entry }: Readonly<{ entry: AuditLogEntry }>) {
                   {r.changed && <span className="sr-only"> (changed)</span>}
                 </dt>
                 <dd className="text-slate-500 break-words">
-                  <span className="md:hidden text-xs text-slate-400">Before: </span>
+                  <span className="md:hidden text-xs text-slate-500">Before: </span>
                   {r.before}
                 </dd>
                 <dd className={cn("break-words", r.changed ? "text-slate-900 font-medium" : "text-slate-500")}>
-                  <span className="md:hidden text-xs font-normal text-slate-400">After: </span>
+                  <span className="md:hidden text-xs font-normal text-slate-500">After: </span>
                   {r.after}
                 </dd>
               </div>

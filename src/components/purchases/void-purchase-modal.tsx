@@ -126,7 +126,7 @@ export function VoidPurchaseModal({
                 Required, 3–{VOID_REASON_MAX} characters.
               </span>
               <span
-                className={reason.trim().length > VOID_REASON_MAX ? "text-error-600" : "text-slate-400"}
+                className={reason.trim().length > VOID_REASON_MAX ? "text-error-600" : "text-slate-500"}
                 aria-hidden="true"
               >
                 {reason.trim().length}/{VOID_REASON_MAX}

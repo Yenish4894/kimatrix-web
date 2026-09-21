@@ -27,7 +27,7 @@ export function VoidedAmount({
   return (
     <span className={cn("inline-flex flex-col items-end md:items-start gap-1", className)}>
       <span className="flex items-center gap-2">
-        <span className="line-through text-slate-400">{formatted}</span>
+        <span className="line-through text-slate-500">{formatted}</span>
         <span className="sr-only">(voided)</span>
         <Badge variant="error" title={purchase.voidReason ?? undefined}>Voided</Badge>
       </span>
