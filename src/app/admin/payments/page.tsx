@@ -190,7 +190,7 @@ export default function AdminPaymentsPage() {
             at 375px instead of each keeping a fixed width that overflowed. */}
         <div className="flex items-center h-11 w-full sm:w-auto rounded-md border border-slate-200 bg-white hover:border-slate-300 divide-x divide-slate-200 overflow-hidden transition-colors focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15">
           <div className="flex flex-1 min-w-0 items-center gap-1.5 self-stretch px-3">
-            <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
+            <Calendar className="hidden sm:block h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={fromDate}
@@ -202,7 +202,7 @@ export default function AdminPaymentsPage() {
           </div>
           <span className="px-2 text-xs text-slate-500 select-none" aria-hidden="true">to</span>
           <div className="flex flex-1 min-w-0 items-center gap-1.5 self-stretch px-3">
-            <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
+            <Calendar className="hidden sm:block h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={toDate}

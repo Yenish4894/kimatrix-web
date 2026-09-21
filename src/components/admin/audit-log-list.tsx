@@ -58,25 +58,25 @@ export function AuditLogList({ companyId }: Readonly<{ companyId?: string }>) {
             onChange={(e) => { setAction(e.target.value); setPage(1); }}
           />
         </div>
-        <div className="flex items-center h-11 rounded-md border border-slate-200 bg-white divide-x divide-slate-200 overflow-hidden focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15">
-          <div className="flex flex-1 items-center gap-1.5 self-stretch px-3">
-            <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
+        <div className="flex items-center h-11 w-full sm:w-auto rounded-md border border-slate-200 bg-white divide-x divide-slate-200 overflow-hidden focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15">
+          <div className="flex flex-1 min-w-0 items-center gap-1.5 self-stretch px-3">
+            <Calendar className="hidden sm:block h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={fromDate}
               onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
-              className="h-full w-full sm:w-32 text-sm text-slate-700 bg-transparent focus:outline-none"
+              className="h-full w-full sm:w-32 min-w-0 text-sm text-slate-700 bg-transparent focus:outline-none"
               aria-label="From date"
             />
           </div>
           <span className="px-2 text-xs text-slate-500 select-none" aria-hidden="true">to</span>
-          <div className="flex flex-1 items-center gap-1.5 self-stretch px-3">
-            <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
+          <div className="flex flex-1 min-w-0 items-center gap-1.5 self-stretch px-3">
+            <Calendar className="hidden sm:block h-3.5 w-3.5 text-slate-400 shrink-0" aria-hidden="true" />
             <input
               type="date"
               value={toDate}
               onChange={(e) => { setToDate(e.target.value); setPage(1); }}
-              className="h-full w-full sm:w-32 text-sm text-slate-700 bg-transparent focus:outline-none"
+              className="h-full w-full sm:w-32 min-w-0 text-sm text-slate-700 bg-transparent focus:outline-none"
               aria-label="To date"
             />
           </div>

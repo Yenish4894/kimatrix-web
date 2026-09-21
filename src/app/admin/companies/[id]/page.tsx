@@ -95,7 +95,7 @@ export default function AdminCompanyDetailPage({
           <div className="max-w-4xl mx-auto">
             <Link
               href="/admin/companies"
-              className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-4"
+              className="inline-flex items-center gap-1 py-1.5 -mt-1.5 mb-2.5 text-sm text-slate-500 hover:text-primary-600"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Companies
             </Link>
@@ -143,7 +143,7 @@ export default function AdminCompanyDetailPage({
       <div className="max-w-4xl mx-auto">
         <Link
           href="/admin/companies"
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 mb-4"
+          className="inline-flex items-center gap-1 py-1.5 -mt-1.5 mb-2.5 text-sm text-slate-500 hover:text-primary-600"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Companies
         </Link>
