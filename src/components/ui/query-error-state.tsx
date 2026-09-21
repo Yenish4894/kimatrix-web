@@ -42,7 +42,7 @@ export function QueryErrorState({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="min-h-11 px-3 -mr-3 shrink-0 text-primary-600 hover:underline text-sm font-medium"
+            className="min-h-11 px-3 -mr-3 shrink-0 text-primary-700 hover:underline text-sm font-medium"
             type="button"
           >
             Retry

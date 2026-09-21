@@ -151,7 +151,7 @@ function ResetPasswordInner() {
         <Button type="submit" fullWidth isLoading={isSubmitting}>Reset Password</Button>
 
         <p className="text-center text-sm text-slate-500">
-          <Link href="/login" className="text-primary-600 hover:underline font-medium">Back to Login</Link>
+          <Link href="/login" className="text-primary-700 hover:underline font-medium">Back to Login</Link>
         </p>
       </form>
     </AuthLayout>

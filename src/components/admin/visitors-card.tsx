@@ -33,7 +33,7 @@ export function VisitorsCard() {
           <button
             type="button"
             onClick={() => q.refetch()}
-            className="font-medium text-primary-600 hover:underline"
+            className="font-medium text-primary-700 hover:underline"
           >
             Retry
           </button>

@@ -89,7 +89,7 @@ function VerifyEmailInner() {
           </Link>
           <p className="text-xs text-slate-500">
             Not signed in?{" "}
-            <Link href="/login" className="text-primary-600 hover:underline">
+            <Link href="/login" className="text-primary-700 hover:underline">
               Log in
             </Link>
           </p>

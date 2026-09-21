@@ -162,7 +162,7 @@ function AuditRow({ entry }: Readonly<{ entry: AuditLogEntry }>) {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls={panelId}
-            className="tap-target inline-flex shrink-0 items-center gap-1 self-start rounded-md px-2 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50"
+            className="tap-target inline-flex shrink-0 items-center gap-1 self-start rounded-md px-2 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-50"
           >
             {open ? "Hide changes" : changedCount ? `Show changes (${changedCount})` : "Show details"}
             <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} aria-hidden="true" />

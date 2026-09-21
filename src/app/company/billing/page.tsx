@@ -230,7 +230,7 @@ export default function BillingPage() {
         <button
           type="button"
           onClick={() => dispatch(fetchPlans())}
-          className="inline-flex items-center gap-2 text-sm text-primary-600 hover:underline"
+          className="inline-flex items-center gap-2 text-sm text-primary-700 hover:underline"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" /> Retry
         </button>
@@ -270,7 +270,7 @@ export default function BillingPage() {
         <div className="-mt-3 flex justify-end">
           <Link
             href="/company/payments"
-            className="inline-flex items-center gap-1.5 min-h-11 text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
+            className="inline-flex items-center gap-1.5 min-h-11 text-sm font-medium text-primary-700 hover:text-primary-800 hover:underline"
           >
             <ReceiptText className="h-4 w-4" aria-hidden="true" />
             View payment history

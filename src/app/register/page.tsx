@@ -287,7 +287,7 @@ export default function RegisterPage() {
             Wrong email address?{" "}
             <button
               type="button"
-              className="text-primary-600 hover:underline font-medium"
+              className="text-primary-700 hover:underline font-medium"
               onClick={() => setSubmittedEmail(null)}
             >
               Go back and fix it
@@ -475,7 +475,7 @@ export default function RegisterPage() {
               <p className="text-sm font-semibold text-primary-900">
                 Confirm your email to activate your account
               </p>
-              <p className="mt-1 text-sm text-primary-800/80">
+              <p className="mt-1 text-sm text-primary-800">
                 We&apos;ll email you a confirmation link — click it and your QR code goes live
                 straight away.
               </p>
@@ -492,9 +492,9 @@ export default function RegisterPage() {
             label={
               <span>
                 I agree to the{" "}
-                <Link href="/terms" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Terms of Service</Link>
+                <Link href="/terms" className="text-primary-700 hover:underline" target="_blank" rel="noopener noreferrer">Terms of Service</Link>
                 {" "}and{" "}
-                <Link href="/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>
+                <Link href="/privacy" className="text-primary-700 hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>
               </span>
             }
             error={errors.termsAccepted}
@@ -536,7 +536,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-slate-500">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary-600 hover:underline font-medium">Login</Link>
+          <Link href="/login" className="text-primary-700 hover:underline font-medium">Login</Link>
         </p>
       </form>
     </AuthLayout>

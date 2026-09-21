@@ -142,7 +142,7 @@ export default function PurchaseDetailPage({
               <div className="pt-3 border-t border-slate-100">
                 <Link
                   href={`/company/customers/${purchase.customer.id}`}
-                  className="text-sm text-primary-600 hover:underline"
+                  className="text-sm text-primary-700 hover:underline"
                 >
                   View customer profile →
                 </Link>

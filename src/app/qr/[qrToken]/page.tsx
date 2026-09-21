@@ -530,7 +530,7 @@ export default function QRSubmissionPage({
                   <button
                     type="button"
                     onClick={requestLocation}
-                    className="w-full min-h-11 text-sm text-primary-600 hover:text-primary-700 py-2 flex items-center justify-center gap-2 border border-dashed border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
+                    className="w-full min-h-11 text-sm text-primary-700 hover:text-primary-800 py-2 flex items-center justify-center gap-2 border border-dashed border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
                   >
                     <MapPin className="h-4 w-4" aria-hidden="true" /> Attach location (optional)
                   </button>

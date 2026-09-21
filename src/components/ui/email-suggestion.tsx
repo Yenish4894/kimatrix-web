@@ -47,7 +47,7 @@ interface EmailSuggestionProps {
 export function EmailSuggestion({ suggestion, error, onApply }: Readonly<EmailSuggestionProps>) {
   const fromServer = suggestionFromMessage(error);
   const buttonClass =
-    "font-medium text-primary-600 underline underline-offset-2 hover:text-primary-700 " +
+    "font-medium text-primary-700 underline underline-offset-2 hover:text-primary-800 " +
     "rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 break-all";
 
   let content: React.ReactNode = null;

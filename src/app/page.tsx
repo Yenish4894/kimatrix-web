@@ -248,10 +248,10 @@ export default function HomePage() {
       <h3 className={cn("text-xl font-semibold font-heading", featured ? "text-white" : "text-slate-800")}>
         {p.name}
       </h3>
-      <p className={cn("mt-1 text-sm", featured ? "text-primary-200" : "text-slate-500")}>{tagline}</p>
+      <p className={cn("mt-1 text-sm", featured ? "text-primary-100" : "text-slate-500")}>{tagline}</p>
       <div className="mt-6 mb-8">
         <span className={cn("text-4xl font-bold font-heading", featured ? "" : "text-slate-900")}>${price(p)}</span>
-        <span className={cn("ml-1 text-sm", featured ? "text-primary-200" : "text-slate-500")}>/ {p.durationDays} days</span>
+        <span className={cn("ml-1 text-sm", featured ? "text-primary-100" : "text-slate-500")}>/ {p.durationDays} days</span>
       </div>
       <ul className="space-y-3 mb-8">
         {planIncludes.map((f) => (
@@ -360,7 +360,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 mx-4">
                     <div className="bg-slate-700 rounded-md h-6 flex items-center px-3">
-                      <span className="text-xs text-slate-500">kimates.com/company/dashboard</span>
+                      <span className="text-xs text-slate-300">kimates.com/company/dashboard</span>
                     </div>
                   </div>
                 </div>
@@ -598,13 +598,13 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-950 text-slate-500 py-12">
+      <footer className="bg-slate-950 text-slate-400 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/kimates-logo-white.png" alt="KIMates" width={150} height={32} className="h-8 w-auto" />
-              <p className="mt-3 text-sm text-slate-500">
+              <p className="mt-3 text-sm text-slate-400">
                 QR-based customer purchase tracking for fuel stations and shops.
               </p>
             </div>
@@ -628,10 +628,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               &copy; {new Date().getFullYear()} KIMates. All rights reserved.
             </p>
-            <div className="flex gap-6 text-xs text-slate-500">
+            <div className="flex gap-6 text-xs text-slate-400">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>

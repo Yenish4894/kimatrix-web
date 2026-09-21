@@ -260,7 +260,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
           )}
           {!subscriptionActive && (
             <p className="text-xs text-slate-500 mt-1">
-              <Link href="/company/billing" className="text-primary-600 hover:underline font-medium">
+              <Link href="/company/billing" className="text-primary-700 hover:underline font-medium">
                 Subscribe
               </Link>{" "}to activate your account.
             </p>

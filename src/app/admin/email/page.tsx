@@ -208,7 +208,7 @@ export default function AdminBulkEmailPage() {
               <h3 className="text-h4 font-heading font-semibold text-slate-800">
                 Select Recipients
                 {selectedIds.size > 0 && (
-                  <span className="ml-2 text-sm font-normal text-primary-600">
+                  <span className="ml-2 text-sm font-normal text-primary-700">
                     {selectedIds.size} selected
                   </span>
                 )}

@@ -43,7 +43,7 @@ export default function TermsPage() {
 
           <h2 className="text-xl font-heading font-semibold text-slate-800 mt-8 mb-3">4. Data & Privacy</h2>
           <p className="text-slate-600">
-            See our <Link href="/privacy" className="text-primary-600 hover:underline">Privacy Policy</Link> for
+            See our <Link href="/privacy" className="text-primary-700 hover:underline">Privacy Policy</Link> for
             details on what we collect and how we use it.
           </p>
 
