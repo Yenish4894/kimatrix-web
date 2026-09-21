@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+/* Laptop-height screens. Browser chrome takes 100-150px off a 768px display, so the
+   real viewport is often 620-700px tall. Fixed-height chrome (the sidebar) has to
+   tighten up there rather than clip its last item. */
+@custom-variant short (@media (max-height: 800px));
+
+/* A scrolling region that shows it can scroll. The two "local" layers are white
+   covers that travel with the content, so each edge shadow is uncovered only while
+   there is more content past that edge. Pure CSS, no scroll listeners. */
+@utility scroll-shadow-y {
+  background:
+    linear-gradient(#fff 30%, rgb(255 255 255 / 0)) center top,
+    linear-gradient(rgb(255 255 255 / 0), #fff 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, rgb(15 23 42 / 0.14), rgb(15 23 42 / 0)) center top,
+    radial-gradient(farthest-side at 50% 100%, rgb(15 23 42 / 0.14), rgb(15 23 42 / 0)) center bottom;
+  background-repeat: no-repeat;
+  background-color: #fff;
+  background-size: 100% 36px, 100% 36px, 100% 12px, 100% 12px;
+  background-attachment: local, local, scroll, scroll;
+}
+
+
 @theme inline {
   /* Theme D — Ocean Deep
      Rich teal-blue primary, warm orange accent. Fresh, modern, tech-forward.

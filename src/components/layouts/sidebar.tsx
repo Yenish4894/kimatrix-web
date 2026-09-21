@@ -181,9 +181,9 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
+      <nav className="flex-1 overflow-y-auto scroll-shadow-y py-4 short:py-2 px-3">
         {nav.map((section) => (
-          <div key={section.title} className="mb-6">
+          <div key={section.title} className="mb-6 short:mb-3">
             {!collapsed && (
               <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 {section.title}
@@ -197,7 +197,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "relative flex items-center gap-3 h-11 rounded-lg transition-all duration-200 ease-out group/nav",
+                        "relative flex items-center gap-3 h-11 short:h-10 rounded-lg transition-all duration-200 ease-out group/nav",
                         collapsed ? "justify-center px-0" : "px-3",
                         isActive
                           ? "bg-gradient-to-r from-primary-50 to-primary-50/40 text-primary-700 font-semibold shadow-[0_1px_2px_rgba(13,148,136,0.06)]"
@@ -250,7 +250,7 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
                 <span>{countdown ? `${countdown.label} remaining` : `${daysLeft} days remaining`}</span>
               </div>
               {/* Progress bar */}
-              <div className="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div className="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden short:hidden">
                 <div
                   className={cn("h-full rounded-full transition-all", progressColor)}
                   style={{ width: `${Math.min(100, (daysLeft / planDuration) * 100)}%` }}
