@@ -158,7 +158,7 @@ export function SearchableSelect({
           onClick={openMenu}
           onKeyDown={handleKeyDown}
           className={cn(
-            "flex h-11 w-full appearance-none rounded-md border bg-white px-3 pr-10 text-base text-slate-800 placeholder:text-slate-300 transition-colors duration-150",
+            "flex h-11 w-full appearance-none rounded-md border bg-white px-3 pr-10 text-base text-slate-800 placeholder:text-slate-500 transition-colors duration-150",
             "focus:outline-none focus:ring-[3px]",
             error
               ? "border-error-500 focus:border-error-500 focus:ring-error-500/15"

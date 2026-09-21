@@ -49,7 +49,7 @@ export function AuditLogList({ companyId }: Readonly<{ companyId?: string }>) {
     <div>
       <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mb-4">
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden="true" />
           <Input
             aria-label="Filter by action"
             placeholder="Filter by action, e.g. trial"

@@ -70,7 +70,10 @@ export function Table<T>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500",
+                    "text-left text-xs font-semibold uppercase tracking-wide text-slate-500",
+                    // A sortable header hands its padding to the button, so the click
+                    // target is the whole cell (~40px) instead of a 16px line of text.
+                    col.sortable ? "p-0" : "px-4 py-3",
                     col.className
                   )}
                   aria-sort={
@@ -84,7 +87,7 @@ export function Table<T>({
                   {col.sortable ? (
                     <button
                       type="button"
-                      className="flex items-center gap-1 select-none hover:text-slate-700 cursor-pointer transition-colors duration-150 w-full text-left"
+                      className="flex items-center gap-1 select-none hover:text-slate-700 cursor-pointer transition-colors duration-150 w-full text-left px-4 py-3 uppercase tracking-wide"
                       onClick={() => onSort?.(col.key)}
                     >
                       {col.header}

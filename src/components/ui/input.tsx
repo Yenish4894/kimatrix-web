@@ -30,12 +30,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <div className="relative">
+        {/* Positioned only when it has an absolute child (the password toggle). An
+            unconditional `relative` put this wrapper in the same paint layer as a
+            search icon placed before it, and its white background covered the icon. */}
+        <div className={cn(isPassword && "relative")}>
           <input
             id={inputId}
             type={isPassword && showPassword ? "text" : type}
             className={cn(
-              "flex h-11 w-full rounded-md border bg-white px-3 text-base text-slate-800 placeholder:text-slate-300 transition-colors duration-150",
+              "flex h-11 w-full rounded-md border bg-white px-3 text-base text-slate-800 placeholder:text-slate-500 transition-colors duration-150",
               "focus:outline-none focus:ring-[3px]",
               error
                 ? "border-error-500 focus:border-error-500 focus:ring-error-500/15"
@@ -45,6 +48,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               className
             )}
             ref={ref}
+            // A field with only a placeholder has no accessible name of its own; browsers
+            // improvise one inconsistently. Say it explicitly; a passed aria-label wins.
+            aria-label={
+              !label && !props["aria-labelledby"] && props.placeholder ? props.placeholder : undefined
+            }
             aria-invalid={!!error}
             // Reference BOTH when both are present. Previously an error replaced the
             // helper text in the a11y tree, so on the QR form the vehicle-format rule
@@ -61,8 +69,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 transition-colors"
-              tabIndex={-1}
+              // 32px target, not the 20px icon. Reachable with Tab: it was tabIndex -1,
+              // which left keyboard-only users no way to reveal a mistyped password.
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-500 transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}

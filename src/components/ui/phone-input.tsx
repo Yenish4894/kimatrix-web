@@ -111,7 +111,7 @@ export function PhoneInput({
           placeholder={placeholder}
           aria-invalid={!!error}
           aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
-          className="flex-1 min-w-0 px-3 text-base text-slate-800 bg-transparent placeholder:text-slate-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-400"
+          className="flex-1 min-w-0 px-3 text-base text-slate-800 bg-transparent placeholder:text-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-400"
         />
       </div>
       {error && (

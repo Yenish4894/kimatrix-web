@@ -250,7 +250,7 @@ export default function AdminCompaniesPage() {
     <DashboardShell title="Companies" requiredRole="super_admin">
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 mb-5">
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden="true" />
           <Input
             placeholder="Search companies..."
             className="pl-10"
