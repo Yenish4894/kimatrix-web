@@ -4,6 +4,8 @@
    real viewport is often 620-700px tall. Fixed-height chrome (the sidebar) has to
    tighten up there rather than clip its last item. */
 @custom-variant short (@media (max-height: 800px));
+/* Budget laptops (1366x768) leave ~650px once browser chrome is subtracted. */
+@custom-variant shorter (@media (max-height: 700px));
 
 /* A scrolling region that shows it can scroll. The two "local" layers are white
    covers that travel with the content, so each edge shadow is uncovered only while

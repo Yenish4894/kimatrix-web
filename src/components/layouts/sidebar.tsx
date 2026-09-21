@@ -181,11 +181,11 @@ export function Sidebar({ onCollapsedChange }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto scroll-shadow-y py-4 short:py-2 px-3">
+      <nav className="flex-1 overflow-y-auto scroll-shadow-y py-4 short:py-2 shorter:py-1 px-3">
         {nav.map((section) => (
-          <div key={section.title} className="mb-6 short:mb-3">
+          <div key={section.title} className="mb-6 short:mb-3 shorter:mb-2">
             {!collapsed && (
-              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shorter:hidden">
                 {section.title}
               </p>
             )}
