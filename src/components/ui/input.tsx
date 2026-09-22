@@ -69,9 +69,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              // 32px target, not the 20px icon. Reachable with Tab: it was tabIndex -1,
-              // which left keyboard-only users no way to reveal a mistyped password.
+              // 32px target, not the 20px icon (WCAG 2.5.8 minimum). Tab order is
+              // untouched — that's a separate, unmeasured change, not made here.
               className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary-500 transition-colors"
+              tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}

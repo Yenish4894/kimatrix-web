@@ -97,7 +97,7 @@ export default function AdminPaymentsPage() {
         row.company?.id ? (
           <Link
             href={`/admin/companies/${row.company.id}`}
-            className="inline-block py-1 -my-1 font-medium text-primary-700 hover:underline"
+            className="font-medium text-primary-700 hover:underline"
           >
             {row.company.name}
           </Link>

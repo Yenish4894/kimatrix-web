@@ -360,7 +360,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 mx-4">
                     <div className="bg-slate-700 rounded-md h-6 flex items-center px-3">
-                      <span className="text-xs text-slate-300">kimates.com/company/dashboard</span>
+                      <span className="text-xs text-slate-500">kimates.com/company/dashboard</span>
                     </div>
                   </div>
                 </div>
