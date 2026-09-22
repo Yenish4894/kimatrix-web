@@ -38,84 +38,88 @@ import type { SubscriptionPlan } from "@/types";
  */
 
 /* ─── Features ───────────────────────────────────── */
-const features = [
+// A flat 9-up grid gave the mechanic that makes this product different (a QR code
+// replacing a logbook) the same weight as a billing preference. Three groups get a
+// featured row instead — decided 2026-09-22: the core loop (scan → see it live), the
+// two "see your business" features paired under one story, and lucky draw as the
+// stand-out differentiator. The other four stay listed, just smaller.
+const featuredGroups = [
   {
-    icon: QrCode,
-    title: "Your own QR code",
+    icons: [QrCode, Smartphone],
+    title: "Scan and go",
     description:
-      "Ready as soon as you confirm your email, and emailed to you as a printable poster. Pause it any time, or regenerate it if a poster goes missing.",
+      "Your QR code arrives as a printable poster as soon as you confirm your email. Customers scan it with any phone camera and fill a short form in their browser — no app, no download, no account.",
     color: "bg-primary-100 text-primary-600",
   },
   {
-    icon: Smartphone,
-    title: "No app for customers",
+    icons: [BarChart3, FileText],
+    title: "See everything, export anything",
     description:
-      "Customers scan with any phone camera and fill a short form in their browser. No download, no account, no friction.",
-    color: "bg-accent-100 text-accent-600",
-  },
-  {
-    icon: BarChart3,
-    title: "Live dashboard",
-    description:
-      "Every purchase appears as it's submitted. See total customers, total spend, your top spender and how long your plan has left.",
+      "Every purchase appears on your dashboard as it's submitted: total customers, total spend, your top spender. One click for a top-10 PDF, a monthly report, or a CSV of everything.",
     color: "bg-success-100 text-success-600",
   },
+  {
+    icons: [Gift],
+    title: "Lucky draw",
+    description:
+      "Reward your customers with a draw run on their real purchases. The winner is picked at random on our server — never by hand — and can win only once per period.",
+    color: "bg-accent-100 text-accent-600",
+  },
+];
+
+const secondaryFeatures = [
   {
     icon: Users,
     title: "Customer & purchase records",
     description:
-      "Search and sort every customer and purchase, filter by date, and void a wrong entry with a reason — it drops out of totals and reports.",
-    color: "bg-info-100 text-info-600",
-  },
-  {
-    icon: FileText,
-    title: "Reports & exports",
-    description:
-      "One-click PDFs of your top 10, all customers and transactions, a monthly report, and CSV exports of your data whenever you want it.",
-    color: "bg-warning-100 text-warning-600",
-  },
-  {
-    icon: Gift,
-    title: "Lucky draw",
-    description:
-      "Reward your customers with a draw run on your real purchases. The winner is picked at random and can win only once per period.",
-    color: "bg-accent-100 text-accent-600",
+      "Search and sort every customer and purchase, filter by date, and void a wrong entry with a reason.",
   },
   {
     icon: Mail,
     title: "Automatic emails",
-    description:
-      "Reminders before your trial or plan ends, and a receipt with an invoice PDF after every payment — nothing to chase.",
-    color: "bg-primary-100 text-primary-600",
+    description: "Reminders before your trial or plan ends, and a receipt after every payment.",
   },
   {
     icon: CreditCard,
     title: "Flexible billing",
-    description:
-      "Short plans with no lock-in, paid securely with PayPal — once, or on auto-renew you can change or cancel. Every invoice is one click away.",
-    color: "bg-success-100 text-success-600",
+    description: "Short plans, no lock-in, paid securely with PayPal. Change or cancel any time.",
   },
   {
     icon: Globe,
     title: "Works wherever you are",
-    description:
-      "Customer amounts are recorded in your own country's currency, and phone numbers use your country's dialling code.",
-    color: "bg-info-100 text-info-600",
+    description: "Amounts in your own country's currency, phone numbers in your own dialling code.",
   },
 ];
 
 function FeatureGrid() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {features.map((f) => (
-        <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-6 h-full">
-          <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", f.color)} aria-hidden="true">
-            <f.icon className="h-6 w-6" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {featuredGroups.map((f) => (
+          <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-7 h-full">
+            <div className="flex items-center gap-2 mb-4">
+              {f.icons.map((Icon, i) => (
+                <div key={i} className={cn("h-12 w-12 rounded-xl flex items-center justify-center", f.color)} aria-hidden="true">
+                  <Icon className="h-6 w-6" />
+                </div>
+              ))}
+            </div>
+            <h3 className="text-xl font-semibold font-heading text-slate-800">{f.title}</h3>
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed">{f.description}</p>
           </div>
-          <h3 className="text-lg font-semibold font-heading text-slate-800">{f.title}</h3>
-          <p className="text-sm text-slate-500 mt-2 leading-relaxed">{f.description}</p>
-        </div>
-      ))}
+        ))}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {secondaryFeatures.map((f) => (
+          <div key={f.title} className="rounded-xl p-5 h-full">
+            <div className="flex items-center gap-2 mb-2">
+              <f.icon className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />
+              <h3 className="text-sm font-semibold font-heading text-slate-700">{f.title}</h3>
+            </div>
+            <p className="text-sm text-slate-500 leading-relaxed">{f.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
