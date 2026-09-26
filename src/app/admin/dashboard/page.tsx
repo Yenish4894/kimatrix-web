@@ -1,12 +1,12 @@
 "use client";
 
-import { Building2, Shield, Fuel, Users, Receipt, Wallet, AlertCircle } from "lucide-react";
+import { Building2, Shield, Fuel, Users, Receipt, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { StatCard, QueryErrorState } from "@/components/ui";
 import { VisitorsCard } from "@/components/admin/visitors-card";
 import { ServiceOutageBanner, ServiceStatusPanel, useSystemStatus } from "@/components/admin/service-status";
-import { formatNumber, formatSpendByCurrency } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 import { adminService } from "@/services";
 
 export default function AdminDashboardPage() {
@@ -65,7 +65,7 @@ export default function AdminDashboardPage() {
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           Platform Activity
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <StatCard
             title="Total Customers"
             value={isLoading ? "—" : formatNumber(stats?.totalCustomers)}
@@ -75,11 +75,6 @@ export default function AdminDashboardPage() {
             title="Total Purchases"
             value={isLoading ? "—" : formatNumber(stats?.totalPurchases)}
             icon={Receipt}
-          />
-          <StatCard
-            title="Total Spend"
-            value={isLoading ? "—" : formatSpendByCurrency(stats?.spendByCountry, stats?.totalSpend ?? 0)}
-            icon={Wallet}
           />
         </div>
       </div>
