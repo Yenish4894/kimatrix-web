@@ -11,6 +11,7 @@ import {useCompanyProfile} from "@/hooks/useCompanyProfile";
 import {companyService} from "@/services";
 import {parseApiError} from "@/lib/errors";
 import {formatNumber} from "@/lib/utils";
+import {downloadFile, messageFromBlobError} from "@/lib/download";
 // PDF generators are lazy-loaded on click — saves ~200KB from initial bundle.
 // See handlers below for dynamic import().
 import type { Customer } from "@/types";
@@ -79,10 +80,6 @@ async function fetchAllCustomers(): Promise<{ customers: Customer[]; truncated: 
 
 // ─── Aggregation ──────────────────────────────────────────────
 
-/**
- * Sort helper: by total spend DESC, then by latest activity DESC (tiebreaker).
- * Equal-spending customers are ordered by who purchased most recently.
- */
 /**
  * Same order as the server (pdf/reports.ts rankCustomers and the monthly query): spend,
  * then more purchases, then mobile — so ranks are consecutive and every list agrees.
@@ -223,11 +220,11 @@ export default function ReportsPage() {
       const { customers, truncated } = await fetchAllCustomers();
       if (truncated) {
         setAllError(
-          `This report shows your top ${formatNumber(MAX_REPORT_PAGES * REPORT_PAGE_SIZE)} customers by spend. Use the CSV export in Settings to download all of them.`,
+          `The preview shows your top ${formatNumber(MAX_REPORT_PAGES * REPORT_PAGE_SIZE)} customers by spend. The PDF includes every customer.`,
         );
       }
-      // Re-sort client-side with tiebreaker — BE sorts by amount only, so
-      // ties across page boundaries can land in arbitrary order.
+      // Re-sort so equal spenders appear in the same order as in the PDFs and the
+      // Top 10 (purchase count, then mobile). The server pages by amount, then id.
       const rows = customers
         .map((c) => ({
           customerId: c.id,
@@ -365,11 +362,13 @@ export default function ReportsPage() {
                   <Button
                     variant="secondary"
                     onClick={async () => {
+                      // Rendered by the server, the same file Settings -> Download your data
+                      // gives: one engine, one ranking, and every customer — the preview
+                      // below is capped, the PDF is not.
                       try {
-                        const { generateAllCustomersPdf } = await import("@/lib/pdf/customer-reports");
-                        await generateAllCustomersPdf(allReport, companyName, companyCountry);
-                      } catch {
-                        toast.error("Could not generate the PDF. Please try again.");
+                        await downloadFile("/company/reports/customers.pdf", "kimates-customers.pdf");
+                      } catch (err) {
+                        toast.error(await messageFromBlobError(err));
                       }
                     }}
                   >

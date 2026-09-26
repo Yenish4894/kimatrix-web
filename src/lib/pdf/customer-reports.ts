@@ -181,15 +181,3 @@ export function generateTop10Pdf(rows: ReportRow[], monthLabel: string, companyN
     ranked: true,
   });
 }
-
-export function generateAllCustomersPdf(rows: ReportRow[], companyName: string, country = "") {
-  return buildReport({
-    title: "All Customers",
-    subtitle: "All-time totals — sorted by spend",
-    companyName,
-    country,
-    rows,
-    filename: `kimates-all-customers-${new Date().toISOString().split("T")[0]}.pdf`,
-    ranked: false,
-  });
-}
