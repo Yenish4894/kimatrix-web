@@ -11,7 +11,7 @@ import { PageLoader } from "@/components/ui/loader";
 // (minus the subscription gate — admins have no subscription). Children are not
 // rendered until the session is restored and the super_admin role is confirmed,
 // so per-page queries never fire for an unauthenticated or wrong-role visitor.
-// The edge proxy (src/proxy.ts) is the first line; this is the client-side
+// The edge middleware (src/middleware.ts) is the first line; this is the client-side
 // enforcement against the localStorage session.
 export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const dispatch = useAppDispatch();

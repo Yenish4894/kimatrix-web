@@ -10,7 +10,7 @@ import type { NextRequest } from "next/server";
 // avoid serving a guarded page shell to an unauthenticated or wrong-role user.
 const SESSION_COOKIE = "kimates.session";
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const role = request.cookies.get(SESSION_COOKIE)?.value; // "super_admin" | "company" | undefined
 

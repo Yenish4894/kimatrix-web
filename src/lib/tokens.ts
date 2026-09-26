@@ -4,7 +4,7 @@
 //
 // In addition to localStorage we mirror a single NON-SENSITIVE cookie holding
 // the user's role. localStorage is invisible to the server, so the proxy
-// (src/proxy.ts) reads this cookie to redirect unauthenticated/wrong-role users
+// (src/middleware.ts) reads this cookie to redirect unauthenticated/wrong-role users
 // at the edge. It is NOT a security boundary — the backend Bearer-token check
 // is. It only saves an unauthenticated user from briefly loading a guarded page.
 
@@ -52,6 +52,11 @@ export const TokenStorage = {
     } catch {
       /* quota full or blocked — ignore */
     }
+    // Every refresh extends the session by the refresh-token lifetime, so extend the
+    // edge cookie with it. Otherwise a tab kept open past 7 days keeps valid tokens but
+    // loses the cookie, and middleware.ts bounces the next navigation to /login.
+    const user = TokenStorage.getUser();
+    if (user) writeSessionCookie(user.userType);
   },
 
   getAccessToken(): string | null {
