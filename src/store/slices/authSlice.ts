@@ -3,7 +3,6 @@ import type { AuthState, AuthUser, BusinessType, RegistrationFormData, LoginForm
 import { TokenStorage } from "@/lib/tokens";
 import { authService } from "@/services";
 import { getQueryClient } from "@/lib/query-client";
-import { clearCompany } from "./companySlice";
 
 const initialState: AuthState = {
   user: null,
@@ -40,7 +39,7 @@ export const registerCompany = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk("auth/logout", async (_, { dispatch }) => {
+export const logout = createAsyncThunk("auth/logout", async () => {
   const refreshToken = TokenStorage.getRefreshToken();
   if (refreshToken) {
     // Fire and forget — always clear client state regardless
@@ -53,7 +52,6 @@ export const logout = createAsyncThunk("auth/logout", async (_, { dispatch }) =>
   TokenStorage.clear();
   // Query keys are not user-scoped, so without this the next account to sign in on
   // this tab briefly sees the previous account's profile, purchases and plans.
-  dispatch(clearCompany());
   getQueryClient().clear();
 });
 
@@ -69,7 +67,7 @@ export const loadSession = createAsyncThunk(
       return rejectWithValue("no_session");
     }
 
-    // Re-assert the edge session cookie (read by src/proxy.ts) in case it was
+    // Re-assert the edge session cookie (read by src/middleware.ts) in case it was
     // lost while the localStorage session survived — keeps the two in sync.
     TokenStorage.setUser(user, companyId);
 

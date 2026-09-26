@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { store } from "./store";
 import { clearAuth } from "./slices/authSlice";
-import { clearCompany } from "./slices/companySlice";
 import { QueryProvider, getQueryClient } from "@/lib/query-client";
 import { onSessionInvalidated } from "@/lib/api";
 import { loginUrlWithReturn } from "@/lib/return-url";
@@ -20,7 +19,6 @@ function SessionHandler({ children }: { children: React.ReactNode }) {
       // Auth first, so the gated layouts stop rendering their pages before the cache
       // empties; then drop everything cached for the account that just lost its session.
       store.dispatch(clearAuth());
-      store.dispatch(clearCompany());
       getQueryClient().clear();
       toast.error("Your session has ended. Please log in again.");
       // Bring them back to the page they were on once they sign in again (FE-14).

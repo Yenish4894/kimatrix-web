@@ -11,9 +11,7 @@ import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { hasLiveSubscription } from "@/lib/billing";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
-import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
-import { fetchPlans } from "@/store/slices/companySlice";
 import { cn, formatNumber } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
 
@@ -91,8 +89,12 @@ function PlanCard({
 }
 
 export default function BillingPage() {
-  const dispatch = useAppDispatch();
-  const { plans, isLoadingPlans, plansFetchFailed } = useAppSelector((state) => state.company);
+  // Same query cache as every other read in the app; logout's queryClient.clear()
+  // drops it with everything else.
+  const plansQ = useQuery({ queryKey: ["plans"], queryFn: paymentService.getPlans });
+  const plans = plansQ.data ?? [];
+  const isLoadingPlans = plansQ.isLoading;
+  const plansFetchFailed = plansQ.isError;
   const { data: spinAddon } = useQuery({
     queryKey: ["payments", "spin-addon"],
     queryFn: paymentService.getSpinAddonPrice,
@@ -129,12 +131,6 @@ export default function BillingPage() {
   const spinQty = Number.parseInt(spinQtyText, 10);
   const spinQtyValid = Number.isInteger(spinQty) && spinQty >= 1 && spinQty <= SPIN_QTY_MAX;
   const [isBuyingSpins, setIsBuyingSpins] = useState(false);
-
-  useEffect(() => {
-    if (plans.length === 0 && !plansFetchFailed) {
-      dispatch(fetchPlans());
-    }
-  }, [dispatch, plans.length, plansFetchFailed]);
 
   // Pre-select the plan the admin marked popular, falling back to the first.
   // This used to look for `durationDays === 30`, so once plans became admin-managed the
@@ -229,7 +225,7 @@ export default function BillingPage() {
         <p className="text-sm text-slate-500">Could not load plans. Check your connection and try again.</p>
         <button
           type="button"
-          onClick={() => dispatch(fetchPlans())}
+          onClick={() => void plansQ.refetch()}
           className="inline-flex items-center gap-2 text-sm text-primary-700 hover:underline"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" /> Retry

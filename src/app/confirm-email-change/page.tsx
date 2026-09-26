@@ -13,7 +13,6 @@ import { TokenStorage } from "@/lib/tokens";
 import { getQueryClient } from "@/lib/query-client";
 import { useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/authSlice";
-import { clearCompany } from "@/store/slices/companySlice";
 
 type Status = "confirming" | "success" | "invalid" | "error";
 
@@ -41,7 +40,6 @@ function ConfirmEmailChangeInner() {
         // succeeded. Same teardown as a password change.
         TokenStorage.clear();
         dispatch(clearAuth());
-        dispatch(clearCompany());
         getQueryClient().clear();
         setNewEmail(res.email);
         setStatus("success");
