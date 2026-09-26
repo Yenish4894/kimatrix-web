@@ -54,11 +54,11 @@ KIMates Web is the frontend application for the KIMates QR platform. Built with 
 - **tailwind-merge** - Conditional class merging
 
 ### State Management
-- **Redux Toolkit 2.11** - Global state management
-- **React Query 5** - Server state management and caching
+- **TanStack Query** - Server state: every API read and its cache
+- **Redux Toolkit** - Client session state (the signed-in user)
 
 ### Forms & Validation
-- **Joi** - Schema validation
+- **`src/lib/validation.ts`** - Small in-house schema validator (`v`); no form library
 - **libphonenumber-js** - Phone number validation
 - **country-state-city** - Location data
 
@@ -66,17 +66,16 @@ KIMates Web is the frontend application for the KIMates QR platform. Built with 
 - **lucide-react** - Icon library
 - **react-toastify** - Toast notifications
 - **qrcode.react** - QR code generation
-- **embla-carousel** - Carousel component
 
 ### PDF Generation
 - **jsPDF** - PDF creation
 - **jspdf-autotable** - Table generation for PDFs
 
 ### HTTP Client
-- **Axios 1.15** - API communication with interceptors
+- **Axios** - API communication with interceptors
 
 ### Utilities
-- **dayjs** - Date manipulation
+- **`src/lib/dates.ts`** - Local-day date conversions for date inputs (no date library)
 - **js-cookie** - Cookie management
 - **use-debounce** - Input debouncing
 
@@ -85,56 +84,37 @@ KIMates Web is the frontend application for the KIMates QR platform. Built with 
 ```
 frontend/
 ├── src/
-│   ├── app/                      # Next.js App Router pages
-│   │   ├── admin/                # Admin portal pages
-│   │   ├── company/              # Company portal pages
-│   │   │   ├── billing/          # Billing & subscriptions
-│   │   │   ├── customers/        # Customer management
-│   │   │   ├── dashboard/        # Company dashboard
-│   │   │   └── profile/          # Company profile
-│   │   ├── qr/                   # QR scanning pages
-│   │   ├── login/                # Login page
-│   │   ├── register/             # Registration page
-│   │   ├── forgot-password/      # Password recovery
-│   │   ├── reset-password/       # Password reset
-│   │   ├── layout.tsx            # Root layout
-│   │   └── page.tsx              # Landing page
-│   ├── components/               # React components
-│   │   ├── layouts/              # Layout components
-│   │   ├── pwa/                  # PWA components
-│   │   ├── settings/             # Settings components
-│   │   └── ui/                   # Reusable UI components
-│   ├── lib/                      # Utility libraries
-│   │   ├── api.ts                # Axios instance & interceptors
-│   │   ├── errors.ts             # Error handling
-│   │   ├── query-client.tsx      # React Query config
-│   │   └── tokens.ts             # Token management
-│   ├── services/                 # API service layer
-│   │   ├── auth.service.ts       # Authentication APIs
-│   │   ├── company.service.ts    # Company APIs
-│   │   ├── payment.service.ts    # Payment APIs
-│   │   ├── qr.service.ts         # QR scanning APIs
-│   │   └── admin.service.ts      # Admin APIs
-│   ├── store/                    # Redux store
-│   │   ├── slices/               # Redux slices
-│   │   │   ├── authSlice.ts      # Auth state
-│   │   │   └── companySlice.ts   # Company state
-│   │   ├── store.ts              # Store configuration
-│   │   ├── hooks.ts              # Typed hooks
-│   │   └── provider.tsx          # Redux provider
-│   └── types/                    # TypeScript types
-├── public/                       # Static assets
-│   ├── icons/                    # PWA icons
-│   └── sw.js                     # Service worker
-├── docs/                         # Documentation
-├── .env.example                  # Environment variables template
-├── .gitignore                    # Git ignore patterns
-├── next.config.ts                # Next.js configuration
-├── tailwind.config.js            # Tailwind configuration
-├── tsconfig.json                 # TypeScript configuration
-├── package.json                  # Dependencies
-└── README.md                     # This file
+│   ├── app/                        # Next.js App Router
+│   │   ├── page.tsx                # Landing page
+│   │   ├── admin/                  # Admin portal: dashboard, companies (+ detail), plans,
+│   │   │                           #   lucky-draw, payments, email, audit-log, settings
+│   │   ├── company/                # Company portal: dashboard, customers (+ detail),
+│   │   │                           #   purchases (+ detail), qr-code, reports, lucky-draw,
+│   │   │                           #   billing (+ success/cancel), payments, export, settings
+│   │   ├── qr/[qrToken]/           # Public customer purchase form (no login)
+│   │   ├── login/ register/ forgot-password/ reset-password/
+│   │   ├── verify-email/ confirm-email-change/
+│   │   ├── terms/ privacy/ offline/
+│   │   └── layout.tsx              # Root layout
+│   ├── middleware.ts               # Edge redirect for /admin and /company (UX gate;
+│   │                               #   the backend enforces auth on every request)
+│   ├── components/                 # admin, auth, billing, layouts, lucky-draw, payments,
+│   │                               #   purchases, pwa, settings, subscription, ui
+│   ├── hooks/                      # useCompanyProfile, useEntitlement, useCurrencyFormatter
+│   ├── lib/                        # api client, tokens, dates, validation, entitlement,
+│   │   └── pdf/                    #   ... and browser-side PDF builders (reports, QR poster)
+│   ├── services/                   # One module per API area (auth, company, admin, payment,
+│   │                               #   qr, metrics)
+│   ├── store/                      # Redux: auth slice, typed hooks, provider
+│   └── types/                      # Shared TypeScript types
+├── public/                         # Brand images, PWA icons, service worker (sw.js)
+├── .github/workflows/deploy.yml    # Test, then deploy on push to main
+├── next.config.ts                  # Next.js config (CSP and security headers)
+└── package.json
 ```
+
+Styling uses Tailwind CSS v4: there is no `tailwind.config.js`; the theme lives in
+`src/app/globals.css` under `@theme`.
 
 ## 🚀 Getting Started
 
@@ -214,8 +194,8 @@ All API calls are organized in the `src/services/` directory:
 ## 🔐 Authentication Flow
 
 1. **Login**: User submits credentials → Backend returns JWT tokens
-2. **Token Storage**: Access token in memory, refresh token in httpOnly cookie
-3. **Protected Routes**: Middleware checks authentication before rendering
+2. **Token Storage**: Access and refresh tokens in `localStorage`, plus a non-sensitive role cookie
+3. **Protected Routes**: `middleware.ts` redirects signed-out or wrong-role visitors at the edge; `DashboardShell` checks again in the browser
 4. **Token Refresh**: Automatic refresh on 401 using refresh token
 5. **Logout**: Clear tokens, redirect to login
 
@@ -294,19 +274,20 @@ npm start
 ## 🔒 Security Best Practices
 
 - ✅ Environment variables never committed (.gitignore configured)
-- ✅ JWT tokens stored securely (memory + httpOnly cookies)
-- ✅ HTTPS enforced in production
-- ✅ Input validation with Joi schemas
+- ⚠️ Access and refresh tokens are kept in `localStorage` (`src/lib/tokens.ts`), sent as a
+  Bearer header. Readable by any script on the page, so XSS protection matters; the
+  backend's refresh rotation and theft detection limit the damage of a stolen token.
+- ✅ Only a non-sensitive role cookie (`kimates.session`) is set, for the edge redirect
+- ✅ HTTPS enforced in production; CSP and security headers in `next.config.ts`
+- ✅ Client-side input validation (`src/lib/validation.ts`); the backend re-validates with Joi
 - ✅ XSS protection via React's built-in escaping
-- ✅ CSRF protection via SameSite cookies
-- ✅ Rate limiting on backend API
+- ✅ No cookie-based auth, so classic CSRF does not apply
+- ✅ Rate limiting on the backend API
 
 ## 📚 Documentation
 
-- [Backend API Guide](./docs/BACKEND_API_GUIDE.md)
-- [Backend Flows](./docs/BACKEND_FLOWS.md)
-- [Integration Status](./docs/INTEGRATION_STATUS.md)
-- [UI/UX Design Spec](./UI_UX_DESIGN_SPEC.md)
+API endpoints, environment variables and deployment are documented in the backend
+repository's README.
 
 ## 🤝 Contributing
 
