@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { companyService } from "@/services";
 import { useAppSelector } from "@/store/hooks";
 import type { CompanyProfile } from "@/types";
@@ -54,10 +54,4 @@ export function useCompanyProfile() {
 /** Call after any mutation that can change the profile server-side. */
 export function invalidateCompanyProfile(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: COMPANY_PROFILE_KEY });
-}
-
-/** Convenience for components that only need the invalidator. */
-export function useInvalidateCompanyProfile(): () => Promise<void> {
-  const queryClient = useQueryClient();
-  return () => invalidateCompanyProfile(queryClient);
 }

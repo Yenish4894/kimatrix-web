@@ -9,7 +9,7 @@ export { Input } from "./input";
 export { Select } from "./select";
 export { SearchableSelect } from "./searchable-select";
 export { Checkbox } from "./checkbox";
-export { Card, CardHeader, CardContent, CardFooter } from "./card";
+export { Card, CardHeader, CardContent } from "./card";
 export { Badge } from "./badge";
 export { StatCard } from "./stat-card";
 export { Modal } from "./modal";

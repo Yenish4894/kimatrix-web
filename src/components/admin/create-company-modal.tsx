@@ -16,7 +16,12 @@ interface CreateCompanyModalProps {
   onCreated: () => void;
 }
 
-/** A year out, as a yyyy-mm-dd string for the date input. */
+/**
+ * A year out, as a yyyy-mm-dd string for the date input.
+ *
+ * Dated rather than permanent on purpose: free access then resurfaces for a decision
+ * instead of quietly becoming forever. "Never expires" is still one checkbox away.
+ */
 function defaultCompDate(): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() + 1);
