@@ -105,6 +105,10 @@ export function DrawMode({
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     spinBtnRef.current?.focus();
+    // Download the spin music now so it is ready by the first spin. Playing it still
+    // waits for a click (ensureSound), as browsers require.
+    soundRef.current = new DrawSound();
+    soundRef.current.preloadMusic();
 
     let enteredFullscreen = false;
     const onFsChange = () => {
@@ -154,23 +158,26 @@ export function DrawMode({
     };
   }, []);
 
-  // ── Ticks: scheduled when the wheel is given a new target ──
+  // ── Spin sound (music, or ticks until it has loaded): on each new wheel target ──
   // Sound only. The pointer's flap is derived inside Wheel from the same tickTimes
   // curve, so it fires on every caller rather than only here.
   const prevRotation = useRef(rotation);
   useEffect(() => {
     const delta = rotation - prevRotation.current;
     prevRotation.current = rotation;
-    // With reduced motion the wheel lands at once, so a 4.5s drumroll would tick over a
-    // still wheel. Skip it; the fanfare on the reveal still plays.
+    // With reduced motion the wheel lands at once, so 4.5s of spin music would play over
+    // a still wheel. Skip it; the fanfare on the reveal still plays.
     if (delta > 0 && spinning && !reducedMotion && !mutedRef.current && soundRef.current?.ready) {
-      soundRef.current.playTicks(tickTimes(delta, spinDurationMs, WHEEL_SEGMENTS));
+      soundRef.current.playSpin(
+        spinDurationMs,
+        tickTimes(delta, spinDurationMs, WHEEL_SEGMENTS),
+      );
     }
   }, [rotation, spinning, spinDurationMs, reducedMotion]);
 
-  // A refused spin stops the wheel early — don't keep ticking.
+  // The wheel has stopped (or a refused spin stopped it early): end the spin sound.
   useEffect(() => {
-    if (!spinning) soundRef.current?.stopTicks();
+    if (!spinning) soundRef.current?.stopSpin();
   }, [spinning]);
 
   // ── Fanfare when a new winner is revealed ──
@@ -194,7 +201,7 @@ export function DrawMode({
     setMuted(next);
     mutedRef.current = next;
     saveMuted(next);
-    if (next) soundRef.current?.stopTicks();
+    if (next) soundRef.current?.stopSpin();
     else ensureSound();
   };
 

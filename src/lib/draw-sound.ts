@@ -1,6 +1,9 @@
 /**
- * Sound for the lucky-draw "Draw mode", generated with the Web Audio API — no audio
- * files, no dependencies.
+ * Sound for the lucky-draw "Draw mode", played through the Web Audio API.
+ *
+ * While the wheel spins, a music clip plays (public/sounds/lucky-draw-spin.mp3: the
+ * first 6s of the track, cut on MP3 frame boundaries). It fades out as the wheel stops.
+ * Until the clip has downloaded and decoded, the generated ticks play instead.
  *
  * The tick schedule is derived from the wheel's own CSS easing curve: a tick plays
  * each time a segment boundary passes the pointer, so ticks are fast at the start and
@@ -68,6 +71,11 @@ export function tickTimes(
   return times;
 }
 
+/** The spin music. Only its first ~5s is ever heard: the spin lasts 4.5s. */
+export const SPIN_MUSIC_URL = "/sounds/lucky-draw-spin.mp3";
+/** Seconds to fade the music out once the wheel has stopped. */
+const MUSIC_FADE_S = 0.35;
+
 type AudioCtor = typeof AudioContext;
 
 /**
@@ -77,6 +85,37 @@ type AudioCtor = typeof AudioContext;
 export class DrawSound {
   private ctx: AudioContext | null = null;
   private tickBus: GainNode | null = null;
+  private musicBytes: Promise<ArrayBuffer | null> | null = null;
+  private music: AudioBuffer | null = null;
+  private musicSource: AudioBufferSourceNode | null = null;
+  private musicGain: GainNode | null = null;
+
+  /**
+   * Starts downloading the spin music. Needs no user gesture (no AudioContext yet), so
+   * call it when Draw mode opens: the clip is then ready by the first spin.
+   */
+  preloadMusic(): void {
+    if (this.musicBytes || typeof fetch === "undefined") return;
+    this.musicBytes = fetch(SPIN_MUSIC_URL)
+      .then((res) => (res.ok ? res.arrayBuffer() : null))
+      .catch(() => null);
+  }
+
+  /** Decodes the downloaded clip once a context exists. Failure just keeps the ticks. */
+  private decodeMusic(): void {
+    const ctx = this.ctx;
+    if (!ctx || this.music) return;
+    this.preloadMusic();
+    void this.musicBytes?.then(async (bytes) => {
+      if (!bytes || this.music || this.ctx !== ctx) return;
+      try {
+        // A copy: decodeAudioData detaches the buffer it is given.
+        this.music = await ctx.decodeAudioData(bytes.slice(0));
+      } catch {
+        /* undecodable: the ticks remain */
+      }
+    });
+  }
 
   /** Creates or resumes the context. Call from a click handler. Returns false if unsupported. */
   ensure(): boolean {
@@ -93,6 +132,7 @@ export class DrawSound {
       }
     }
     if (this.ctx.state === "suspended") void this.ctx.resume().catch(() => {});
+    this.decodeMusic();
     return true;
   }
 
@@ -100,11 +140,38 @@ export class DrawSound {
     return this.ctx !== null && this.ctx.state !== "closed";
   }
 
-  /** Schedules one short click per entry in `timesMs`, relative to now. */
-  playTicks(timesMs: number[]): void {
+  /**
+   * Sound for one spin: the music clip, faded out as the wheel stops after
+   * `durationMs`, or, if the clip isn't ready yet, the ticks in `tickTimesMs`.
+   */
+  playSpin(durationMs: number, tickTimesMs: number[]): void {
     const ctx = this.ctx;
     if (!ctx) return;
-    this.stopTicks();
+    this.stopSpin();
+    if (!this.music) {
+      this.playTicks(tickTimesMs);
+      return;
+    }
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    const source = ctx.createBufferSource();
+    source.buffer = this.music;
+    source.connect(gain);
+    const t0 = ctx.currentTime + 0.02;
+    const end = t0 + durationMs / 1000;
+    gain.gain.setValueAtTime(0.8, t0);
+    gain.gain.setValueAtTime(0.8, end);
+    gain.gain.linearRampToValueAtTime(0.0001, end + MUSIC_FADE_S);
+    source.start(t0);
+    source.stop(end + MUSIC_FADE_S + 0.05);
+    this.musicSource = source;
+    this.musicGain = gain;
+  }
+
+  /** Schedules one short click per entry in `timesMs`, relative to now. */
+  private playTicks(timesMs: number[]): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
     const bus = ctx.createGain();
     bus.gain.value = 0.35;
     bus.connect(ctx.destination);
@@ -127,8 +194,24 @@ export class DrawSound {
     });
   }
 
-  /** Silences any ticks still scheduled (mute, close). */
-  stopTicks(): void {
+  /** Silences the spin sound: a quick fade on the music, the pending ticks cut. */
+  stopSpin(): void {
+    const ctx = this.ctx;
+    const source = this.musicSource;
+    const gain = this.musicGain;
+    this.musicSource = null;
+    this.musicGain = null;
+    if (ctx && source && gain) {
+      try {
+        const now = ctx.currentTime;
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+        gain.gain.linearRampToValueAtTime(0.0001, now + 0.12);
+        source.stop(now + 0.15);
+      } catch {
+        /* already stopped */
+      }
+    }
     if (this.tickBus) {
       try {
         this.tickBus.disconnect();
@@ -171,7 +254,7 @@ export class DrawSound {
   }
 
   close(): void {
-    this.stopTicks();
+    this.stopSpin();
     const ctx = this.ctx;
     this.ctx = null;
     if (ctx && ctx.state !== "closed") void ctx.close().catch(() => {});
