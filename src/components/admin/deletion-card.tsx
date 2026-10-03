@@ -8,6 +8,7 @@ import { Badge, Button, Card, CardContent, CardHeader, Input, ConfirmDialog } fr
 import { adminService } from "@/services/admin.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
+import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/retention";
 
 interface DeletionCardProps {
   companyId: string;
@@ -108,7 +109,7 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
             <>
               <p className="text-sm text-slate-500">
                 Use this when a customer emails support asking to close their account. It starts a
-                30-day grace period — nothing is erased until then, and they keep working
+                {ACCOUNT_DELETION_GRACE_DAYS}-day grace period — nothing is erased until then, and they keep working
                 throughout.
               </p>
               <Button variant="ghost" size="sm" onClick={() => setModal("request")}>
@@ -137,7 +138,7 @@ export function DeletionCard({ companyId, companyName }: Readonly<DeletionCardPr
             {/* Spelled out because it is genuinely irreversible once it runs, and the
                 person clicking is acting for someone who is not in the room. */}
             <span>
-              After 30 days, every purchase and customer record for{" "}
+              After {ACCOUNT_DELETION_GRACE_DAYS} days, every purchase and customer record for{" "}
               <strong>{companyName}</strong> is permanently erased and the account details are
               scrubbed. This cannot be undone once it runs.
             </span>

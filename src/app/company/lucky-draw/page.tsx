@@ -19,7 +19,9 @@ import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import type { LuckyDrawSpinResult } from "@/types";
 
 /** Long enough to feel like a draw, short enough that nobody taps away. */
-const SPIN_MS = 4500;
+const SPIN_MS = 9000;
+/** Full turns per spin, before the random landing angle: ~1.6 turns a second at 9s. */
+const SPIN_TURNS = 14;
 
 /**
  * Lucky draw for the current plan window.
@@ -60,7 +62,7 @@ export default function LuckyDrawPage() {
       setSpinning(true);
       // Several full turns plus a random landing angle, so consecutive spins don't
       // stop on the same segment and look scripted.
-      setRotation((r) => r + 360 * 6 + Math.floor(Math.random() * 360));
+      setRotation((r) => r + 360 * SPIN_TURNS + Math.floor(Math.random() * 360));
     },
     onSuccess: (res) => {
       revealTimer.current = setTimeout(() => {

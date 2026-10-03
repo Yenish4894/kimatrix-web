@@ -10,6 +10,7 @@ import { authService } from "@/services/auth.service";
 import { parseApiError } from "@/lib/errors";
 import { toast } from "react-toastify";
 import type { Entitlement } from "@/lib/entitlement";
+import { DATA_RETENTION_DAYS } from "@/lib/retention";
 
 interface PaywallModalProps {
   entitlement: Entitlement;
@@ -41,12 +42,12 @@ function copyFor(
     case "trial_expired":
       return {
         heading: "Your trial has ended",
-        body: "Nothing has been deleted. Choose a plan and everything picks up exactly where it left off — the same QR code, the same customer list.",
+        body: `Choose a plan and everything picks up where it left off — the same QR code, the same customer list. Your customer and purchase records are kept for ${DATA_RETENTION_DAYS} days after your trial ends, then permanently removed.`,
       };
     case "expired":
       return {
         heading: "Your subscription has expired",
-        body: "Your data is safe and untouched. Renew and everything resumes immediately — the same QR code, the same customer list.",
+        body: `Renew and everything resumes immediately — the same QR code, the same customer list. Your customer and purchase records are kept for ${DATA_RETENTION_DAYS} days after your plan ends, then permanently removed.`,
       };
     default:
       // `pending` — registered, never subscribed, and either ineligible for a trial or

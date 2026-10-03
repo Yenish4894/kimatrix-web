@@ -2,7 +2,7 @@
  * Sound for the lucky-draw "Draw mode", played through the Web Audio API.
  *
  * While the wheel spins, a music clip plays (public/sounds/lucky-draw-spin.mp3: the
- * first 6s of the track, cut on MP3 frame boundaries). It fades out as the wheel stops.
+ * first 10s of the track, cut on MP3 frame boundaries). It fades out as the wheel stops.
  * Until the clip has downloaded and decoded, the generated ticks play instead.
  *
  * The tick schedule is derived from the wheel's own CSS easing curve: a tick plays
@@ -71,7 +71,7 @@ export function tickTimes(
   return times;
 }
 
-/** The spin music. Only its first ~5s is ever heard: the spin lasts 4.5s. */
+/** The spin music: 10s, covering the 9s spin and its fade-out. */
 export const SPIN_MUSIC_URL = "/sounds/lucky-draw-spin.mp3";
 /** Seconds to fade the music out once the wheel has stopped. */
 const MUSIC_FADE_S = 0.35;

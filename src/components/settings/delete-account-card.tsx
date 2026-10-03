@@ -8,6 +8,7 @@ import { Button, Card, CardContent, CardHeader, Input, ConfirmDialog } from "@/c
 import { companyService } from "@/services/company.service";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { formatDate } from "@/lib/utils";
+import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/retention";
 
 const CONFIRM_WORD = "DELETE";
 
@@ -16,7 +17,7 @@ const CONFIRM_WORD = "DELETE";
  *
  * The privacy policy directs customers to email support, and that route works (an
  * admin can action it), but making somebody write an email to leave is a dark pattern
- * — easy to sign up, hard to go. This gives them the same 30-day grace period without
+ * — easy to sign up, hard to go. This gives them the same grace period without
  * the round trip.
  *
  * Nothing here is a one-click destructive action: it takes a typed confirmation, and
@@ -103,15 +104,15 @@ export function DeleteAccountCard() {
           ) : (
             <>
               <p className="text-sm text-slate-600">
-                Closing your account starts a 30-day countdown. Nothing is deleted until then,
+                Closing your account starts a {ACCOUNT_DELETION_GRACE_DAYS}-day countdown. Nothing is deleted until then,
                 everything keeps working, and you can change your mind at any point.
               </p>
               <p className="flex items-start gap-2 text-sm text-slate-500">
                 <Download className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                {/* Pointing at the export first is the honest order: once the 30 days are
+                {/* Pointing at the export first is the honest order: once those days are
                     up the purchase and customer records are gone for good. */}
                 <span>
-                  Download your customer and purchase data first — after 30 days it can&apos;t be
+                  Download your customer and purchase data first — after {ACCOUNT_DELETION_GRACE_DAYS} days it can&apos;t be
                   recovered.
                 </span>
               </p>
@@ -138,11 +139,11 @@ export function DeleteAccountCard() {
       >
         <div className="space-y-4 text-sm text-slate-600">
           <p>
-            You have <strong>30 days</strong> to change your mind. Until then your QR code, your
+            You have <strong>{ACCOUNT_DELETION_GRACE_DAYS} days</strong> to change your mind. Until then your QR code, your
             dashboard and your data all keep working exactly as they do now.
           </p>
           <p className="rounded-lg bg-error-50 px-3 py-2 text-error-800">
-            After 30 days every customer record and purchase is{" "}
+            After {ACCOUNT_DELETION_GRACE_DAYS} days every customer record and purchase is{" "}
             <strong>permanently erased</strong> and cannot be recovered.
           </p>
           <p>

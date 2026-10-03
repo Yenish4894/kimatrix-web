@@ -14,6 +14,7 @@ import { paymentService } from "@/services/payment.service";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { cn, formatNumber } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
+import { DATA_RETENTION_DAYS } from "@/lib/retention";
 
 const SPIN_QTY_MAX = 100;
 
@@ -205,7 +206,7 @@ export default function BillingPage() {
   if (isPending) {
     bannerMessage = "Choose a plan to activate your account and start using KIMates.";
   } else if (isExpired) {
-    bannerMessage = "Your subscription has expired. Renew to continue accessing your data.";
+    bannerMessage = `Your subscription has expired. Renew to keep your data: customer and purchase records are permanently removed ${DATA_RETENTION_DAYS} days after your plan ends.`;
   } else {
     bannerMessage = "Manage your KIMates subscription.";
   }

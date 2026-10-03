@@ -165,7 +165,7 @@ export function DrawMode({
   useEffect(() => {
     const delta = rotation - prevRotation.current;
     prevRotation.current = rotation;
-    // With reduced motion the wheel lands at once, so 4.5s of spin music would play over
+    // With reduced motion the wheel lands at once, so the spin music would play over
     // a still wheel. Skip it; the fanfare on the reveal still plays.
     if (delta > 0 && spinning && !reducedMotion && !mutedRef.current && soundRef.current?.ready) {
       soundRef.current.playSpin(
