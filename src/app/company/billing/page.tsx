@@ -211,6 +211,19 @@ export default function BillingPage() {
     !!profile.subscriptionExpiresAt &&
     new Date(profile.subscriptionExpiresAt).getTime() > Date.now();
 
+  // The server's rule alone (draws.canBuySpins): during a USD paid plan, or on a trial /
+  // free access once every spin is used. No client-side copy of it to drift.
+  const showSpinCard = draws?.canBuySpins === true && !!profile && spinPrice !== undefined;
+
+  // "Buy more spins" links here as /company/billing#buy-spins, but the card renders only
+  // once its queries load — after the browser has already looked for the anchor. Scroll
+  // when it appears.
+  useEffect(() => {
+    if (showSpinCard && window.location.hash === "#buy-spins") {
+      document.getElementById("buy-spins")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showSpinCard]);
+
   let bannerMessage: string;
   if (isPending) {
     bannerMessage = "Choose a plan to activate your account and start using KIMates.";
@@ -315,65 +328,58 @@ export default function BillingPage() {
 
         {/* Spin add-on — during a paid plan, or on a trial / free access once the free
             spins are used up (server-decided: draws.canBuySpins). */}
-        {(hasPaidPlanNow || draws?.canBuySpins) && profile && spinPrice !== undefined && (
+        {showSpinCard && profile && spinPrice !== undefined && (
           <Card id="buy-spins" className="scroll-mt-24">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="h-4 w-4 text-accent-500" aria-hidden="true" />
                 <h2 className="text-base font-semibold text-slate-800">Buy Lucky Draw Spins</h2>
               </div>
-              {hasPaidPlanNow && profile.currentPlan?.currency !== "USD" ? (
-                <p className="text-xs text-slate-500">
-                  Lucky Draw spins are priced in USD and are only available on USD plans.
-                  Your current plan uses {profile.currentPlan?.currency ?? "a non-USD currency"}.
+              <>
+                <p className="text-xs text-slate-500 mb-4">
+                  {hasPaidPlanNow
+                    ? "Add spins to your current plan period."
+                    : profile.isTrial
+                      ? "Your free spins are used up. Spins you buy can be used until your trial ends."
+                      : "Your free spins are used up. Spins you buy can be used until your free access ends."}{" "}
+                  Each spin is USD {formatNumber(spinPrice, 2)}.
                 </p>
-              ) : (
-                <>
-                  <p className="text-xs text-slate-500 mb-4">
-                    {hasPaidPlanNow
-                      ? "Add spins to your current plan period."
-                      : profile.isTrial
-                        ? "Your free spins are used up. Spins you buy can be used until your trial ends."
-                        : "Your free spins are used up. Spins you buy can be used until your free access ends."}{" "}
-                    Each spin is USD {formatNumber(spinPrice, 2)}.
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <label htmlFor="spin-qty" className="text-sm text-slate-600 shrink-0">
-                      Spins
-                    </label>
-                    <input
-                      id="spin-qty"
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      max={SPIN_QTY_MAX}
-                      value={spinQtyText}
-                      onChange={(e) => setSpinQtyText(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                      onBlur={() =>
-                        setSpinQtyText(
-                          String(Number.isInteger(spinQty) ? Math.min(SPIN_QTY_MAX, Math.max(1, spinQty)) : 1),
-                        )
-                      }
-                      aria-invalid={!spinQtyValid}
-                      className="w-20 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-400"
-                    />
-                    <span className="text-sm font-medium text-slate-700">
-                      = USD {spinQtyValid ? formatNumber(spinQty * spinPrice, 2) : "—"}
-                    </span>
-                  </div>
-                  <div className="mt-4">
-                    <Button
-                      fullWidth
-                      onClick={handleBuySpins}
-                      disabled={isBuyingSpins || !spinQtyValid}
-                      isLoading={isBuyingSpins}
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
-                      {isBuyingSpins ? "Redirecting to PayPal…" : "Buy Spins with PayPal"}
-                    </Button>
-                  </div>
-                </>
-              )}
+                <div className="flex items-center gap-3">
+                  <label htmlFor="spin-qty" className="text-sm text-slate-600 shrink-0">
+                    Spins
+                  </label>
+                  <input
+                    id="spin-qty"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={SPIN_QTY_MAX}
+                    value={spinQtyText}
+                    onChange={(e) => setSpinQtyText(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                    onBlur={() =>
+                      setSpinQtyText(
+                        String(Number.isInteger(spinQty) ? Math.min(SPIN_QTY_MAX, Math.max(1, spinQty)) : 1),
+                      )
+                    }
+                    aria-invalid={!spinQtyValid}
+                    className="w-20 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                  />
+                  <span className="text-sm font-medium text-slate-700">
+                    = USD {spinQtyValid ? formatNumber(spinQty * spinPrice, 2) : "—"}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <Button
+                    fullWidth
+                    onClick={handleBuySpins}
+                    disabled={isBuyingSpins || !spinQtyValid}
+                    isLoading={isBuyingSpins}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {isBuyingSpins ? "Redirecting to PayPal…" : "Buy Spins with PayPal"}
+                  </Button>
+                </div>
+              </>
             </CardContent>
           </Card>
         )}

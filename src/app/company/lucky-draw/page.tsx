@@ -95,6 +95,13 @@ export default function LuckyDrawPage() {
   const status = drawsQ.data;
   const current = status?.periods.find((p) => p.remaining > 0) ?? status?.periods[0];
   const canSpin = Boolean(current && current.remaining > 0 && current.entries > 0) && !spinning;
+  // A trial or comp can show two pools for one period (its free spins and the spins
+  // bought on it). Winners are counted across both: nobody wins twice in a period.
+  const winnersInPeriod = current
+    ? (status?.periods ?? [])
+        .filter((p) => p.source === current.source && p.periodStart === current.periodStart)
+        .reduce((n, p) => n + p.used, 0)
+    : 0;
 
   const blocker = !current
     ? null
@@ -131,7 +138,7 @@ export default function LuckyDrawPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <Stat icon={Ticket} label="Spins left" value={formatNumber(status!.totalRemaining)} />
-              <Stat icon={Trophy} label="Winners so far" value={formatNumber(current.used)} />
+              <Stat icon={Trophy} label="Winners so far" value={formatNumber(winnersInPeriod)} />
               <Stat icon={Gift} label="Entries in the draw" value={formatNumber(current.entries)} />
               <Stat icon={Users} label="Eligible customers" value={formatNumber(current.eligibleCustomers)} />
             </div>
