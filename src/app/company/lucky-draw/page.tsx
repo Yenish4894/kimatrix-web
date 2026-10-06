@@ -99,9 +99,9 @@ export default function LuckyDrawPage() {
   const blocker = !current
     ? null
     : current.remaining === 0
-      ? "You've used every spin in this plan period."
+      ? "You've used every spin in this period."
       : current.entries === 0
-        ? "No eligible purchases yet in this plan period. Spins stay available until the plan ends."
+        ? "No eligible purchases yet in this period. Spins stay available until it ends."
         : null;
 
   return (
@@ -116,11 +116,11 @@ export default function LuckyDrawPage() {
               No lucky draw spins available
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              While a paid plan is active, you can buy spins from the billing page. Each
-              spin picks a random winner from the customers who bought from you during
-              your current plan period.
+              {status?.canBuySpins
+                ? "You can buy spins from the billing page. Each spin picks a random winner from the customers who bought from you during your current plan, trial or free access."
+                : "While a plan, trial or free access is active, you can buy spins from the billing page. Each spin picks a random winner from the customers who bought from you in that period."}
             </p>
-            <Link href="/company/billing" className="mt-5 inline-block">
+            <Link href="/company/billing#buy-spins" className="mt-5 inline-block">
               <Button>Buy spins</Button>
             </Link>
           </CardContent>
@@ -172,6 +172,11 @@ export default function LuckyDrawPage() {
               </Button>
               {blocker && !spinning && (
                 <p className="mt-3 max-w-xs text-center text-sm text-slate-500">{blocker}</p>
+              )}
+              {status?.canBuySpins && status.totalRemaining === 0 && !spinning && (
+                <Link href="/company/billing#buy-spins" className="mt-3">
+                  <Button size="sm">Buy more spins</Button>
+                </Link>
               )}
               <Button
                 variant="secondary"

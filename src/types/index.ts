@@ -500,6 +500,12 @@ export interface LuckyDrawHistoryItem extends LuckyDrawWinner {
 export interface LuckyDrawStatus {
   periods: LuckyDrawPeriod[];
   totalRemaining: number;
+  /**
+   * Whether spins can be bought right now: always during a paid plan; on a trial or
+   * admin-granted free access, only once the free spins are used up. Optional for an
+   * older backend that doesn't send it.
+   */
+  canBuySpins?: boolean;
   history: LuckyDrawHistoryItem[];
 }
 

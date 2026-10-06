@@ -11,6 +11,7 @@ import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import { hasLiveSubscription } from "@/lib/billing";
 import { Button, Card, CardContent } from "@/components/ui";
 import { paymentService } from "@/services/payment.service";
+import { companyService } from "@/services/company.service";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { cn, formatNumber } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
@@ -122,6 +123,14 @@ export default function BillingPage() {
   // "Current Subscription" card therefore never rendered and `isExpired` was
   // permanently false, showing an expired customer the neutral "manage" copy.
   const { data: profile } = useCompanyProfile();
+  // Trial and free-access companies may buy spins once their free ones are used up;
+  // the server decides (canBuySpins). Not fetched for a company without access, whose
+  // lucky draw is locked anyway.
+  const { data: draws } = useQuery({
+    queryKey: ["company", "draws"],
+    queryFn: companyService.getDraws,
+    enabled: profile?.hasAccess === true,
+  });
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -304,15 +313,16 @@ export default function BillingPage() {
         </Card>
         )}
 
-        {/* Spin add-on — for any company inside a paid plan period, however it paid. */}
-        {hasPaidPlanNow && profile && spinPrice !== undefined && (
-          <Card>
+        {/* Spin add-on — during a paid plan, or on a trial / free access once the free
+            spins are used up (server-decided: draws.canBuySpins). */}
+        {(hasPaidPlanNow || draws?.canBuySpins) && profile && spinPrice !== undefined && (
+          <Card id="buy-spins" className="scroll-mt-24">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="h-4 w-4 text-accent-500" aria-hidden="true" />
                 <h2 className="text-base font-semibold text-slate-800">Buy Lucky Draw Spins</h2>
               </div>
-              {profile.currentPlan?.currency !== "USD" ? (
+              {hasPaidPlanNow && profile.currentPlan?.currency !== "USD" ? (
                 <p className="text-xs text-slate-500">
                   Lucky Draw spins are priced in USD and are only available on USD plans.
                   Your current plan uses {profile.currentPlan?.currency ?? "a non-USD currency"}.
@@ -320,7 +330,12 @@ export default function BillingPage() {
               ) : (
                 <>
                   <p className="text-xs text-slate-500 mb-4">
-                    Add spins to your current plan period. Each spin is USD {formatNumber(spinPrice, 2)}.
+                    {hasPaidPlanNow
+                      ? "Add spins to your current plan period."
+                      : profile.isTrial
+                        ? "Your free spins are used up. Spins you buy can be used until your trial ends."
+                        : "Your free spins are used up. Spins you buy can be used until your free access ends."}{" "}
+                    Each spin is USD {formatNumber(spinPrice, 2)}.
                   </p>
                   <div className="flex items-center gap-3">
                     <label htmlFor="spin-qty" className="text-sm text-slate-600 shrink-0">
