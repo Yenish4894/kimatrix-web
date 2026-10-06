@@ -2,7 +2,7 @@
  * Sound for the lucky-draw "Draw mode", played through the Web Audio API.
  *
  * While the wheel spins, a music clip plays (public/sounds/lucky-draw-spin.mp3: the
- * first 10s of the track, cut on MP3 frame boundaries). It fades out as the wheel stops.
+ * first 16s of the track, cut on MP3 frame boundaries). It fades out as the wheel stops.
  * Until the clip has downloaded and decoded, the generated ticks play instead.
  *
  * The tick schedule is derived from the wheel's own CSS easing curve: a tick plays
@@ -71,7 +71,7 @@ export function tickTimes(
   return times;
 }
 
-/** The spin music: 10s, covering the 9s spin and its fade-out. */
+/** The spin music: 16s, covering the 15s spin and its fade-out. */
 export const SPIN_MUSIC_URL = "/sounds/lucky-draw-spin.mp3";
 /** Seconds to fade the music out once the wheel has stopped. */
 const MUSIC_FADE_S = 0.35;
@@ -99,6 +99,26 @@ export class DrawSound {
     this.musicBytes = fetch(SPIN_MUSIC_URL)
       .then((res) => (res.ok ? res.arrayBuffer() : null))
       .catch(() => null);
+    // Decode right away, before any click. Waiting for the Spin click (when the live
+    // AudioContext may first be created) meant the very first spin always started
+    // before the music was ready and fell back to ticks. An OfflineAudioContext needs
+    // no user gesture, and the AudioBuffer it returns plays in any context.
+    const Offline =
+      typeof window !== "undefined"
+        ? (window.OfflineAudioContext ??
+          (window as unknown as { webkitOfflineAudioContext?: typeof OfflineAudioContext })
+            .webkitOfflineAudioContext)
+        : undefined;
+    if (!Offline) return;
+    void this.musicBytes.then(async (bytes) => {
+      if (!bytes || this.music) return;
+      try {
+        // A copy: decodeAudioData detaches the buffer it is given.
+        this.music = await new Offline(2, 1, 44100).decodeAudioData(bytes.slice(0));
+      } catch {
+        /* decodeMusic retries with the live context on the first click */
+      }
+    });
   }
 
   /** Decodes the downloaded clip once a context exists. Failure just keeps the ticks. */

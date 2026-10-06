@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Gift, Trophy, Users, Ticket, CalendarRange, MonitorPlay } from "lucide-react";
+import { Gift, Trophy, Users, Ticket, CalendarRange, MonitorPlay, Volume2, VolumeX } from "lucide-react";
 
 import { DashboardShell } from "@/components/layouts/dashboard-shell";
 import { Button, Card, CardContent, QueryErrorState } from "@/components/ui";
@@ -16,12 +16,13 @@ import { parseApiError } from "@/lib/errors";
 import { formatDate, formatDateTime, formatNumber } from "@/lib/utils";
 import { useCurrencyFormatter } from "@/hooks/useCurrencyFormatter";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
+import { useSpinSound } from "@/hooks/useSpinSound";
 import type { LuckyDrawSpinResult } from "@/types";
 
 /** Long enough to feel like a draw, short enough that nobody taps away. */
-const SPIN_MS = 9000;
-/** Full turns per spin, before the random landing angle: ~1.6 turns a second at 9s. */
-const SPIN_TURNS = 14;
+const SPIN_MS = 15000;
+/** Full turns per spin, before the random landing angle: ~1.6 turns a second at 15s. */
+const SPIN_TURNS = 24;
 
 /**
  * Lucky draw for the current plan window.
@@ -44,6 +45,21 @@ export default function LuckyDrawPage() {
   // Customer-facing presentation of the same draw (TV/monitor). Presentation only.
   const [drawMode, setDrawMode] = useState(false);
   const closeDrawMode = useCallback(() => setDrawMode(false), []);
+
+  // Spin music and the winner fanfare for this page's wheel. Silent while Draw mode is
+  // open: it has its own, and the two wheels turn together.
+  const sound = useSpinSound({
+    rotation,
+    spinning,
+    spinDurationMs: SPIN_MS,
+    celebrateKey: result?.drawId ?? null,
+    active: !drawMode,
+  });
+  const handleSpin = () => {
+    // Inside the click: the only moment browsers let audio start.
+    sound.unlock();
+    spinM.mutate();
+  };
 
   // Leaving mid-spin cancels the reveal, and with it the refresh that was waiting for
   // the wheel to stop — so the cache kept the pre-spin count and history, and coming
@@ -170,7 +186,7 @@ export default function LuckyDrawPage() {
               <Button
                 size="lg"
                 className="mt-7"
-                onClick={() => spinM.mutate()}
+                onClick={handleSpin}
                 disabled={!canSpin}
                 isLoading={spinning}
               >
@@ -194,6 +210,21 @@ export default function LuckyDrawPage() {
               >
                 <MonitorPlay className="h-4 w-4" aria-hidden="true" />
                 Draw mode
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2"
+                onClick={sound.toggleMuted}
+                aria-pressed={!sound.muted}
+                aria-label={sound.muted ? "Turn sound on" : "Mute sound"}
+              >
+                {sound.muted ? (
+                  <VolumeX className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Volume2 className="h-4 w-4" aria-hidden="true" />
+                )}
+                {sound.muted ? "Sound off" : "Sound on"}
               </Button>
 
               {/* Announced to screen readers too — the wheel itself is decorative. */}

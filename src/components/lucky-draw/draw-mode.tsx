@@ -1,49 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import { Gift, Trophy, Volume2, VolumeX, X } from "lucide-react";
 
 import { Button } from "@/components/ui";
-import { Wheel, WHEEL_SEGMENTS } from "@/components/lucky-draw/wheel";
+import { Wheel } from "@/components/lucky-draw/wheel";
 import { Confetti } from "@/components/lucky-draw/confetti";
-import { DrawSound, tickTimes } from "@/lib/draw-sound";
+import { usePrefersReducedMotion, useSpinSound } from "@/hooks/useSpinSound";
 import { maskMobile } from "@/lib/mask-mobile";
 import { formatNumber } from "@/lib/utils";
 import type { LuckyDrawSpinResult } from "@/types";
-
-const MUTE_KEY = "kimates.drawMode.muted";
-
-function readMuted(): boolean {
-  try {
-    // Default muted: nothing may make noise until someone asks for it.
-    return localStorage.getItem(MUTE_KEY) !== "0";
-  } catch {
-    return true;
-  }
-}
-
-function saveMuted(muted: boolean) {
-  try {
-    localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
-  } catch {
-    /* private mode / blocked storage — the choice just isn't remembered */
-  }
-}
-
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
-function subscribeReducedMotion(cb: () => void) {
-  const mq = window.matchMedia(REDUCED_MOTION);
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    () => window.matchMedia(REDUCED_MOTION).matches,
-    () => false,
-  );
-}
 
 export interface DrawModeProps {
   onClose: () => void;
@@ -84,9 +51,6 @@ export function DrawMode({
   const titleId = useId();
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const spinBtnRef = useRef<HTMLButtonElement | null>(null);
-  const soundRef = useRef<DrawSound | null>(null);
-  const [muted, setMuted] = useState(readMuted);
-  const mutedRef = useRef(muted);
   const reducedMotion = usePrefersReducedMotion();
 
   // A result that already existed when draw mode opened is shown, but not celebrated.
@@ -105,10 +69,6 @@ export function DrawMode({
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     spinBtnRef.current?.focus();
-    // Download the spin music now so it is ready by the first spin. Playing it still
-    // waits for a click (ensureSound), as browsers require.
-    soundRef.current = new DrawSound();
-    soundRef.current.preloadMusic();
 
     let enteredFullscreen = false;
     const onFsChange = () => {
@@ -152,57 +112,23 @@ export function DrawMode({
       document.removeEventListener("keydown", onKey);
       if (document.fullscreenElement === el) void document.exitFullscreen().catch(() => {});
       document.body.style.overflow = prevOverflow;
-      soundRef.current?.close();
-      soundRef.current = null;
       previouslyFocused?.focus?.();
     };
   }, []);
 
-  // ── Spin sound (music, or ticks until it has loaded): on each new wheel target ──
-  // Sound only. The pointer's flap is derived inside Wheel from the same tickTimes
-  // curve, so it fires on every caller rather than only here.
-  const prevRotation = useRef(rotation);
-  useEffect(() => {
-    const delta = rotation - prevRotation.current;
-    prevRotation.current = rotation;
-    // With reduced motion the wheel lands at once, so the spin music would play over
-    // a still wheel. Skip it; the fanfare on the reveal still plays.
-    if (delta > 0 && spinning && !reducedMotion && !mutedRef.current && soundRef.current?.ready) {
-      soundRef.current.playSpin(
-        spinDurationMs,
-        tickTimes(delta, spinDurationMs, WHEEL_SEGMENTS),
-      );
-    }
-  }, [rotation, spinning, spinDurationMs, reducedMotion]);
-
-  // The wheel has stopped (or a refused spin stopped it early): end the spin sound.
-  useEffect(() => {
-    if (!spinning) soundRef.current?.stopSpin();
-  }, [spinning]);
-
-  // ── Fanfare when a new winner is revealed ──
-  useEffect(() => {
-    if (freshWin && !mutedRef.current) soundRef.current?.playFanfare();
-  }, [freshWin, result?.drawId]);
-
-  const ensureSound = () => {
-    if (!soundRef.current) soundRef.current = new DrawSound();
-    return soundRef.current.ensure();
-  };
+  // Spin music, fanfare and the shared mute preference.
+  const sound = useSpinSound({
+    rotation,
+    spinning,
+    spinDurationMs,
+    celebrateKey: freshWin ? result.drawId : null,
+  });
+  const muted = sound.muted;
 
   const handleSpin = () => {
     // Inside the click: the only moment browsers let us start audio.
-    if (!mutedRef.current) ensureSound();
+    sound.unlock();
     onSpin();
-  };
-
-  const toggleMute = () => {
-    const next = !muted;
-    setMuted(next);
-    mutedRef.current = next;
-    saveMuted(next);
-    if (next) soundRef.current?.stopSpin();
-    else ensureSound();
   };
 
   const noSpinsLeft = spinsLeft <= 0;
@@ -231,7 +157,7 @@ export function DrawMode({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={toggleMute}
+            onClick={sound.toggleMuted}
             aria-pressed={!muted}
             aria-label={muted ? "Turn sound on" : "Mute sound"}
             className="inline-flex h-10 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300"
