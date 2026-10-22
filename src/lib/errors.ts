@@ -39,7 +39,17 @@ export function parseApiError(err: unknown): ParsedApiError {
     };
   }
 
-  const message = data.message || "Something went wrong.";
+  // A rejected form says WHY in `details`; the top-level message is only the generic
+  // "Validation failed", which is all a toast used to show (the bulk-email send that
+  // failed five times with no hint that one pasted address was the problem).
+  const detailMessages =
+    data.error === "VALIDATION_ERROR" && Array.isArray(data.details)
+      ? Array.from(new Set(data.details.map((d) => d?.message).filter(Boolean)))
+      : [];
+  const message =
+    detailMessages.length > 0
+      ? detailMessages.join(" ")
+      : data.message || "Something went wrong.";
   const isSessionInvalidated =
     status === 401 && /session\s+invalidated/i.test(message);
 

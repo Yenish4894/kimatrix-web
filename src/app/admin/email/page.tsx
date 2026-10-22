@@ -19,6 +19,7 @@ import { PAGE_SIZE } from "@/lib/pagination";
 import { adminService } from "@/services";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 import type { Company, BulkEmailLog } from "@/types";
+import { parseExtraEmails, isValidEmailAddress } from "@/lib/bulkEmailAddresses";
 
 /** 100 per page x this = the most companies Select All will gather. */
 const MAX_SELECT_ALL_PAGES = 100;
@@ -58,26 +59,13 @@ export default function AdminBulkEmailPage() {
     queryFn: () => adminService.getBulkEmailLogs(logsPage, LOGS_PAGE_SIZE),
   });
 
-  // Split on comma, semicolon, whitespace or newline — people paste address lists in
-  // every one of those shapes, and rejecting the paste is a worse answer than
-  // accepting it.
-  const extraEmails = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          extraInput
-            .split(/[\s,;]+/)
-            .map((e) => e.trim().toLowerCase())
-            .filter(Boolean),
-        ),
-      ),
-    [extraInput],
-  );
+  // Pasted lists in any shape, including `Name <x@y.com>` (see parseExtraEmails).
+  const extraEmails = useMemo(() => parseExtraEmails(extraInput), [extraInput]);
 
-  // Deliberately permissive: the API is the authority on what a valid address is, and
-  // this only decides whether to warn before the request is made.
+  // Close to the server's own rule, so a bad address is caught here with a clear
+  // message instead of the whole send coming back as "Validation failed".
   const invalidExtras = useMemo(
-    () => extraEmails.filter((e) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)),
+    () => extraEmails.filter((e) => !isValidEmailAddress(e)),
     [extraEmails],
   );
 
