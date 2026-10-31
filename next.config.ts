@@ -54,6 +54,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
   // No camera/mic/geolocation needed except for QR submission flow's geolocation,
   // which is gated behind explicit user permission anyway.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },

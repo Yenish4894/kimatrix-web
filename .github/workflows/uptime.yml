@@ -1,0 +1,20 @@
+name: Uptime
+
+# Runs outside the server, so it still fires when the server itself is down. A failed run
+# emails the repo owner. Checks /ready (database and Redis) and warns of an SSL certificate
+# within 14 days of expiry, the two things that broke unnoticed in October 2026.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Site and services are ready
+        run: curl -fsS --retry 4 --retry-delay 30 --retry-all-errors -m 20 https://kimates.com/ready
+      - name: Certificate has more than 14 days left
+        run: |
+          echo | openssl s_client -connect kimates.com:443 -servername kimates.com 2>/dev/null \
+            | openssl x509 -noout -enddate -checkend 1209600
