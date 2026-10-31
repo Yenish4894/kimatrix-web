@@ -27,6 +27,8 @@
 .env.copy
 env.js
 env.ts
+# Reads NEXT_PUBLIC_* only, holds no secrets, and the app cannot build without it.
+!src/lib/env.ts
 config.local.js
 config.local.ts
 secrets.json
