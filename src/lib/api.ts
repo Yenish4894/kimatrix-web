@@ -48,6 +48,12 @@ api.interceptors.request.use((config) => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // The JSON default above would make axios flatten a FormData body into JSON: arrays
+  // sent as form fields stay strings and files vanish. Clearing it lets the browser
+  // send real multipart with its boundary.
+  if (config.data instanceof FormData) {
+    config.headers.setContentType(false);
+  }
   return config;
 });
 

@@ -287,8 +287,8 @@ export const adminService = {
       "/admin/bulk-email",
       form,
       {
-        // Content-Type is deliberately unset: the browser has to add the multipart
-        // boundary itself, and setting it by hand produces a body the server cannot parse.
+        // No Content-Type here: the browser has to add the multipart boundary itself,
+        // and the api client clears its JSON default for FormData.
         onUploadProgress: (e) => {
           if (!payload.onUploadProgress || !e.total) return;
           payload.onUploadProgress(Math.round((e.loaded / e.total) * 100));
