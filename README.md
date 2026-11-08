@@ -1,318 +1,155 @@
 # KIMates Web - Frontend
 
-> B2B SaaS QR-based customer purchase tracking platform for fuel stations and shops, focused on South Africa and India
+> B2B SaaS QR-based customer purchase tracking platform for fuel stations and shops, available worldwide
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.3-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38bdf8)](https://tailwindcss.com/)
-[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2.11-764abc)](https://redux-toolkit.js.org/)
 
 ## 📋 Overview
 
-KIMates Web is the frontend application for the KIMates QR platform. Built with Next.js 15 (App Router), it provides a modern, responsive interface for managing fuel station and shop purchases, tracking customer loyalty, and administering company operations across South Africa and India. Customer amounts are formatted in the company country’s local currency; subscription payments are in USD.
+KIMates Web is the frontend for the KIMates QR platform, built with Next.js 15 (App Router). Businesses sign up, verify their email to start a trial, and get a QR code; their customers scan it to record purchases without logging in. The platform owner runs everything from a super-admin panel. Customer amounts are shown in the company country's currency; everything paid to KIMates is in USD.
+
+Live at https://kimates.com.
 
 ## ✨ Features
 
-### Customer Management
-- **QR Code Scanning**: Quick customer identification via QR codes
-- **Purchase Recording**: Real-time transaction tracking with fuel type and quantity
-- **Customer History**: View complete purchase history and loyalty points
+### Public
+- **Landing page** with every active plan in the admin's order and the admin's "Most Popular" badge
+- **Signup** with email verification (verifying starts the trial), honeypot and Cloudflare Turnstile
+- **Customer QR form** (`/qr/[qrToken]`): mobile first, no login; Fuel Station and Shop variants; separate screens for paused, inactive and invalid QR codes
 
 ### Company Portal
-- **Dashboard Analytics**: Revenue metrics, top customers, recent transactions
-- **Customer Management**: CRUD operations with search and filtering
-- **Billing & Subscriptions**: PayPal integration for plan upgrades
-- **Profile Management**: Company information and settings
+- **Dashboard**: stats, plan status with countdown, recent purchases
+- **QR code**: branded poster PDF, pause/resume, regenerate
+- **Customers and purchases**: search, sort, date filters, void a purchase with a reason
+- **Reports**: top 10, all customers, transactions, monthly; PDF and CSV
+- **Lucky draw**: 15-second wheel with music, full-screen Draw mode for a shop TV, buy more spins once free ones run out
+- **Billing**: PayPal one-time payment for plans and spin add-ons; payments history with invoice PDFs
+- **Settings**: profile, password, change login email, delete account (7-day grace)
+- **Paywall**: when access lapses, billing, payments, export and settings stay reachable
 
-### Admin Portal
-- **Company Management**: Approve/deactivate companies, extend subscriptions
-- **User Management**: View all users and companies
-- **System Overview**: Platform-wide analytics and monitoring
+### Admin Panel
+- **Dashboard**: platform stats per currency, visitors, service status (SMTP, PayPal, database, Redis, queue)
+- **Companies**: ban/unban, complimentary access with spins, trial extension, onboarding by invite, deletion, read-only customer/purchase/draw tabs
+- **Plans & trial, lucky-draw pricing, payments, bulk email (with attachments), audit log**
 
-### Authentication & Security
-- **JWT-based Authentication**: Secure token-based auth with refresh tokens
-- **Role-based Access Control**: Super admin, company owner roles
-- **Protected Routes**: Middleware-based route protection
-- **Subscription Gating**: Automatic access control for expired subscriptions
-
-### Progressive Web App (PWA)
-- **Offline Support**: Service worker for offline functionality
-- **Installable**: Add to home screen on mobile devices
-- **Push Notifications**: Real-time updates (future)
+### Progressive Web App
+- Installable, with an offline page and a service worker (`public/sw.js`)
 
 ## 🛠️ Tech Stack
 
-### Core
-- **Next.js 16.2** - React framework with App Router
-- **React 19.2** - UI library
-- **TypeScript 5** - Type safety
-
-### Styling
-- **TailwindCSS 4** - Utility-first CSS framework
-- **class-variance-authority** - Component variants
-- **tailwind-merge** - Conditional class merging
-
-### State Management
-- **TanStack Query** - Server state: every API read and its cache
-- **Redux Toolkit** - Client session state (the signed-in user)
-
-### Forms & Validation
-- **`src/lib/validation.ts`** - Small in-house schema validator (`v`); no form library
-- **libphonenumber-js** - Phone number validation
-- **country-state-city** - Location data
-
-### UI Components
-- **lucide-react** - Icon library
-- **react-toastify** - Toast notifications
-- **qrcode.react** - QR code generation
-
-### PDF Generation
-- **jsPDF** - PDF creation
-- **jspdf-autotable** - Table generation for PDFs
-
-### HTTP Client
-- **Axios** - API communication with interceptors
-
-### Utilities
-- **`src/lib/dates.ts`** - Local-day date conversions for date inputs (no date library)
-- **js-cookie** - Cookie management
-- **use-debounce** - Input debouncing
+- **Next.js 15.5** (App Router), **React 19.2**, **TypeScript 5.9** (strict)
+- **TanStack Query** for all server state; **Redux Toolkit** only for the signed-in session
+- **Tailwind CSS 4** (theme in `src/app/globals.css` under `@theme`, no `tailwind.config.js`), `class-variance-authority`, `tailwind-merge`, `lucide-react`, `react-toastify`
+- **Axios** client in `src/lib/api.ts` (Bearer token, refresh rotation; clears the JSON content type for `FormData` uploads)
+- **jsPDF** + `jspdf-autotable` for the QR poster and reports
+- `libphonenumber-js` and `country-state-city` for phone and address fields; a small in-house validator in `src/lib/validation.ts`
+- **Fonts** self-hosted in `src/app/fonts/` with `next/font/local` (Inter, Plus Jakarta Sans, JetBrains Mono), so builds never need Google Fonts. Regenerate with `scripts/build-fonts.py`
 
 ## 📁 Project Structure
 
 ```
 frontend/
 ├── src/
-│   ├── app/                        # Next.js App Router
-│   │   ├── page.tsx                # Landing page
-│   │   ├── admin/                  # Admin portal: dashboard, companies (+ detail), plans,
-│   │   │                           #   lucky-draw, payments, email, audit-log, settings
-│   │   ├── company/                # Company portal: dashboard, customers (+ detail),
-│   │   │                           #   purchases (+ detail), qr-code, reports, lucky-draw,
-│   │   │                           #   billing (+ success/cancel), payments, export, settings
-│   │   ├── qr/[qrToken]/           # Public customer purchase form (no login)
-│   │   ├── login/ register/ forgot-password/ reset-password/
-│   │   ├── verify-email/ confirm-email-change/
-│   │   ├── terms/ privacy/ offline/
-│   │   └── layout.tsx              # Root layout
-│   ├── middleware.ts               # Edge redirect for /admin and /company (UX gate;
-│   │                               #   the backend enforces auth on every request)
-│   ├── components/                 # admin, auth, billing, layouts, lucky-draw, payments,
-│   │                               #   purchases, pwa, settings, subscription, ui
-│   ├── hooks/                      # useCompanyProfile, useEntitlement, useCurrencyFormatter
-│   ├── lib/                        # api client, tokens, dates, validation, entitlement,
-│   │   └── pdf/                    #   ... and browser-side PDF builders (reports, QR poster)
-│   ├── services/                   # One module per API area (auth, company, admin, payment,
-│   │                               #   qr, metrics)
-│   ├── store/                      # Redux: auth slice, typed hooks, provider
-│   └── types/                      # Shared TypeScript types
-├── public/                         # Brand images, PWA icons, service worker (sw.js)
-├── .github/workflows/deploy.yml    # Test, then deploy on push to main
-├── next.config.ts                  # Next.js config (CSP and security headers)
-└── package.json
+│   ├── app/                        # Routes: admin/, company/, qr/[qrToken]/, login/, register/,
+│   │                               #   verify-email/, reset-password/, terms/, privacy/, offline/
+│   │   └── fonts/                  # Self-hosted woff2 fonts
+│   ├── middleware.ts               # Edge redirect for /admin and /company (UX only;
+│   │                               #   the backend enforces access on every request)
+│   ├── components/                 # ui/, layouts/, lucky-draw/, billing/, admin/, auth/, ...
+│   ├── hooks/                      # useEntitlement, useCompanyProfile, useCurrencyFormatter, useSpinSound
+│   ├── lib/                        # Pure helpers with colocated *.test.ts, plus pdf/
+│   ├── services/                   # One module per API area (auth, company, admin, payment, qr, metrics)
+│   ├── store/                      # Redux auth slice
+│   └── types/                      # API types shared with the backend
+├── public/                         # Brand images, PWA icons, sounds, service worker
+├── scripts/build-fonts.py          # Rebuilds src/app/fonts from Google's upstream fonts
+├── .claude/                        # Project instructions for Claude Code (CLAUDE.md, rules, skills)
+└── .github/workflows/              # deploy.yml (test, then deploy) and uptime.yml (checks /ready)
 ```
-
-Styling uses Tailwind CSS v4: there is no `tailwind.config.js`; the theme lives in
-`src/app/globals.css` under `@theme`.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 20+ and npm/yarn
-- Backend API running (see [kimates-api](../backend))
-- Git
+- Node.js 22 and npm
+- The backend API running locally (see the backend repository)
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/KIMates/kimates-web.git
-   cd kimates-web
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Edit `.env.local`:
-   ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
-   ```
-
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open browser**
-   ```
-   http://localhost:3000
-   ```
-
-## 📝 Available Scripts
-
 ```bash
-npm run dev        # Start development server (port 3000)
-npm run build      # Build for production
-npm start          # Start production server
-npm run lint       # Run ESLint
+git clone https://github.com/Yenish4894/kimatrix-web.git
+cd kimatrix-web
+npm install
+cp .env.example .env
 ```
 
-## 🔗 API Integration
-
-The frontend communicates with the backend API via Axios. The base URL is configured in `.env.local`:
+Set the API origin in `.env` (origin only; the client appends `/api`):
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
 
-### API Client Configuration
-
-- **Axios Instance**: Configured in `src/lib/api.ts`
-- **Request Interceptor**: Attaches JWT access token to requests
-- **Response Interceptor**: Handles token refresh on 401 errors
-- **Error Handling**: Centralized error handling with toast notifications
-
-### Service Layer
-
-All API calls are organized in the `src/services/` directory:
-
-- `auth.service.ts` - Login, register, password reset
-- `company.service.ts` - Company CRUD, profile updates
-- `payment.service.ts` - Plans, PayPal orders
-- `qr.service.ts` - QR scanning, purchase recording
-- `admin.service.ts` - Admin operations
-
-## 🔐 Authentication Flow
-
-1. **Login**: User submits credentials → Backend returns JWT tokens
-2. **Token Storage**: Access and refresh tokens in `localStorage`, plus a non-sensitive role cookie
-3. **Protected Routes**: `middleware.ts` redirects signed-out or wrong-role visitors at the edge; `DashboardShell` checks again in the browser
-4. **Token Refresh**: Automatic refresh on 401 using refresh token
-5. **Logout**: Clear tokens, redirect to login
-
-## 💳 Payment Integration
-
-### PayPal Integration Flow
-
-1. **Plan Selection**: User selects subscription plan
-2. **Order Creation**: Frontend calls backend `/payment/paypal/create-order`
-3. **Redirect**: User redirected to PayPal approval URL
-4. **Approval**: User approves payment on PayPal
-5. **Capture**: Frontend calls backend `/payment/paypal/capture-order`
-6. **Activation**: Backend updates company subscription, frontend syncs state
-7. **Webhook**: Backend webhook handles closed-browser scenarios
-
-## 🎨 UI/UX Design
-
-- **Responsive Design**: Mobile-first approach with Tailwind breakpoints
-- **Dark Mode**: (Future enhancement)
-- **Accessibility**: ARIA labels, keyboard navigation
-- **Toast Notifications**: Real-time feedback for user actions
-- **Loading States**: Skeletons and spinners for async operations
-
-## 📱 PWA Features
-
-- **Service Worker**: Offline support for critical pages
-- **Manifest**: App metadata and icons
-- **Install Prompt**: Custom install UI
-- **Offline Page**: Fallback when offline
-
-## 🧪 Testing
+Optional: `NEXT_PUBLIC_TURNSTILE_SITE_KEY` turns on the signup bot check.
 
 ```bash
-# Run tests (future)
-npm test
-
-# Run tests in watch mode
-npm test -- --watch
-
-# Generate coverage report
-npm test -- --coverage
+npm run dev    # http://localhost:3000
 ```
+
+## 📝 Scripts
+
+```bash
+npm run dev       # development server (port 3000)
+npm run build     # production build
+npm start         # serve the production build
+npm run lint      # ESLint
+npm test          # unit tests (node:test via tsx, src/**/*.test.ts)
+npx tsc --noEmit  # type check
+```
+
+Do not run Prettier on this repo; it is not a dependency and reformats whole files.
+
+## 🔐 Authentication
+
+- Access and refresh tokens are kept in `localStorage` (`src/lib/tokens.ts`) and sent as a Bearer header; a non-sensitive role cookie (`kimates.session`) drives the edge redirect.
+- On a 401 the client refreshes once; the backend rotates refresh tokens and revokes every session if a used one comes back.
+- `useEntitlement()` reads the access state the server computed; the frontend never decides access itself.
+
+## 💳 Payments
+
+1. The company picks a plan or a number of spins on Billing.
+2. The frontend asks the backend for a PayPal order and redirects to PayPal.
+3. PayPal returns to `/company/billing/success`, which confirms the payment once.
+4. The backend captures it, grants the plan or spins, and emails a receipt with the invoice.
+5. A signed PayPal webhook covers buyers who close the browser before step 3.
+
+Auto-renewing PayPal subscriptions are built but hidden from customers since 2026-09-27.
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
+A push to `main` runs lint and tests on GitHub Actions, then deploys to the VPS over SSH: `git pull`, `npm ci`, `npm run build` (the previous build is restored if the build fails), `pm2 restart kimatrix-web`, and a health check. Production reads `NEXT_PUBLIC_API_BASE_URL=https://kimates.com` from `.env.production` on the server.
 
-1. **Push to GitHub**
-   ```bash
-   git push origin main
-   ```
+`uptime.yml` checks `https://kimates.com/ready` and the SSL certificate every 10 minutes.
 
-2. **Import in Vercel**
-   - Connect GitHub repository
-   - Set environment variables in Vercel dashboard
-   - Deploy
+## 🔒 Security
 
-3. **Set Environment Variables**
-   ```
-   NEXT_PUBLIC_API_BASE_URL=https://kimates.com
-   ```
-
-   Origin only — the API client appends `/api` itself. The backend is
-   reverse-proxied under the main domain; there is no `api.*` subdomain.
-
-### Manual Deployment
-
-```bash
-# Build production bundle
-npm run build
-
-# Start production server
-npm start
-```
-
-## 🔒 Security Best Practices
-
-- ✅ Environment variables never committed (.gitignore configured)
-- ⚠️ Access and refresh tokens are kept in `localStorage` (`src/lib/tokens.ts`), sent as a
-  Bearer header. Readable by any script on the page, so XSS protection matters; the
-  backend's refresh rotation and theft detection limit the damage of a stolen token.
-- ✅ Only a non-sensitive role cookie (`kimates.session`) is set, for the edge redirect
-- ✅ HTTPS enforced in production; CSP and security headers in `next.config.ts`
-- ✅ Client-side input validation (`src/lib/validation.ts`); the backend re-validates with Joi
-- ✅ XSS protection via React's built-in escaping
-- ✅ No cookie-based auth, so classic CSRF does not apply
-- ✅ Rate limiting on the backend API
+- No secrets in the repo; `.env*` files are git-ignored
+- CSP, HSTS and other security headers in `next.config.ts`
+- Client-side validation mirrors the backend, which re-validates everything with Joi
+- Tokens in `localStorage` are readable by page scripts, so XSS protection matters; refresh rotation and theft detection on the backend limit the damage of a stolen token
 
 ## 📚 Documentation
 
-API endpoints, environment variables and deployment are documented in the backend
-repository's README.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- `CLAUDE.md` and `.claude/rules/` in this repo: routes, patterns, lucky draw and billing UI
+- The backend repository's `.claude/rules/`: API endpoints, schema, flows and decisions
 
 ## 📄 License
 
-This project is proprietary and confidential. All rights reserved.
-
-## 👥 Team
-
-- **Development**: KIMates Team
-- **Design**: KIMates Team
-- **Product**: KIMates Team
+MIT, see [LICENSE](LICENSE).
 
 ## 📞 Support
 
-For issues or questions:
-- Email: support@kimates.com
-- GitHub Issues: [kimates-web/issues](https://github.com/KIMates/kimates-web/issues)
-
----
-
-Built with ❤️ by KIMates Team
+- Email: info@kimates.com
+- Issues: [kimatrix-web/issues](https://github.com/Yenish4894/kimatrix-web/issues)
