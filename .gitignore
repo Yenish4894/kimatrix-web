@@ -248,7 +248,7 @@ temp/
 # MISC
 # ─────────────────────────────────────────────────────────────────────────────────
 *.local
-.claude/
+.claude/settings.local.json
 .storybook/build/
 .docusaurus/
 .cache-loader/
@@ -257,8 +257,6 @@ temp/
 # ─────────────────────────────────────────────────────────────────────────────────
 # AI / DEV TOOLING (not production code)
 # ─────────────────────────────────────────────────────────────────────────────────
-CLAUDE.md
-AGENTS.md
 GIT_SETUP_SUMMARY.md
 UI_UX_DESIGN_SPEC.md
 SETUP.md
