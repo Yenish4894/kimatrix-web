@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
@@ -13,6 +13,23 @@ import { invalidateCompanyProfile } from "@/hooks/useCompanyProfile";
 import { parseApiError, errorMessageWithId } from "@/lib/errors";
 
 type CaptureState = "loading" | "success" | "error";
+
+// One confirmation request per PayPal reference for the life of the page, shared by
+// every mount. A per-component ref was not enough: DashboardShell mounts this page,
+// unmounts it while the session resolves, and mounts it again, so the second copy fired
+// its own capture. Its "already being processed" 409 answered first and was what the
+// buyer saw, hiding the real outcome (a card decline, on 2026-11-08). Keyed by reference
+// so a later checkout in the same tab still confirms.
+const confirmations = new Map<string, Promise<unknown>>();
+
+function confirmOnce<T>(key: string, run: () => Promise<T>): Promise<T> {
+  let pending = confirmations.get(key) as Promise<T> | undefined;
+  if (!pending) {
+    pending = run();
+    confirmations.set(key, pending);
+  }
+  return pending;
+}
 
 // Inner component owns useSearchParams — must be inside a Suspense boundary
 function CaptureHandler() {
@@ -34,18 +51,17 @@ function CaptureHandler() {
   // The server's reason for a failed confirmation, kept on the page rather than only in
   // a toast that disappears after a few seconds (FE-10).
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const capturedRef = useRef(false);
 
   useEffect(() => {
     if (!paypalOrderId && !paypalSubscriptionId) {
       setState("error");
       return;
     }
-    // Guard against double-call in React StrictMode or user page refresh
-    if (capturedRef.current) return;
-    capturedRef.current = true;
+    // Results from a previous mount must not land on this one after it unmounts.
+    let active = true;
 
     const fail = (err: unknown) => {
+      if (!active) return;
       const parsed = parseApiError(err);
       setErrorMessage(errorMessageWithId(parsed));
       setState("error");
@@ -65,20 +81,24 @@ function CaptureHandler() {
     };
 
     if (paypalSubscriptionId) {
-      paymentService
-        .confirmSubscription(paypalSubscriptionId)
+      confirmOnce(`sub:${paypalSubscriptionId}`, () =>
+        paymentService.confirmSubscription(paypalSubscriptionId)
+      )
         .then((status) => {
+          if (!active) return;
           setExpiresAt(status.currentPeriodEnd);
           setState("success");
         })
         .catch(fail)
         .finally(refreshAfterPayment);
-      return;
+      return () => {
+        active = false;
+      };
     }
 
-    paymentService
-      .captureOrder(paypalOrderId!)
+    confirmOnce(`order:${paypalOrderId}`, () => paymentService.captureOrder(paypalOrderId!))
       .then((result) => {
+        if (!active) return;
         setExpiresAt(result.subscriptionEndsAt);
         setIsSpinAddon(result.kind === "spin_addon");
         // refreshAfterPayment invalidates the shared profile query, so the gate, sidebar
@@ -88,6 +108,9 @@ function CaptureHandler() {
       })
       .catch(fail)
       .finally(refreshAfterPayment);
+    return () => {
+      active = false;
+    };
   }, [paypalOrderId, paypalSubscriptionId, queryClient]);
 
   if (state === "loading") {
