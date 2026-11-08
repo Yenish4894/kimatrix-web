@@ -13,6 +13,7 @@ Next.js App Router site for KIMates: public landing and signup, the company port
 - jsPDF + autotable for the Reports page and QR poster (`src/lib/pdf/`)
 - Tests: `node:test` via `tsx` on `src/**/*.test.ts` (pure helpers in `src/lib/`), 309 tests
 - PWA: `public/sw.js` (`CACHE_NAME = "kimates-v2"`), `src/app/manifest.ts`
+- Fonts: self-hosted in `src/app/fonts/` via `next/font/local` (Inter, Plus Jakarta Sans, JetBrains Mono); regenerate with `scripts/build-fonts.py`
 
 ## Commands
 
@@ -59,6 +60,7 @@ src/
 - The service worker caches images network-first and `/_next/static/` cache-first; bump `CACHE_NAME` only to force eviction.
 - Draw mode and the page wheel share one sound hook; `active:false` silences the hidden one.
 - The Turnstile widget renders only when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set at build time.
+- Do not switch back to `next/font/google`: its build-time fetch from Google failed three deploys in a row on 2026-11-08 while passing everywhere else. The build must not need the network.
 
 ## Domain index
 
